@@ -1,0 +1,19 @@
+General
+ - get git repo set up with commits
+
+Visualization
+    LD
+        - use vcftools, samtools to get counts of variants from vcf files
+        - plot variant positions in chr22, along with probabilities and number
+        - 2D plot variant LD as a function of genome distance and LD strength
+    k-mers
+        - fix running out of memory due to recursive trie structure (switch to preallocated or hash)
+        - 2D plot of regional k-mer frequencies as a function of window size and position
+        - verify k-mer probabilities are multiplicative: e.g. for tri-mer 'ABC', P('ABC') = P('AB')P('C') = P('A')P('BC')
+        - calculate k-mer frequencies relative to frequency of smaller k-mers (i.e. LD)
+        - try to replicate results from kmermaid BoG talk (k-mers )
+
+Autoencoder
+    - build a simple autoencoder with noise (dropout) to test imputation of missing values
+    - have the input window size vary, see what conditions allow autoencoder to have zero reconstruction error
+    - use missing inputs (input noise) to replicate Shannon English bits per word study
