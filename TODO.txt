@@ -15,5 +15,8 @@ Visualization
 
 Autoencoder
     - build a simple autoencoder with noise (dropout) to test imputation of missing values
+        - add noise/dropout to inputs and intermediate layers (imputation)
+        - include distance for similar sequences in loss function (e.g. shifting window by one bp)? (need non-significant sequence variants)
+        - verify encoder by training on chr22 and testing on randomly generated sequences, and vice versa (reconstruction error should be higher when cross domain)
     - have the input window size vary, see what conditions allow autoencoder to have zero reconstruction error
     - use missing inputs (input noise) to replicate Shannon English bits per word study

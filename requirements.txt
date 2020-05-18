@@ -1,0 +1,14 @@
+biopython==1.76
+cycler==0.10.0
+future==0.18.2
+kiwisolver==1.2.0
+matplotlib==3.2.1
+numpy==1.18.4
+Pillow==7.1.2
+pkg-resources==0.0.0
+pyparsing==2.4.7
+pysam==0.15.4
+python-dateutil==2.8.1
+PyVCF==0.6.8
+six==1.14.0
+torch==1.5.0

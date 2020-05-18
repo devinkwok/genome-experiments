@@ -1,8 +1,11 @@
 import pickle
 import operator
-import util
+
 import numpy as np
 import matplotlib.pyplot as plt
+
+import util
+
 
 class TrieNode:
 
@@ -127,9 +130,9 @@ def plot_ngrams(trie):
         plt.clf()
 
 
-# filename = 'data/ref_genome/chr22_excerpt.fa'
-filename = 'data/ref_genome/chr22.fa'
-# trie = seq_k_mer(filename, 10)
+filename = 'data/ref_genome/chr22_excerpt.fa'
+# filename = 'data/ref_genome/chr22.fa'
+trie = seq_k_mer(filename, 10)
 
 with open(util.output_path('ngrams_', filename, '.pickle'), 'rb') as file:
     trie = pickle.load(file)

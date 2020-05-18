@@ -1,8 +1,12 @@
 import math
 import os
+
 import numpy as np
 from PIL import Image
+
+import k_mers
 import util
+
 
 rgb_map = {
     b'a': 0xffb80000,
@@ -26,7 +30,7 @@ def make_img(filename):
     print(n_bases, width)
     
     img_array = np.empty((width, width), dtype=np.uint32)
-    seq = util.read_seq(filename)
+    seq = util.load.read_seq(filename)
     coords = hilbert_curve(iters)
 
     for base, (x, y) in zip(seq, coords):
@@ -34,7 +38,7 @@ def make_img(filename):
         img_array[x, y] = rgb_map.get(base, 0xff000000)
     
     genome_img = Image.fromarray(img_array, mode='RGBA')
-    genome_img.save(util.output_path('vis_img_', filename, '.png'), format="PNG")
+    genome_img.save(util.load.output_path('vis_img_', filename, '.png'), format="PNG")
 
 # direction is 0, 1, 2, or 3
 # iteration is recursion depth
@@ -86,5 +90,5 @@ def test_img_save():
     img.save('vis_test_img_save.png')
 
 
-make_img('data/ref_genome/test.txt')
+make_img('data/ref_genome/test.fasta')
 # make_img('data/ref_genome/chr22.fa')
