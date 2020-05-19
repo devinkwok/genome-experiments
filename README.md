@@ -9,6 +9,6 @@ Data and inputs in `data`.
 
 Outputs to `outputs`.
 
-Visualization experiments in `visualization`.
+Visualization experiments in `src/visualization`.
 
-Autoencoder experiments in `autoencoder`.
+Autoencoder experiments in `src/autoencoder`.

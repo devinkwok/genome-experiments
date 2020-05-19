@@ -1,5 +1,6 @@
 data/**
-outputs/**
+outputs/**/*.pickle
+outputs/**/*.pth
 ref/**
 env/**
 **/__pycache__/**
