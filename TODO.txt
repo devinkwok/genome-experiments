@@ -14,6 +14,7 @@ Visualization
         - try to replicate results from kmermaid BoG talk (k-mers )
 
 Autoencoder
+    see https://github.com/ShayanPersonal/stacked-autoencoder-pytorch/blob/master/model.py
     - build a simple autoencoder with noise (dropout) to test imputation of missing values
         - add noise/dropout to inputs and intermediate layers (imputation)
         - include distance for similar sequences in loss function (e.g. shifting window by one bp)? (need non-significant sequence variants)

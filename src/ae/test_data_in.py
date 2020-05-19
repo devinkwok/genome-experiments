@@ -1,3 +1,6 @@
+import sys
+sys.path.append('./src/ae/')
+
 import math
 import unittest
 
@@ -5,10 +8,10 @@ import torch
 import numpy as np
 import numpy.testing as npt
 
-from src.ae.seq_io import *
+from data_in import *
 
 
-class Test_Load(unittest.TestCase):
+class Test_Data_In(unittest.TestCase):
 
 
     def setUp(self):
@@ -48,7 +51,7 @@ class Test_Load(unittest.TestCase):
 
         with self.assertRaises(ValueError) as context:
             seq = slice_seq(self.test_tensor, slice_len, overlap=2)
-        self.assertTrue(' cannot be more than half of length: ' in str(context.exception))
+        self.assertTrue(" cannot be more than half of length: " in str(context.exception))
 
         seq = slice_seq(self.test_tensor, slice_len)
         

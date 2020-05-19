@@ -4,14 +4,17 @@ import torch
 import numpy as np
 from Bio import SeqIO
 
+
 # 1h means one hot
 # complement reverses order of 1h columns
+
 BASE_TO_INDEX = {
     'A': 0, 'a': 0,
     'G': 1, 'g': 1,
     'C': 2, 'c': 2,
     'T': 3, 't': 3,
     }
+
 N_BASE = 4
 
 
@@ -42,7 +45,7 @@ def slice_seq(seq1h_tensor, length, overlap=0):
 
     # can't overlap more than 1/2 of sequence for ease of implementation
     if overlap > length / 2:
-        raise ValueError('overlap of ' + str(overlap) + ' cannot be more than half of length: ' + str(length))
+        raise ValueError("overlap of " + str(overlap) + " cannot be more than half of length: " + str(length))
 
     stride = length - overlap
     n_sub = math.ceil(seq1h_tensor.shape[0] / stride)
@@ -57,6 +60,7 @@ def slice_seq(seq1h_tensor, length, overlap=0):
     sub_seq1h_tensor = torch.repeat_interleave(padded_tensor, 2, dim=0)
     sub_seq1h_tensor = sub_seq1h_tensor[1:-1,:,:]
     sub_seq1h_tensor = sub_seq1h_tensor.view(n_sub, stride * 2, N_BASE)
+
     # trim the excess overlap at the end of each subsequence
     return sub_seq1h_tensor[:, :length , :]
 

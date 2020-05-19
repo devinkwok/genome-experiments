@@ -1,10 +1,13 @@
+import sys
+sys.path.append('./src/')
+
 import pickle
 import operator
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-import util
+import seq_util.io
 
 
 class TrieNode:
@@ -91,13 +94,13 @@ def test_Trie(char_seq, n):
 VALID_BASES = {b'A', b'T', b'C', b'G'}
 
 def seq_k_mer(filename, max_depth):
-    seq = util.read_seq(filename, print_progress=1000)
+    seq = seq_util.io.read_seq(filename, print_progress=1000)
     k_mer_trie = Trie(max_depth)
     for base in seq:
         if base in VALID_BASES:
             k_mer_trie.append_char(base.decode('ascii'))
 
-    out_filename =  util.output_path('ngrams_', filename, '.pickle')
+    out_filename =  seq_util.io.output_path('ngrams_', filename, '.pickle')
     with open(out_filename, mode='wb') as file:
         pickle.dump(k_mer_trie, file)
     return k_mer_trie
@@ -126,14 +129,15 @@ def plot_ngrams(trie):
             plt.axvline(x=rand_expectation, ymin=0, ymax=1, color='black')
             plt.axvline(x=semirand_expectation, ymin=0, ymax=1, color='red')
 
-        plt.savefig(util.output_path('ngrams_', filename, str(i) + '.png'))
+        plt.savefig(seq_util.io.output_path('ngrams_', filename, str(i) + '.png'))
         plt.clf()
 
 
-filename = 'data/ref_genome/chr22_excerpt.fa'
-# filename = 'data/ref_genome/chr22.fa'
-trie = seq_k_mer(filename, 10)
+if __name__ == '__main__':
+    filename = 'data/ref_genome/chr22_excerpt.fa'
+    # filename = 'data/ref_genome/chr22.fa'
+    trie = seq_k_mer(filename, 10)
 
-with open(util.output_path('ngrams_', filename, '.pickle'), 'rb') as file:
-    trie = pickle.load(file)
-plot_ngrams(trie)
+    with open(seq_util.io.output_path('ngrams_', filename, '.pickle'), 'rb') as file:
+        trie = pickle.load(file)
+    plot_ngrams(trie)
