@@ -50,10 +50,10 @@ class Test_Data_In(unittest.TestCase):
         slice_len = 3  # must be >= 2
 
         with self.assertRaises(ValueError) as context:
-            seq = slice_seq(self.test_tensor, slice_len, overlap=2)
+            seq = slice_seq(self.test_tensor, length=slice_len, overlap=2)
         self.assertTrue(" cannot be more than half of length: " in str(context.exception))
 
-        seq = slice_seq(self.test_tensor, slice_len)
+        seq = slice_seq(self.test_tensor, length=slice_len, overlap=0)
         
         n_slices = int(math.ceil(self.seq_len / slice_len))
         new_shape = (n_slices, slice_len, N_BASE)
@@ -63,7 +63,7 @@ class Test_Data_In(unittest.TestCase):
 
         overlap = 1
         stride = slice_len - overlap
-        seq = slice_seq(self.test_tensor, slice_len, overlap=overlap)
+        seq = slice_seq(self.test_tensor, length=slice_len, overlap=overlap)
         n_slices = int(math.ceil(self.seq_len / stride))
         self.assertEqual(seq.shape, (n_slices, slice_len, N_BASE))
         for i in range(n_slices):
@@ -85,7 +85,7 @@ class Test_Data_In(unittest.TestCase):
     def test_cull_empty(self):
         offset = int(self.seq_len / 2)
         seq = pad_seq(self.test_tensor, 2 * self.seq_len + offset , offset=offset)
-        seq = slice_seq(seq, self.seq_len)
+        seq = slice_seq(seq, length=self.seq_len, overlap=0)
         culled_zeros = cull_empty(seq, base_freq=0).shape[0]
         self.assertLessEqual(culled_zeros, seq.shape[0])
         culled_all = cull_empty(seq, base_freq=1).shape[0]

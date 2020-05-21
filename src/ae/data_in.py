@@ -41,7 +41,7 @@ def complement(seq1h_tensor):
 
 # divide sequence into subsequences of length or shorter (pad remaining with empty)
 # with overlap for convolution
-def slice_seq(seq1h_tensor, length, overlap=0):
+def slice_seq(seq1h_tensor, length=1, overlap=0):
 
     # can't overlap more than 1/2 of sequence for ease of implementation
     if overlap > length / 2:

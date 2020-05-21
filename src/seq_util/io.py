@@ -10,7 +10,8 @@ def output_path(prefix, input_file, suffix):
                 path_to_filename(caller))
     # make sure directory exists
     Path(output_path).mkdir(parents=True, exist_ok=True)
-    return os.path.join(output_path, prefix + path_to_filename(input_file) + suffix)
+    filename = prefix + path_to_filename(input_file) + suffix
+    return os.path.join(output_path, filename)
 
 def path_to_filename(path):
     return os.path.splitext(os.path.split(path)[1])[0]

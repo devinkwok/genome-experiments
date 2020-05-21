@@ -9,6 +9,10 @@ Data and inputs in `data`.
 
 Outputs to `outputs`.
 
-Visualization experiments in `src/visualization`.
+Visualization experiments in `src/vis`.
 
-Autoencoder experiments in `src/autoencoder`.
+Autoencoder experiments in `src/ae`.
+
+Run scripts from project root directory as `python src/**/*.py`.
+
+Run tests as `python -m unittest discover`.
