@@ -27,3 +27,13 @@ Autoencoder
     - verify on randomized data (permutations at different window lengths)
     - normalize and visualize latent vectors
     - try different omissions of data (with and without empty 'N' sequences, omitting certain k-mers)
+
+    - measure error rates on k-mers
+
+    - need to understand deconvolution better, i.e. how is overlap handled?
+
+    - see https://stackoverflow.com/questions/60018578/what-does-model-eval-do-in-pytorch
+        - turn off training related layers during evaluation
+        - dropout turns off automatically in this way
+
+    - cutoff for empty prediction is an important hyperparameter

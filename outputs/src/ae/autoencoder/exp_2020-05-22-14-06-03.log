@@ -1,0 +1,180 @@
+Training 1x1_20_at0.01 for 20 epochs
+epoch 0, avg loss 0.19031705142977035, validation acc. 0.359375
+epoch 1, avg loss 0.18953266129477345, validation acc. 0.1953125
+epoch 2, avg loss 0.1888777967926021, validation acc. 0.2109375
+epoch 3, avg loss 0.1883796095779886, validation acc. 0.3046875
+epoch 4, avg loss 0.18795466678775422, validation acc. 0.2421875
+epoch 5, avg loss 0.1875962691053373, validation acc. 0.265625
+epoch 6, avg loss 0.1872996753017744, validation acc. 0.25
+epoch 7, avg loss 0.1870578326267836, validation acc. 0.265625
+epoch 8, avg loss 0.18686311028778416, validation acc. 0.3046875
+epoch 9, avg loss 0.18670791530772804, validation acc. 0.2421875
+epoch 10, avg loss 0.18658615624877353, validation acc. 0.2109375
+epoch 11, avg loss 0.18649111459675316, validation acc. 0.3203125
+epoch 12, avg loss 0.1864177387557259, validation acc. 0.2890625
+epoch 13, avg loss 0.18636185322937213, validation acc. 0.28125
+epoch 14, avg loss 0.18631932043920119, validation acc. 0.359375
+epoch 15, avg loss 0.18628746888321107, validation acc. 0.203125
+epoch 16, avg loss 0.18626359231275608, validation acc. 0.3515625
+epoch 17, avg loss 0.18624571102161974, validation acc. 0.3125
+epoch 18, avg loss 0.18623227682348248, validation acc. 0.2421875
+epoch 19, avg loss 0.1862221466594757, validation acc. 0.3046875
+Saving model to outputs/src/ae/autoencoder/ae01_test1x1_20_at0.01.pth
+Training 1x2_20_at0.01 for 20 epochs
+epoch 0, avg loss 0.19499900851833465, validation acc. 0.4140625
+epoch 1, avg loss 0.1927268217302842, validation acc. 0.3125
+epoch 2, avg loss 0.19102527518294224, validation acc. 0.296875
+epoch 3, avg loss 0.19028410295054352, validation acc. 0.2421875
+epoch 4, avg loss 0.18965137062820198, validation acc. 0.25
+epoch 5, avg loss 0.18908202092352938, validation acc. 0.390625
+epoch 6, avg loss 0.18857771826554218, validation acc. 0.1875
+epoch 7, avg loss 0.18813840325418818, validation acc. 0.25
+epoch 8, avg loss 0.18776132977936305, validation acc. 0.2578125
+epoch 9, avg loss 0.18744283989583327, validation acc. 0.3046875
+epoch 10, avg loss 0.18717897695316602, validation acc. 0.2734375
+epoch 11, avg loss 0.18696219059777205, validation acc. 0.2421875
+epoch 12, avg loss 0.18678696538818237, validation acc. 0.2265625
+epoch 13, avg loss 0.186647111272921, validation acc. 0.328125
+epoch 14, avg loss 0.1865365831884694, validation acc. 0.328125
+epoch 15, avg loss 0.1864501850965094, validation acc. 0.3203125
+epoch 16, avg loss 0.1863827920205533, validation acc. 0.3046875
+epoch 17, avg loss 0.1863305058236526, validation acc. 0.3984375
+epoch 18, avg loss 0.1862905031278968, validation acc. 0.3515625
+epoch 19, avg loss 0.18626011096503697, validation acc. 0.2265625
+Saving model to outputs/src/ae/autoencoder/ae01_test1x2_20_at0.01.pth
+Training 1x4_20_at0.01 for 20 epochs
+epoch 0, avg loss 0.18625490629973074, validation acc. 0.2265625
+epoch 1, avg loss 0.17939794056748362, validation acc. 0.5625
+epoch 2, avg loss 0.17125576581098395, validation acc. 0.90625
+epoch 3, avg loss 0.1613921375446516, validation acc. 0.828125
+epoch 4, avg loss 0.15099519753756185, validation acc. 0.828125
+epoch 5, avg loss 0.14145718937743992, validation acc. 0.8203125
+epoch 6, avg loss 0.13337709336995532, validation acc. 0.7890625
+epoch 7, avg loss 0.12654994852687457, validation acc. 0.84375
+epoch 8, avg loss 0.12067405847103699, validation acc. 0.7421875
+epoch 9, avg loss 0.11492964072958556, validation acc. 0.75
+epoch 10, avg loss 0.10896647591953693, validation acc. 0.7890625
+epoch 11, avg loss 0.10257723023880537, validation acc. 0.8125
+epoch 12, avg loss 0.09567393099961619, validation acc. 1.0
+epoch 13, avg loss 0.08827788381063692, validation acc. 1.0
+epoch 14, avg loss 0.08046560269914721, validation acc. 1.0
+epoch 15, avg loss 0.07230548867508257, validation acc. 1.0
+epoch 16, avg loss 0.06399852891603924, validation acc. 1.0
+epoch 17, avg loss 0.055779497516373476, validation acc. 1.0
+epoch 18, avg loss 0.04801277066975218, validation acc. 1.0
+epoch 19, avg loss 0.04110911566107715, validation acc. 1.0
+Saving model to outputs/src/ae/autoencoder/ae01_test1x4_20_at0.01.pth
+Training 3x2_20_at0.01 for 20 epochs
+epoch 0, avg loss 0.18844898847679212, validation acc. 0.265625
+epoch 1, avg loss 0.18764278676376833, validation acc. 0.3203125
+epoch 2, avg loss 0.18678961649473133, validation acc. 0.328125
+epoch 3, avg loss 0.18574570672578566, validation acc. 0.28125
+epoch 4, avg loss 0.18447722731230085, validation acc. 0.328125
+epoch 5, avg loss 0.1827995799833613, validation acc. 0.4375
+epoch 6, avg loss 0.18061559087728737, validation acc. 0.453125
+epoch 7, avg loss 0.17809271435113425, validation acc. 0.453125
+epoch 8, avg loss 0.17535666024608162, validation acc. 0.40625
+epoch 9, avg loss 0.17241594946819314, validation acc. 0.5703125
+epoch 10, avg loss 0.16901086270809174, validation acc. 0.75
+epoch 11, avg loss 0.16493681504874783, validation acc. 0.5625
+epoch 12, avg loss 0.16011033235957184, validation acc. 0.6328125
+epoch 13, avg loss 0.15420585816382337, validation acc. 0.734375
+epoch 14, avg loss 0.14739005341166592, validation acc. 0.6953125
+epoch 15, avg loss 0.14006391615315056, validation acc. 0.6875
+epoch 16, avg loss 0.13247806494136224, validation acc. 0.6640625
+epoch 17, avg loss 0.12499003826996287, validation acc. 0.8125
+epoch 18, avg loss 0.11783045135406466, validation acc. 0.8125
+epoch 19, avg loss 0.11120191110945567, validation acc. 0.734375
+Saving model to outputs/src/ae/autoencoder/ae01_test3x2_20_at0.01.pth
+Training 3x4_20_at0.01 for 20 epochs
+epoch 0, avg loss 0.18810990692591975, validation acc. 0.3828125
+epoch 1, avg loss 0.18549285080811495, validation acc. 0.375
+epoch 2, avg loss 0.18289959417903884, validation acc. 0.390625
+epoch 3, avg loss 0.18001641895893816, validation acc. 0.5234375
+epoch 4, avg loss 0.17651684374384613, validation acc. 0.5859375
+epoch 5, avg loss 0.1723297558117322, validation acc. 0.765625
+epoch 6, avg loss 0.16704841130792838, validation acc. 0.7734375
+epoch 7, avg loss 0.16025745788741008, validation acc. 0.765625
+epoch 8, avg loss 0.15161117546803962, validation acc. 0.78125
+epoch 9, avg loss 0.14159356377411297, validation acc. 0.7578125
+epoch 10, avg loss 0.1304737114119683, validation acc. 0.7578125
+epoch 11, avg loss 0.11902530911846222, validation acc. 0.7734375
+epoch 12, avg loss 0.10784179431110492, validation acc. 0.765625
+epoch 13, avg loss 0.09721959863545557, validation acc. 0.78125
+epoch 14, avg loss 0.08736986001801593, validation acc. 0.8671875
+epoch 15, avg loss 0.07839720138216735, validation acc. 0.9296875
+epoch 16, avg loss 0.07037266319050042, validation acc. 0.9296875
+epoch 17, avg loss 0.06328935439142802, validation acc. 0.9140625
+epoch 18, avg loss 0.057083781536812435, validation acc. 0.921875
+epoch 19, avg loss 0.051677027341506, validation acc. 0.953125
+Saving model to outputs/src/ae/autoencoder/ae01_test3x4_20_at0.01.pth
+Training 3x6_20_at0.01 for 20 epochs
+epoch 0, avg loss 0.18305184973539712, validation acc. 0.3125
+epoch 1, avg loss 0.17668067184256894, validation acc. 0.390625
+epoch 2, avg loss 0.17035129177084296, validation acc. 0.3828125
+epoch 3, avg loss 0.1631630576283635, validation acc. 0.5546875
+epoch 4, avg loss 0.1549422265442144, validation acc. 0.6640625
+epoch 5, avg loss 0.1457138587540823, validation acc. 0.6953125
+epoch 6, avg loss 0.13542039802721642, validation acc. 0.78125
+epoch 7, avg loss 0.12419879305388283, validation acc. 0.796875
+epoch 8, avg loss 0.11244483856492288, validation acc. 0.828125
+epoch 9, avg loss 0.1007297647069708, validation acc. 0.875
+epoch 10, avg loss 0.08957593106213045, validation acc. 0.8671875
+epoch 11, avg loss 0.0793237316186336, validation acc. 0.890625
+epoch 12, avg loss 0.06996969926638665, validation acc. 0.8359375
+epoch 13, avg loss 0.061490563907592596, validation acc. 0.875
+epoch 14, avg loss 0.053805937247087, validation acc. 0.9375
+epoch 15, avg loss 0.04693701006312227, validation acc. 0.9375
+epoch 16, avg loss 0.04090730862316272, validation acc. 0.96875
+epoch 17, avg loss 0.03569971235237152, validation acc. 0.9375
+epoch 18, avg loss 0.03129075633066151, validation acc. 0.96875
+epoch 19, avg loss 0.027638314511674925, validation acc. 0.953125
+Saving model to outputs/src/ae/autoencoder/ae01_test3x6_20_at0.01.pth
+Training 3x12_20_at0.01 for 20 epochs
+epoch 0, avg loss 0.1942713977249395, validation acc. 0.21875
+epoch 1, avg loss 0.17757357608990607, validation acc. 0.5234375
+epoch 2, avg loss 0.16521540220203318, validation acc. 0.8359375
+epoch 3, avg loss 0.15231339345674147, validation acc. 0.921875
+epoch 4, avg loss 0.13737294061884858, validation acc. 0.8984375
+epoch 5, avg loss 0.12068547385189154, validation acc. 0.9609375
+epoch 6, avg loss 0.10333141609386824, validation acc. 0.953125
+epoch 7, avg loss 0.08635773134014126, validation acc. 0.984375
+epoch 8, avg loss 0.07076611118031417, validation acc. 0.984375
+epoch 9, avg loss 0.057262188487170594, validation acc. 0.9765625
+epoch 10, avg loss 0.046251087821220636, validation acc. 0.96875
+epoch 11, avg loss 0.03771480736462599, validation acc. 0.9921875
+epoch 12, avg loss 0.03128128989635619, validation acc. 0.9765625
+epoch 13, avg loss 0.026487975269396162, validation acc. 0.96875
+epoch 14, avg loss 0.022905440173659457, validation acc. 0.9765625
+epoch 15, avg loss 0.020197292182258783, validation acc. 0.9765625
+epoch 16, avg loss 0.01810813673608037, validation acc. 0.984375
+epoch 17, avg loss 0.016464893644187968, validation acc. 0.9765625
+epoch 18, avg loss 0.015146948531062179, validation acc. 0.9921875
+epoch 19, avg loss 0.01407170614683321, validation acc. 0.984375
+Saving model to outputs/src/ae/autoencoder/ae01_test3x12_20_at0.01.pth
+Training 3x24_20_at0.01 for 20 epochs
+epoch 0, avg loss 0.18166493013693027, validation acc. 0.40625
+epoch 1, avg loss 0.15705156930654346, validation acc. 0.7421875
+epoch 2, avg loss 0.13389077613154193, validation acc. 0.8203125
+epoch 3, avg loss 0.11152272190211157, validation acc. 0.8984375
+epoch 4, avg loss 0.09107227286108062, validation acc. 0.9609375
+epoch 5, avg loss 0.07311868211134565, validation acc. 0.9765625
+epoch 6, avg loss 0.05805008220506328, validation acc. 0.9921875
+epoch 7, avg loss 0.04613783002667161, validation acc. 0.953125
+epoch 8, avg loss 0.03721838567581811, validation acc. 0.984375
+epoch 9, avg loss 0.03064178029083259, validation acc. 0.9765625
+epoch 10, avg loss 0.02580316818834886, validation acc. 0.9765625
+epoch 11, avg loss 0.022212757253339873, validation acc. 0.984375
+epoch 12, avg loss 0.01949171465122073, validation acc. 0.96875
+epoch 13, avg loss 0.017387916072163844, validation acc. 0.9921875
+epoch 14, avg loss 0.015720047370446726, validation acc. 0.9921875
+epoch 15, avg loss 0.014372737124929995, validation acc. 0.984375
+epoch 16, avg loss 0.01326628525985221, validation acc. 0.96875
+epoch 17, avg loss 0.012343317308251311, validation acc. 0.984375
+epoch 18, avg loss 0.011560940393546493, validation acc. 0.984375
+epoch 19, avg loss 0.010891292879733661, validation acc. 0.9921875
+Saving model to outputs/src/ae/autoencoder/ae01_test3x24_20_at0.01.pth
+
+real	3m22.200s
+user	19m45.832s
+sys	0m43.645s

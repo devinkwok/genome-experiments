@@ -53,7 +53,7 @@ class SeqData(torch.utils.data.Dataset):
 
 
     def __getitem__(self, index):
-        return self.seq[index,:,:]
+        return self.seq[index,:,:], self.seq[index,:,:]
 
 
     def split(self, split_prop=0.5, shuffle=False):
@@ -78,6 +78,13 @@ def seq_to_1h(bio_seq):
     for base, index in BASE_TO_INDEX.items():
         one_hot[:, index] = one_hot[:, index] + (np_seq == base)
     return torch.tensor(one_hot, dtype=torch.float32)
+
+
+def one_hot_to_seq(seq1h_tensor):
+    zeros = (torch.sum(seq1h_tensor, dim=1) == 0)
+    output = torch.argmax(seq1h_tensor, dim=1) + 1
+    output[zeros] = 0
+    return output
 
 
 def reverse(seq1h_tensor):

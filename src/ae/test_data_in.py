@@ -113,7 +113,7 @@ class Test_Data_In(unittest.TestCase):
             self.assertEqual(split_1.seq.shape, split_2.seq.shape)
         else:
             self.assertEqual(split_1.seq.shape, split_2.seq[:-1,:,:].shape)
-        npt.assert_array_equal(split_1[0:int(n/2)], self.dataset.seq[0:int(n/2)])
+        npt.assert_array_equal(split_1.seq[0:int(n/2)], self.dataset.seq[0:int(n/2)])
 
         split_1, split_2 = self.dataset.split(split_prop=0.0, shuffle=False)
         self.assertEqual(split_2.seq.shape, self.dataset.seq.shape)
