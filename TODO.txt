@@ -21,3 +21,9 @@ Autoencoder
         - verify encoder by training on chr22 and testing on randomly generated sequences, and vice versa (reconstruction error should be higher when cross domain)
     - have the input window size vary, see what conditions allow autoencoder to have zero reconstruction error
     - use missing inputs (input noise) to replicate Shannon English bits per word study
+
+
+    - include test and validation error rates
+    - verify on randomized data (permutations at different window lengths)
+    - normalize and visualize latent vectors
+    - try different omissions of data (with and without empty 'N' sequences, omitting certain k-mers)

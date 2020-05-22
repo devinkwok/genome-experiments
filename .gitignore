@@ -1,6 +1,7 @@
-data/**
+*.pyc
+**/__pycache__/**
 outputs/**/*.pickle
 outputs/**/*.pth
+data/**
 ref/**
 env/**
-**/__pycache__/**

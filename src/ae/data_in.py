@@ -18,6 +18,55 @@ BASE_TO_INDEX = {
 N_BASE = 4
 
 
+class SeqData(torch.utils.data.Dataset):
+
+
+    def __init__(self, tensor):
+        self.seq = tensor
+
+
+    @classmethod
+    def from_file(cls, filename, seq_len=1, overlap=0, do_cull=False, cull_threshold=0.05):
+        bio_seq = read_seq(filename)
+        seq1h_tensor = seq_to_1h(bio_seq)
+
+        # augment data with reverse and complement
+        augmented_seq = torch.cat((seq1h_tensor, reverse(seq1h_tensor)), 0)
+        augmented_seq = torch.cat((augmented_seq, complement(augmented_seq)), 0)
+
+        # use overlap of (window size - 1) to ensure every position has convolution applied once
+        input_data = slice_seq(augmented_seq, length=seq_len, overlap=overlap)
+        if do_cull:
+            input_data = cull_empty(input_data, base_freq=cull_threshold)
+        # TODO: this is a quick fix to get dimensions in correct order for Conv1D
+        input_data = input_data.permute(0, 2, 1)
+        return cls(input_data)
+
+
+    @classmethod
+    def from_SeqData(cls, obj_SeqData):
+        return cls(obj_SeqData.seq)
+
+
+    def __len__(self):
+        return self.seq.shape[0]
+
+
+    def __getitem__(self, index):
+        return self.seq[index,:,:]
+
+
+    def split(self, split_prop=0.5, shuffle=False):
+        n = self.__len__()
+        if shuffle:
+            indexes = torch.randperm(n)
+        else:
+            indexes = torch.arange(n)
+        split_1 = indexes[:int(split_prop * n)]
+        split_2 = indexes[int(split_prop * n):]
+        return SeqData(self.seq[split_1]), SeqData(self.seq[split_2])
+
+
 def read_seq(filename):
     return SeqIO.read(filename, 'fasta')
 
