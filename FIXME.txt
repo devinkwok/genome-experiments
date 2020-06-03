@@ -1,0 +1,6 @@
+
+- see https://stackoverflow.com/questions/60018578/what-does-model-eval-do-in-pytorch
+    - turn off training related layers during evaluation
+    - dropout turns off automatically in this way
+
+- no empty predictions allowed
