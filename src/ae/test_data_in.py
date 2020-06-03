@@ -106,25 +106,5 @@ class Test_Data_In(unittest.TestCase):
         self.assertEqual(self.dataset.seq.shape, (n_seq, N_BASE, self.seq_len))
 
 
-    def test_SeqData_split(self):
-        split_1, split_2 = self.dataset.split(split_prop=0.5, shuffle=False)
-        n = len(self.dataset)
-        if n % 2 == 0:
-            self.assertEqual(split_1.seq.shape, split_2.seq.shape)
-        else:
-            self.assertEqual(split_1.seq.shape, split_2.seq[:-1,:,:].shape)
-        npt.assert_array_equal(split_1.seq[0:int(n/2)], self.dataset.seq[0:int(n/2)])
-
-        split_1, split_2 = self.dataset.split(split_prop=0.0, shuffle=False)
-        self.assertEqual(split_2.seq.shape, self.dataset.seq.shape)
-        npt.assert_array_equal(split_2.seq, self.dataset.seq)
-        split_1, split_2 = self.dataset.split(split_prop=0.7, shuffle=False)
-        self.assertEqual(len(split_1) + len(split_2), n)
-
-        split_1, split_2 = self.dataset.split(split_prop=1.0, shuffle=True)
-        self.assertEqual(split_1.seq.shape, self.dataset.seq.shape)
-        self.assertFalse((split_1.seq == self.dataset.seq).all())
-
-
 if __name__ == '__main__':
     unittest.main()

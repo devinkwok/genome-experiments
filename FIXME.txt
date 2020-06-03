@@ -4,3 +4,21 @@
     - dropout turns off automatically in this way
 
 - no empty predictions allowed
+
+
+Implementation notes
+-----------
+ - separate training code outside of model object
+ - centralize hyperparameters so that training can be called with arbitrary hyperparameters passed as args (good for optimization frameworks e.g. Optuna), furthermore consider hyperparameters that can be modified during training
+ - training function needs data, hyperparameters, model
+ - SummaryWriter collects training stats for visualization via TensorBoard
+ - don't shuffle validation data, also double validation batch size to take advantage of lack of gradients in memory
+ - see https://pytorch.org/tutorials/beginner/nn_tutorial.html for a basic rundown of the pytorch library
+
+data
+model specifications
+training loop
+
+    model layers
+    various hyperparameters
+    training hyperparameters

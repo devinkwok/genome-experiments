@@ -19,7 +19,7 @@ if debug:
     torch.backends.cudnn.benchmark = False
 
 # input tensors are (n, N_BASE, subseq_len)
-# where n is number of batches, N_BASE is number of channels
+# where n is number of subsequences per batch, N_BASE is number of channels
 # and subseq_len is the length of subsequences
 
 class Autoencoder(nn.Module):
@@ -32,16 +32,13 @@ class Autoencoder(nn.Module):
         self.latent_len = latent_len
         self.seq_len = seq_len
         self.seq_per_batch = seq_per_batch
+        self.empty_cutoff_prob = empty_cutoff_prob  # if no output is above this cutoff, predict empty (none)
         self.encode_layer1 = nn.Conv1d(N_BASE, latent_len, window_len)
         # need ConvTranspose to do deconvolution, otherwise channels go to wrong dimension
         self.decode_layer1 = nn.ConvTranspose1d(latent_len, N_BASE, window_len)
-        self.empty_cutoff_prob = empty_cutoff_prob
         self.total_epochs = 0
         # for convenience, length of the sequence which is decoded by window
         self.decodable_len = self.seq_len - (self.window_len - 1)
-        self.train_loader = None
-        self.valid_loader = None
-        self.input_path = None  #TODO quick hack
 
 
     def encode(self, x):
@@ -60,51 +57,6 @@ class Autoencoder(nn.Module):
         latent = self.encode(x)
         reconstructed = self.decode(latent)
         return reconstructed
-
-
-    def load_data(self, data_filename, validation_split=0.2):
-        dataset = data_in.SeqData.from_file(data_filename, seq_len=self.seq_len,
-            overlap=(self.window_len - 1), do_cull=True, cull_threshold=0.05)
-        train_data, valid_data = dataset.split(split_prop=validation_split, shuffle=True)
-        self.train_loader = torch.utils.data.DataLoader(
-                train_data, batch_size=self.seq_per_batch, shuffle=True, num_workers=4)
-        self.valid_loader = torch.utils.data.DataLoader(
-                valid_data, batch_size=self.seq_per_batch, shuffle=True, num_workers=4)
-        self.input_path = data_filename
-
-
-    def train(self, epochs=1, learn_rate=0.01):
-        if self.train_loader is None or self.valid_loader is None:
-            raise RuntimeError("No data loaded, run Autoencoder.load_data() first.")
-        # target CPU or GPU
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.to(device)
-        optimizer = torch.optim.SGD(self.parameters(), lr=learn_rate)
-        # TODO use BCE with logits as more stable than BCE with sigmoid separately?
-        loss_fn = nn.MSELoss()
-        validation = iter(self.valid_loader)
-
-        model_str = "{}x{}_{}_at{}".format(
-                self.window_len, self.latent_len, self.total_epochs + epochs, learn_rate)
-        print("Training {} for {} epochs".format(model_str, epochs))
-        for i in range(epochs):
-            self.total_epochs += 1
-            loss_sum = 0
-            for x, true_x in self.train_loader:
-                optimizer.zero_grad()
-                z = self.forward(x)
-                loss = loss_fn(z, true_x)
-                loss_sum += loss.item()
-                loss.backward()
-                optimizer.step()
-
-            accuracy, _ = self.evaluate(*next(validation))
-            print("epoch {}, avg loss {}, validation acc. {}".format(
-                    i, loss_sum / len(self.train_loader), accuracy))
-        
-        out_file = seq_util.io.output_path("ae01_", self.input_path, model_str + '.pth')
-        print("Saving model to {}".format(out_file))
-        torch.save(self, out_file)
 
 
     def predict(self, reconstruction):
@@ -126,46 +78,98 @@ class Autoencoder(nn.Module):
         return accuracy, error_indexes
 
 
-    #TODO add noise (dropout)
-    #TODO use gpu
-    #TODO reserve some inputs for evaluateing
+def load_data(model, input_path, split_prop):
+    dataset = data_in.SeqData.from_file(input_path, seq_len=model.seq_len,
+        overlap=(model.window_len - 1), do_cull=True, cull_threshold=0.99)
+    split_size = int(split_prop * len(dataset))
+    train_data, valid_data = torch.utils.data.random_split(dataset, [len(dataset) - split_size, split_size])
+    train_loader = torch.utils.data.DataLoader(
+            train_data, batch_size=model.seq_per_batch, shuffle=True, num_workers=4)
+    valid_loader = torch.utils.data.DataLoader(
+            valid_data, batch_size=model.seq_per_batch, shuffle=True, num_workers=4)
+    return train_loader, valid_loader
+
+
+def train(model, train_loader, valid_loader, optimizer, loss_fn, epochs):
+    # target CPU or GPU
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model.to(device)
+
+    validation = iter(valid_loader)
+
+    for i in range(epochs):
+        model.total_epochs += 1
+        loss_sum = 0
+        for x, true_x in train_loader:
+            optimizer.zero_grad()
+            z = model.forward(x)
+            loss = loss_fn(z, true_x)
+            loss_sum += loss.item()
+            loss.backward()
+            optimizer.step()
+
+        accuracy, _ = model.evaluate(*next(validation))
+        print("epoch {}, avg loss {}, validation acc. {}".format(
+                i, loss_sum / len(train_loader), accuracy))
+
+
+def run(hparams):
+    model = Autoencoder(hparams['window_len'], hparams['latent_len'],
+                hparams['seq_len'], hparams['seq_per_batch'], hparams['empty_cutoff_prob'])
+    train_loader, valid_loader = load_data(model, hparams['input_path'], hparams['split_prop'])
+
+    model_str = "{}x{}_{}_at{}".format(
+            model.window_len, model.latent_len,
+            model.total_epochs + hparams['epochs'], hparams['learn_rate'])
+    print("Training {} for {} epochs".format(model_str, hparams['epochs']))
+
+    optimizer = torch.optim.SGD(model.parameters(), lr=hparams['learn_rate'])
+    # TODO use BCE with logits as more stable than BCE with sigmoid separately?
+    loss_fn = nn.MSELoss()
+    train(model, train_loader, valid_loader, optimizer, loss_fn, hparams['epochs'])
+
+    out_file = seq_util.io.output_path("ae01_", hparams['input_path'], model_str + '.pth')
+    print("Saving model to {}".format(out_file))
+    torch.save(model.state_dict(), out_file)
 
 
 def experiment_1():
-    input_path = "data/ref_genome/test.fasta"
+    hparams = {
+        'window_len': 1,
+        'latent_len': 1,
+        'seq_len': 32,
+        'seq_per_batch': 4,
+        'empty_cutoff_prob': 0.25,
+        'input_path': "data/ref_genome/test.fasta",
+        'split_prop': 0.2,
+        'epochs': 20,
+        'learn_rate': 0.01,
+    }
     # one latent var isn't enough, >= 2 bits should capture all 4 bp
-    ae = Autoencoder(window_len=1, latent_len=1, seq_len=32, seq_per_batch=4)
-    ae.load_data(input_path)
-    ae.train(epochs=20, learn_rate=0.01)
+    run(hparams)
 
-    ae = Autoencoder(window_len=1, latent_len=2, seq_len=32, seq_per_batch=4)
-    ae.load_data(input_path)
-    ae.train(epochs=20, learn_rate=0.01)
+    hparams['latent_len'] = 2
+    run(hparams)
 
-    ae = Autoencoder(window_len=1, latent_len=4, seq_len=32, seq_per_batch=4)
-    ae.load_data(input_path)
-    ae.train(epochs=20, learn_rate=0.01)
+    hparams['latent_len'] = 4
+    run(hparams)
 
     # similar experiment on window size 3, >= 2 * 3 bits should capture all variation
-    ae = Autoencoder(window_len=3, latent_len=2, seq_len=32, seq_per_batch=4)
-    ae.load_data(input_path)
-    ae.train(epochs=20, learn_rate=0.01)
+    hparams['window_len'] = 3
+    hparams['latent_len'] = 2
+    run(hparams)
 
-    ae = Autoencoder(window_len=3, latent_len=4, seq_len=32, seq_per_batch=4)
-    ae.load_data(input_path)
-    ae.train(epochs=20, learn_rate=0.01)
+    hparams['latent_len'] = 4
+    run(hparams)
 
-    ae = Autoencoder(window_len=3, latent_len=6, seq_len=32, seq_per_batch=4)
-    ae.load_data(input_path)
-    ae.train(epochs=20, learn_rate=0.01)
+    hparams['latent_len'] = 6
+    run(hparams)
 
-    ae = Autoencoder(window_len=3, latent_len=12, seq_len=32, seq_per_batch=4)
-    ae.load_data(input_path)
-    ae.train(epochs=20, learn_rate=0.01)
+    hparams['latent_len'] = 12
+    run(hparams)
 
-    ae = Autoencoder(window_len=3, latent_len=24, seq_len=32, seq_per_batch=4)
-    ae.load_data(input_path)
-    ae.train(epochs=20, learn_rate=0.01)
+    hparams['latent_len'] = 24
+    run(hparams)
 
 
 if __name__ == '__main__':

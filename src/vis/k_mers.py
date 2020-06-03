@@ -82,13 +82,13 @@ class Trie:
     def __repr__(self):
         return str(self.root_node)
 
+
 def test_Trie(char_seq, n):
     trie = Trie(n)
     for char in char_seq:
         trie.append_char(char)
     print(trie)
     return trie
-
 
 
 VALID_BASES = {b'A', b'T', b'C', b'G'}

@@ -17,17 +17,19 @@ Diagnostic
 
 noise
     add dropout to inputs and intermediary layers
-    test imputation accuracy
 
 loss
     include vector to vector loss
         - include distance for similar sequences in loss function (e.g. shifting window by one bp)? (need non-significant sequence variants)
         - plot this distance across the chromosome positions
 
+k-fold cross validation
+
 multilayer
-    build stacked denoising architecture out to 500 bp window
+    build architecture out to 500 bp window (use dilated convolutions?)
 
 inference
+    test imputation accuracy on fixed genome and variants
     identify variant positions
         LD
             - use vcftools, samtools to get counts of variants from vcf files
@@ -48,3 +50,4 @@ deploy
 see https://github.com/ShayanPersonal/stacked-autoencoder-pytorch/blob/master/model.py
 - have the input window size vary, see what conditions allow autoencoder to have zero reconstruction error
 - use missing inputs (input noise) to replicate Shannon English bits per word study
+- try momentum, try varying learn rate

@@ -56,17 +56,6 @@ class SeqData(torch.utils.data.Dataset):
         return self.seq[index,:,:], self.seq[index,:,:]
 
 
-    def split(self, split_prop=0.5, shuffle=False):
-        n = self.__len__()
-        if shuffle:
-            indexes = torch.randperm(n)
-        else:
-            indexes = torch.arange(n)
-        split_1 = indexes[:int(split_prop * n)]
-        split_2 = indexes[int(split_prop * n):]
-        return SeqData(self.seq[split_1]), SeqData(self.seq[split_2])
-
-
 def read_seq(filename):
     return SeqIO.read(filename, 'fasta')
 
