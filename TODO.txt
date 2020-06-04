@@ -16,7 +16,7 @@ Diagnostic
         - calculate k-mer frequencies relative to frequency of smaller k-mers (i.e. LD)
 
 noise
-    add dropout to inputs and intermediary layers
+    add dropout to intermediary layers
 
 loss
     include vector to vector loss
