@@ -18,6 +18,9 @@ class Test_Autoencoder(unittest.TestCase):
         self.ae = Autoencoder(window_len=5, latent_len=2, seq_len=17, seq_per_batch=7)
         self.filename = "data/ref_genome/test.fasta"
         self.train_loader, self.valid_loader = load_data(self.ae, self.filename, split_prop=0.2)
+        self.shape = (5, 4, 3)
+        self.ones = torch.ones(*self.shape)
+        self.zeros = torch.zeros(*self.shape)
 
 
     def test_load_data(self):
@@ -74,26 +77,22 @@ class Test_Autoencoder(unittest.TestCase):
 
 
     def test_SeqDropout(self):
-        shape = (5, 4, 3)
-        ones = torch.ones(*shape)
-        zeros = torch.zeros(*shape)
-
         dropout = SeqDropout(0.0)
-        npt.assert_array_equal(dropout(ones), ones)
+        npt.assert_array_equal(dropout(self.ones), self.ones)
 
         dropout = SeqDropout(1.0)
-        npt.assert_array_equal(dropout(ones), zeros)
+        npt.assert_array_equal(dropout(self.ones), self.zeros)
 
         dropout = SeqDropout(0.5)
-        self.assertLess(torch.sum(dropout(ones)), torch.sum(ones))
-        self.assertGreater(torch.sum(dropout(ones)), 0)
-        position_wise_sum = torch.sum(dropout(ones), dim=1)
+        self.assertLess(torch.sum(dropout(self.ones)), torch.sum(self.ones))
+        self.assertGreater(torch.sum(dropout(self.ones)), 0)
+        position_wise_sum = torch.sum(dropout(self.ones), dim=1)
         sums = torch.logical_or(position_wise_sum == 0., position_wise_sum == 4.)
         self.assertTrue(torch.all(sums))
 
 
     def test_GaussianNoise(self):
-        # large enough to make std, mean unlikely to be off
+        # make size large enough to make std and mean unlikely to be off
         shape = (100, 4, 100)
         ones = torch.ones(*shape)
 
@@ -106,6 +105,24 @@ class Test_Autoencoder(unittest.TestCase):
         self.assertAlmostEqual(std.item(), 0.5, places=1)
         noise.eval()
         npt.assert_array_equal(noise(ones), ones)
+
+
+    def test_NeighbourDistanceLoss(self):
+        x = torch.rand(self.shape)
+        z = torch.rand(self.shape)
+
+        nd_loss = NeighbourDistanceLoss(0.0)
+        bce_loss = nn.BCELoss()
+        self.assertEqual(nd_loss(x, z, self.ones).item(), bce_loss(x, z).item())
+
+        nd_loss = NeighbourDistanceLoss(0.5)
+        self.assertEqual(nd_loss(x, z, self.ones).item(), bce_loss(x, z).item() * 0.5)
+
+        nd_loss = NeighbourDistanceLoss(1.0)
+        self.assertEqual(nd_loss(x, z, self.ones).item(), 0.0)
+
+        y = torch.arange(self.ones.nelement()).reshape(self.shape).float()
+        self.assertEqual(nd_loss(x, z, y).item(), 1.0)
 
 
 if __name__ == '__main__':

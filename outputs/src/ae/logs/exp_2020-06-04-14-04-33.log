@@ -1,0 +1,180 @@
+Training 1x1_d0.2_n0.0_20_at0.01 for 20 epochs
+epoch 0, avg loss 0.563387648055428, validation acc. 0.3125
+epoch 1, avg loss 0.5593818008081318, validation acc. 0.1953125
+epoch 2, avg loss 0.5591582194209371, validation acc. 0.375
+epoch 3, avg loss 0.5591456375555807, validation acc. 0.34375
+epoch 4, avg loss 0.5591499425590175, validation acc. 0.3203125
+epoch 5, avg loss 0.5591471662033068, validation acc. 0.2734375
+epoch 6, avg loss 0.5591496150403601, validation acc. 0.3203125
+epoch 7, avg loss 0.559145328518455, validation acc. 0.296875
+epoch 8, avg loss 0.5591502698048847, validation acc. 0.359375
+epoch 9, avg loss 0.5591481258449075, validation acc. 0.25
+epoch 10, avg loss 0.5591492006039456, validation acc. 0.359375
+epoch 11, avg loss 0.5591453744153955, validation acc. 0.40625
+epoch 12, avg loss 0.559149327587754, validation acc. 0.375
+epoch 13, avg loss 0.5591490027628992, validation acc. 0.1796875
+epoch 14, avg loss 0.5591478621250432, validation acc. 0.2265625
+epoch 15, avg loss 0.5591492788606159, validation acc. 0.2578125
+epoch 16, avg loss 0.5591476241838468, validation acc. 0.3203125
+epoch 17, avg loss 0.5591468532789218, validation acc. 0.25
+epoch 18, avg loss 0.5591481375748832, validation acc. 0.2734375
+epoch 19, avg loss 0.559147842109067, validation acc. 0.171875
+Saving model to /home/devin/d/data/src/chgi/src/ae/autoencoder/ae02droptest1x1_d0.2_n0.0_20_at0.01.pth
+Training 1x2_d0.2_n0.0_20_at0.01 for 20 epochs
+epoch 0, avg loss 0.5398448470562219, validation acc. 0.5
+epoch 1, avg loss 0.4761019612170193, validation acc. 0.4375
+epoch 2, avg loss 0.4347735221585093, validation acc. 0.53125
+epoch 3, avg loss 0.4128704514328893, validation acc. 0.515625
+epoch 4, avg loss 0.39216528543072926, validation acc. 0.6171875
+epoch 5, avg loss 0.37092123591517967, validation acc. 0.546875
+epoch 6, avg loss 0.3551982569612682, validation acc. 0.6875
+epoch 7, avg loss 0.34454537810463653, validation acc. 0.7421875
+epoch 8, avg loss 0.3375402363166384, validation acc. 0.796875
+epoch 9, avg loss 0.33141108048180423, validation acc. 0.6484375
+epoch 10, avg loss 0.32677283315350314, validation acc. 0.6953125
+epoch 11, avg loss 0.3235454667589757, validation acc. 0.6328125
+epoch 12, avg loss 0.31963217790394133, validation acc. 0.7265625
+epoch 13, avg loss 0.3165905130025451, validation acc. 0.7265625
+epoch 14, avg loss 0.31459977893793883, validation acc. 0.6484375
+epoch 15, avg loss 0.31180321296476665, validation acc. 0.6640625
+epoch 16, avg loss 0.31087759605159204, validation acc. 0.6328125
+epoch 17, avg loss 0.3089411315471957, validation acc. 0.6640625
+epoch 18, avg loss 0.30876912997536854, validation acc. 0.6484375
+epoch 19, avg loss 0.3064023563446524, validation acc. 0.5546875
+Saving model to /home/devin/d/data/src/chgi/src/ae/autoencoder/ae02droptest1x2_d0.2_n0.0_20_at0.01.pth
+Training 1x4_d0.2_n0.0_20_at0.01 for 20 epochs
+epoch 0, avg loss 0.558972815558894, validation acc. 0.4921875
+epoch 1, avg loss 0.5126535106339498, validation acc. 0.65625
+epoch 2, avg loss 0.4161919058733183, validation acc. 0.671875
+epoch 3, avg loss 0.2990692945227061, validation acc. 0.71875
+epoch 4, avg loss 0.24813205506695218, validation acc. 0.828125
+epoch 5, avg loss 0.22361343562841687, validation acc. 0.8671875
+epoch 6, avg loss 0.20609413713080388, validation acc. 0.8515625
+epoch 7, avg loss 0.19219046261255338, validation acc. 0.8359375
+epoch 8, avg loss 0.18117341747000235, validation acc. 0.8671875
+epoch 9, avg loss 0.1699465647280148, validation acc. 0.8828125
+epoch 10, avg loss 0.15988202159478407, validation acc. 0.8671875
+epoch 11, avg loss 0.15191692612144575, validation acc. 0.8828125
+epoch 12, avg loss 0.14496854773255863, validation acc. 0.859375
+epoch 13, avg loss 0.13771771757226242, validation acc. 0.859375
+epoch 14, avg loss 0.13302456194564735, validation acc. 0.890625
+epoch 15, avg loss 0.1306924290946542, validation acc. 0.890625
+epoch 16, avg loss 0.12728838858277766, validation acc. 0.8671875
+epoch 17, avg loss 0.12539830611852473, validation acc. 0.828125
+epoch 18, avg loss 0.1239469601395508, validation acc. 0.828125
+epoch 19, avg loss 0.12248630265894962, validation acc. 0.8828125
+Saving model to /home/devin/d/data/src/chgi/src/ae/autoencoder/ae02droptest1x4_d0.2_n0.0_20_at0.01.pth
+Training 3x2_d0.2_n0.0_20_at0.01 for 20 epochs
+epoch 0, avg loss 0.5483194792027637, validation acc. 0.421875
+epoch 1, avg loss 0.48568705152800157, validation acc. 0.609375
+epoch 2, avg loss 0.39223291814455147, validation acc. 0.71875
+epoch 3, avg loss 0.31896320969473907, validation acc. 0.765625
+epoch 4, avg loss 0.28339871685040613, validation acc. 0.75
+epoch 5, avg loss 0.2610165757474853, validation acc. 0.8125
+epoch 6, avg loss 0.24232696717836827, validation acc. 0.8203125
+epoch 7, avg loss 0.22748115819443193, validation acc. 0.84375
+epoch 8, avg loss 0.21473941294868104, validation acc. 0.859375
+epoch 9, avg loss 0.20577745258712205, validation acc. 0.8203125
+epoch 10, avg loss 0.19928777721098948, validation acc. 0.8125
+epoch 11, avg loss 0.19443281489332476, validation acc. 0.8046875
+epoch 12, avg loss 0.1902648289747888, validation acc. 0.8125
+epoch 13, avg loss 0.18807590680092956, validation acc. 0.78125
+epoch 14, avg loss 0.18607871210434407, validation acc. 0.8046875
+epoch 15, avg loss 0.1853242468512557, validation acc. 0.796875
+epoch 16, avg loss 0.18345390972101766, validation acc. 0.890625
+epoch 17, avg loss 0.18285079320788766, validation acc. 0.8515625
+epoch 18, avg loss 0.18189804011740016, validation acc. 0.796875
+epoch 19, avg loss 0.18056205598149816, validation acc. 0.7734375
+Saving model to /home/devin/d/data/src/chgi/src/ae/autoencoder/ae02droptest3x2_d0.2_n0.0_20_at0.01.pth
+Training 3x4_d0.2_n0.0_20_at0.01 for 20 epochs
+epoch 0, avg loss 0.5301807001712752, validation acc. 0.5234375
+epoch 1, avg loss 0.3994407609041157, validation acc. 0.8046875
+epoch 2, avg loss 0.25416547990535976, validation acc. 0.7734375
+epoch 3, avg loss 0.19108154609111885, validation acc. 0.890625
+epoch 4, avg loss 0.1674699154102879, validation acc. 0.8125
+epoch 5, avg loss 0.15523105787808802, validation acc. 0.8515625
+epoch 6, avg loss 0.14811471096227993, validation acc. 0.8515625
+epoch 7, avg loss 0.14468447200138554, validation acc. 0.84375
+epoch 8, avg loss 0.14070064640831795, validation acc. 0.859375
+epoch 9, avg loss 0.13855980143606536, validation acc. 0.8359375
+epoch 10, avg loss 0.13719157277418564, validation acc. 0.8203125
+epoch 11, avg loss 0.13739801510017316, validation acc. 0.828125
+epoch 12, avg loss 0.13552550600577834, validation acc. 0.8046875
+epoch 13, avg loss 0.1350589254631185, validation acc. 0.8203125
+epoch 14, avg loss 0.13444203303831073, validation acc. 0.859375
+epoch 15, avg loss 0.1335151067059567, validation acc. 0.875
+epoch 16, avg loss 0.13265743908420397, validation acc. 0.828125
+epoch 17, avg loss 0.13314908443522427, validation acc. 0.8125
+epoch 18, avg loss 0.13326202150706057, validation acc. 0.859375
+epoch 19, avg loss 0.1323244781693036, validation acc. 0.8125
+Saving model to /home/devin/d/data/src/chgi/src/ae/autoencoder/ae02droptest3x4_d0.2_n0.0_20_at0.01.pth
+Training 3x6_d0.2_n0.0_20_at0.01 for 20 epochs
+epoch 0, avg loss 0.49541025762266355, validation acc. 0.703125
+epoch 1, avg loss 0.3175615314474177, validation acc. 0.8203125
+epoch 2, avg loss 0.208661985955333, validation acc. 0.8671875
+epoch 3, avg loss 0.17029095031001282, validation acc. 0.84375
+epoch 4, avg loss 0.1545090329365669, validation acc. 0.8203125
+epoch 5, avg loss 0.14668446812426966, validation acc. 0.875
+epoch 6, avg loss 0.14200615752968027, validation acc. 0.84375
+epoch 7, avg loss 0.1395778659003679, validation acc. 0.828125
+epoch 8, avg loss 0.13742265715603535, validation acc. 0.859375
+epoch 9, avg loss 0.1355849981124117, validation acc. 0.875
+epoch 10, avg loss 0.13486366281725562, validation acc. 0.8359375
+epoch 11, avg loss 0.13446016759559704, validation acc. 0.859375
+epoch 12, avg loss 0.13346606297138677, validation acc. 0.8046875
+epoch 13, avg loss 0.13293859141563014, validation acc. 0.84375
+epoch 14, avg loss 0.13299501531801383, validation acc. 0.859375
+epoch 15, avg loss 0.13163199089467525, validation acc. 0.8203125
+epoch 16, avg loss 0.1315294684154729, validation acc. 0.8125
+epoch 17, avg loss 0.13030708454301493, validation acc. 0.8515625
+epoch 18, avg loss 0.13106728918738503, validation acc. 0.859375
+epoch 19, avg loss 0.1300520626068627, validation acc. 0.8046875
+Saving model to /home/devin/d/data/src/chgi/src/ae/autoencoder/ae02droptest3x6_d0.2_n0.0_20_at0.01.pth
+Training 3x12_d0.2_n0.0_20_at0.01 for 20 epochs
+epoch 0, avg loss 0.4317651549154341, validation acc. 0.8359375
+epoch 1, avg loss 0.2162570158587249, validation acc. 0.8125
+epoch 2, avg loss 0.15439994253873698, validation acc. 0.859375
+epoch 3, avg loss 0.13930486897686137, validation acc. 0.890625
+epoch 4, avg loss 0.13231453567327603, validation acc. 0.84375
+epoch 5, avg loss 0.12813236623155072, validation acc. 0.921875
+epoch 6, avg loss 0.1261877119581139, validation acc. 0.8671875
+epoch 7, avg loss 0.12345194597548681, validation acc. 0.8671875
+epoch 8, avg loss 0.12140889371677338, validation acc. 0.890625
+epoch 9, avg loss 0.12066652667368942, validation acc. 0.8671875
+epoch 10, avg loss 0.11949245924281972, validation acc. 0.9296875
+epoch 11, avg loss 0.11900713602120912, validation acc. 0.84375
+epoch 12, avg loss 0.11779010736947088, validation acc. 0.875
+epoch 13, avg loss 0.11795992955421557, validation acc. 0.890625
+epoch 14, avg loss 0.11691904563432791, validation acc. 0.890625
+epoch 15, avg loss 0.11628947254717989, validation acc. 0.8671875
+epoch 16, avg loss 0.11649084828050543, validation acc. 0.84375
+epoch 17, avg loss 0.11696133347499972, validation acc. 0.875
+epoch 18, avg loss 0.11530044750018693, validation acc. 0.8046875
+epoch 19, avg loss 0.11564832237896873, validation acc. 0.90625
+Saving model to /home/devin/d/data/src/chgi/src/ae/autoencoder/ae02droptest3x12_d0.2_n0.0_20_at0.01.pth
+Training 3x24_d0.2_n0.0_20_at0.01 for 20 epochs
+epoch 0, avg loss 0.4176436723989351, validation acc. 0.8046875
+epoch 1, avg loss 0.20560421423722747, validation acc. 0.8125
+epoch 2, avg loss 0.15270625278673458, validation acc. 0.8515625
+epoch 3, avg loss 0.1372278910370088, validation acc. 0.859375
+epoch 4, avg loss 0.13117631755833206, validation acc. 0.8203125
+epoch 5, avg loss 0.12700660255349885, validation acc. 0.828125
+epoch 6, avg loss 0.12410594522553324, validation acc. 0.890625
+epoch 7, avg loss 0.1221407853794392, validation acc. 0.828125
+epoch 8, avg loss 0.12140420334645478, validation acc. 0.8359375
+epoch 9, avg loss 0.1200163034590305, validation acc. 0.8671875
+epoch 10, avg loss 0.11937853947777477, validation acc. 0.828125
+epoch 11, avg loss 0.11778886447552704, validation acc. 0.9140625
+epoch 12, avg loss 0.11732937128167167, validation acc. 0.875
+epoch 13, avg loss 0.11821427034581872, validation acc. 0.8671875
+epoch 14, avg loss 0.11650885200695546, validation acc. 0.90625
+epoch 15, avg loss 0.11719266813280373, validation acc. 0.8671875
+epoch 16, avg loss 0.11665445712670812, validation acc. 0.84375
+epoch 17, avg loss 0.1153043989839568, validation acc. 0.84375
+epoch 18, avg loss 0.11518544660353545, validation acc. 0.859375
+epoch 19, avg loss 0.11498269561654188, validation acc. 0.8515625
+Saving model to /home/devin/d/data/src/chgi/src/ae/autoencoder/ae02droptest3x24_d0.2_n0.0_20_at0.01.pth
+
+real	13m51.999s
+user	87m48.662s
+sys	2m41.499s

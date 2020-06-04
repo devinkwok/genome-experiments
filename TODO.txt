@@ -4,10 +4,11 @@ Diagnostic
     - create separate test set
     - include test and validation error rates
     - verify on randomized data (permutations at different window lengths)
-    optional
+    optional:
         - normalize and visualize latent vectors
+        - show examples of reconstruction vs original
         - try different omissions of data (with and without empty 'N' sequences, omitting certain k-mers)
-    optional k-mers issues
+    optional: k-mers issues
         - fix running out of memory
             - root to leaf references only
             - instead of storing each character, make character implicit in array of pointers
@@ -17,11 +18,14 @@ Diagnostic
 
 k-fold cross validation
 
+noise
+    - does it help to ramp up noise during training? does this train faster than having fixed noise?
+
 loss
-    change to binary cross entropy loss
-    include vector to vector loss
-        - include distance for similar sequences in loss function (e.g. shifting window by one bp)? (need non-significant sequence variants)
-        - plot this distance across the chromosome positions
+    optional: variant loss
+        - include distance for similar sequences in loss function which differ by less than k bp
+        - need non-significant sequence variants to generate this data
+    optional: plot the distance between all chromosome positions to create a map of variations
 
 multilayer
     build architecture out to 500 bp window (use dilated convolutions?)

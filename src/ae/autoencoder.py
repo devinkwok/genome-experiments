@@ -1,5 +1,6 @@
 import sys
 sys.path.append('./src/')
+from collections import defaultdict
 
 import numpy as np
 import torch
@@ -14,6 +15,24 @@ N_BASE = data_in.N_BASE
 # input tensors are (n, N_BASE, subseq_len)
 # where n is number of subsequences per batch, N_BASE is number of channels
 # and subseq_len is the length of subsequences
+
+_DEFAULT_HYPERPARAMETERS = {
+    'name': "default",
+    'window_len': 1,
+    'latent_len': 1,
+    'seq_len': 1,
+    'seq_per_batch': 1,
+    'input_path': "",
+    'split_prop': 0.0,
+    'epochs': 0,
+    'learn_rate': 0.01,
+    'dropout_freq': 0.0,
+    'noise_std': 0.0,
+    'save_model': True,
+    'disable_eval': False,
+    'neighbour_loss_prop': 0.0,
+    'load_prev_model_state': None,
+}
 
 
 # this layer drops out every channel at some positions, and keeps inputs at size 1
@@ -41,11 +60,26 @@ class GaussianNoise(nn.Module):
         return x
 
 
+# this loss function combines binary cross entropy with neighbour distance
+# neighbour distance is difference between latent variables at adjacent positions
+# the output loss is weighted between BCE loss and this difference
+class NeighbourDistanceLoss(nn.Module):
+
+    def __init__(self, neighbour_loss_prop):
+        super().__init__()
+        self.neighbour_loss_prop = neighbour_loss_prop
+        self.bce_loss = nn.BCELoss()
+        self.mse_loss = nn.MSELoss()
+    
+    def forward(self, x, z, y):
+        return self.bce_loss(x, z) * (1 - self.neighbour_loss_prop) + \
+                self.mse_loss(y[:, :, :-1], y[:, :, 1:]) * self.neighbour_loss_prop
+
+
 class Autoencoder(nn.Module):
 
 
-    def __init__(self, window_len=1, latent_len=1, seq_len=2,
-                seq_per_batch=1, dropout_freq=0.0, noise_std=0.0):
+    def __init__(self, window_len, latent_len, seq_len, seq_per_batch, dropout_freq, noise_std):
         super().__init__()
         self.window_len = window_len
         self.latent_len = latent_len
@@ -106,9 +140,9 @@ def evaluate(model, x, true_x):
     return accuracy, error_indexes
 
 
-# set_eval is a quick hack to turn evaluation code off and on, this is useful for testing
+# disable_eval is a quick hack to turn evaluation code off and on, this is useful for testing
 # model effectiveness while dropout and noise are included
-def train(model, train_loader, valid_loader, optimizer, loss_fn, epochs, set_eval=True):
+def train(model, train_loader, valid_loader, optimizer, loss_fn, epochs, disable_eval):
     # target CPU or GPU
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
@@ -122,12 +156,12 @@ def train(model, train_loader, valid_loader, optimizer, loss_fn, epochs, set_eva
         for x, true_x in train_loader:
             optimizer.zero_grad()
             z, y = model.forward(x)
-            loss = loss_fn(z, true_x)
+            loss = loss_fn(z, true_x, y)
             loss_sum += loss.item()
             loss.backward()
             optimizer.step()
 
-        if set_eval:
+        if not disable_eval:
             model.eval()
         accuracy, _ = evaluate(model, *next(validation))
         print("epoch {}, avg loss {}, validation acc. {}".format(
@@ -135,33 +169,30 @@ def train(model, train_loader, valid_loader, optimizer, loss_fn, epochs, set_eva
 
 
 def run(hparams):
-    model = Autoencoder(hparams['window_len'], hparams['latent_len'], hparams['seq_len'],
-            hparams['seq_per_batch'], hparams['dropout_freq'], hparams['noise_std'])
-    if 'prev_model_state' in hparams.keys():
-        model.load_state_dict(torch.load(hparams['prev_model_state']))
+    config = dict(_DEFAULT_HYPERPARAMETERS)
+    config.update(hparams)
 
-    train_loader, valid_loader = load_data(model, hparams['input_path'], hparams['split_prop'])
+    model = Autoencoder(config['window_len'], config['latent_len'], config['seq_len'],
+            config['seq_per_batch'], config['dropout_freq'], config['noise_std'])
+    if not config['load_prev_model_state'] is None:
+        model.load_state_dict(torch.load(config['load_prev_model_state']))
 
-    model_str = "{}x{}_d{}_n{}_{}_at{}".format(
+    train_loader, valid_loader = load_data(model, config['input_path'], config['split_prop'])
+    optimizer = torch.optim.SGD(model.parameters(), lr=config['learn_rate'])
+    loss_fn = NeighbourDistanceLoss(config['neighbour_loss_prop'])
+
+    model_str = "{}x{}d{}n{}l{}_{}_at{}".format(
             model.window_len, model.latent_len, model.dropout_freq, model.noise_std,
-            model.total_epochs + hparams['epochs'], hparams['learn_rate'])
-    print("Training {} for {} epochs".format(model_str, hparams['epochs']))
+            config['neighbour_loss_prop'],
+            model.total_epochs + config['epochs'], config['learn_rate'])
+    print("Training {} for {} epochs".format(model_str, config['epochs']))
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=hparams['learn_rate'])
-    # TODO use BCE with logits as more stable than BCE with sigmoid separately?
-    loss_fn = nn.MSELoss()
-
-    set_eval = False
-    if 'set_eval' in hparams.keys():
-        set_eval = hparams['set_eval']
     train(model, train_loader, valid_loader, optimizer, loss_fn,
-            hparams['epochs'], set_eval)
+            config['epochs'], config['disable_eval'])
 
-    if 'save_model' in hparams.keys():
-        if not hparams['save_model']:
-            return model, train_loader, valid_loader, optimizer, loss_fn
+    if config['save_model']:
+        out_file = seq_util.io.output_path(config['name'], config['input_path'], model_str + '.pth')
+        print("Saving model to {}".format(out_file))
+        torch.save(model.state_dict(), out_file)
 
-    out_file = seq_util.io.output_path(hparams['name'], hparams['input_path'], model_str + '.pth')
-    print("Saving model to {}".format(out_file))
-    torch.save(model.state_dict(), out_file)
     return model, train_loader, valid_loader, optimizer, loss_fn

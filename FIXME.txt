@@ -15,9 +15,19 @@ Data input issues
  - future models should treat inputs as indexed tokens and consider empty as a unique token, separate from masked token and possibly other semantic distinctions
 
 
+Testing
+-------
+ - need to include dedicated testing code
+ - use entire testing set to reduce stochastic nature of scores
+ - be able to toggle model.eval() on for true accuracy, vs off for testing with dropout and noise
+ - show examples of model reconstructions
+
+
 Implementation notes
 -----------
  - consider hyperparameters that can be modified during training (make hyperparams an object which is called to get a specific hyperparam, can take some kind of reference to calling object to track epochs? or find library solution)
  - SummaryWriter collects training stats for visualization via TensorBoard
  - don't shuffle validation data, also double validation batch size to take advantage of lack of gradients in memory
  - see https://pytorch.org/tutorials/beginner/nn_tutorial.html for a basic rundown of the pytorch library
+ - can't use BCEWithLogitsLoss because we are using Softmax, not Sigmoid, ignore the numerical instability for the prototype, but may have to manually implement loss function to combine log operations in future
+ - looks like neighbour loss isn't very useful, needs more testing
