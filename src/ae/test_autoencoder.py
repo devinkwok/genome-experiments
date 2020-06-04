@@ -43,7 +43,7 @@ class Test_Autoencoder(unittest.TestCase):
         for x, x_true in self.train_loader:
             seq = predict(x)
             npt.assert_array_equal(seq, x)
-            seq = predict(self.ae.forward(x))
+            seq = predict(self.ae.forward(x)[0])
             npt.assert_array_equal(torch.sum(seq, dim=1), torch.ones(x.shape[0], x.shape[2]))
             break  # only test the first batch
 
@@ -51,17 +51,17 @@ class Test_Autoencoder(unittest.TestCase):
     def test_evaluate(self):
         for x, x_true in self.train_loader:
             self.ae.eval()
-            accuracy, error_indexes = evaluate(self.ae, x, predict(self.ae.forward(x)))
+            accuracy, error_indexes = evaluate(self.ae, x, predict(self.ae.forward(x)[0]))
             self.assertAlmostEqual(accuracy, 1.0)
             self.assertEqual(x[error_indexes[0],:, error_indexes[1]].nelement(), 0)
 
             accuracy, error_indexes = evaluate(self.ae, x, data_in.complement(
-                predict(self.ae.forward(x))))
+                predict(self.ae.forward(x)[0])))
             flattened = x.permute(0, 2, 1).reshape((x.shape[0]*x.shape[2], x.shape[1]))
             self.assertAlmostEqual(accuracy, 0)
             npt.assert_array_equal(flattened, x[error_indexes[0],:, error_indexes[1]])
 
-            one_error = predict(self.ae.forward(x))
+            one_error = predict(self.ae.forward(x)[0])
             index_0, index_1 = 0, 1
             error = one_error[index_0, :, index_1].clone().detach()
             one_error[index_0, :, index_1] = error.flip(0)
@@ -73,7 +73,7 @@ class Test_Autoencoder(unittest.TestCase):
             break  # only test the first batch
 
 
-    def test_dropout(self):
+    def test_SeqDropout(self):
         shape = (5, 4, 3)
         ones = torch.ones(*shape)
         zeros = torch.zeros(*shape)
@@ -90,6 +90,22 @@ class Test_Autoencoder(unittest.TestCase):
         position_wise_sum = torch.sum(dropout(ones), dim=1)
         sums = torch.logical_or(position_wise_sum == 0., position_wise_sum == 4.)
         self.assertTrue(torch.all(sums))
+
+
+    def test_GaussianNoise(self):
+        # large enough to make std, mean unlikely to be off
+        shape = (100, 4, 100)
+        ones = torch.ones(*shape)
+
+        noise = GaussianNoise(0)
+        npt.assert_array_equal(noise(ones), ones)
+
+        noise = GaussianNoise(0.5)
+        std, mean = torch.std_mean(noise(ones))
+        self.assertAlmostEqual(mean.item(), 1, places=1)
+        self.assertAlmostEqual(std.item(), 0.5, places=1)
+        noise.eval()
+        npt.assert_array_equal(noise(ones), ones)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,40 @@
+Training 3x6_d0.0_n0.0_5_at0.0 for 5 epochs
+epoch 0, avg loss 0.015629681518757037, validation acc. 0.9609375
+epoch 1, avg loss 0.015629681540741045, validation acc. 0.9765625
+epoch 2, avg loss 0.015629681566722148, validation acc. 0.96875
+epoch 3, avg loss 0.01562968158670761, validation acc. 0.9765625
+epoch 4, avg loss 0.015629681430821, validation acc. 0.9609375
+Training 3x6_d0.0_n0.2_5_at0.0 for 5 epochs
+epoch 0, avg loss 0.01806254785651813, validation acc. 0.9609375
+epoch 1, avg loss 0.01792815469141426, validation acc. 0.96875
+epoch 2, avg loss 0.017995387399689068, validation acc. 0.953125
+epoch 3, avg loss 0.018056902722675402, validation acc. 0.96875
+epoch 4, avg loss 0.017985006078853883, validation acc. 0.96875
+Training 3x6_d0.0_n0.5_5_at0.0 for 5 epochs
+epoch 0, avg loss 0.034602294208346006, validation acc. 0.890625
+epoch 1, avg loss 0.03509325681198308, validation acc. 0.8984375
+epoch 2, avg loss 0.034502264292103284, validation acc. 0.9453125
+epoch 3, avg loss 0.03468601592684509, validation acc. 0.9375
+epoch 4, avg loss 0.03473384106779559, validation acc. 0.96875
+Training 3x6_d0.0_n1_5_at0.0 for 5 epochs
+epoch 0, avg loss 0.09566036757289596, validation acc. 0.765625
+epoch 1, avg loss 0.09563870718422877, validation acc. 0.7578125
+epoch 2, avg loss 0.09503243406315218, validation acc. 0.7890625
+epoch 3, avg loss 0.09627662554319324, validation acc. 0.6953125
+epoch 4, avg loss 0.09567566238375692, validation acc. 0.7109375
+Training 3x6_d0.0_n2_5_at0.0 for 5 epochs
+epoch 0, avg loss 0.2017903253755856, validation acc. 0.4609375
+epoch 1, avg loss 0.1995201868049065, validation acc. 0.5
+epoch 2, avg loss 0.20071619358952977, validation acc. 0.53125
+epoch 3, avg loss 0.20019638308128063, validation acc. 0.5078125
+epoch 4, avg loss 0.20170099412934464, validation acc. 0.546875
+Training 3x6_d0.0_n5_5_at0.0 for 5 epochs
+epoch 0, avg loss 0.3013212852211981, validation acc. 0.40625
+epoch 1, avg loss 0.3009457961044598, validation acc. 0.34375
+epoch 2, avg loss 0.3007079201706489, validation acc. 0.421875
+epoch 3, avg loss 0.30255298572292655, validation acc. 0.3359375
+epoch 4, avg loss 0.30372494753338236, validation acc. 0.375
+
+real	0m21.150s
+user	1m57.013s
+sys	0m5.623s

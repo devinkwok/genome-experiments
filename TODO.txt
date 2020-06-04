@@ -15,15 +15,13 @@ Diagnostic
         - verify k-mer probabilities are multiplicative: e.g. for tri-mer 'ABC', P('ABC') = P('AB')P('C') = P('A')P('BC')
         - calculate k-mer frequencies relative to frequency of smaller k-mers (i.e. LD)
 
-noise
-    add dropout to intermediary layers
+k-fold cross validation
 
 loss
+    change to binary cross entropy loss
     include vector to vector loss
         - include distance for similar sequences in loss function (e.g. shifting window by one bp)? (need non-significant sequence variants)
         - plot this distance across the chromosome positions
-
-k-fold cross validation
 
 multilayer
     build architecture out to 500 bp window (use dilated convolutions?)
@@ -41,6 +39,9 @@ inference
 
 variational
     make into VAE
+        - output needs to include mean and variance tensors
+        - add reparameterization layer which samples normal according to mean and variance
+        - add loss which includes KL divergence of intermediary layers
 
 deploy
     run on GPU
@@ -51,3 +52,6 @@ see https://github.com/ShayanPersonal/stacked-autoencoder-pytorch/blob/master/mo
 - have the input window size vary, see what conditions allow autoencoder to have zero reconstruction error
 - use missing inputs (input noise) to replicate Shannon English bits per word study
 - try momentum, try varying learn rate
+
+- SIFT/PolyPhen data can be used to find functional variants
+- could use Selene and train directly with DeepSEA data

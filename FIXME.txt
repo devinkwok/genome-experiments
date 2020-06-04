@@ -3,22 +3,21 @@
     - turn off training related layers during evaluation
     - dropout turns off automatically in this way
 
-- no empty predictions allowed
+
+Data input issues
+-----------
+ - the data pipeline works but is poorly designed
+ - it converts to 1-hot first and then applies data augmentation and batching
+ - instead, it should convert to numerical indexes first and then apply 1-hot only for input to network
+ - similarly, the network decoding step has to convert indexes (via argmax) back to one-hot for comparison
+ - this was to support possibility of predicting empty (all zeros), but subsequent discussion has shown this is not necessary (we always want to predict a base)
+ - these problems won't be fixed for the time being, as this autoencoder is a prototype
+ - future models should treat inputs as indexed tokens and consider empty as a unique token, separate from masked token and possibly other semantic distinctions
 
 
 Implementation notes
 -----------
- - separate training code outside of model object
- - centralize hyperparameters so that training can be called with arbitrary hyperparameters passed as args (good for optimization frameworks e.g. Optuna), furthermore consider hyperparameters that can be modified during training
- - training function needs data, hyperparameters, model
+ - consider hyperparameters that can be modified during training (make hyperparams an object which is called to get a specific hyperparam, can take some kind of reference to calling object to track epochs? or find library solution)
  - SummaryWriter collects training stats for visualization via TensorBoard
  - don't shuffle validation data, also double validation batch size to take advantage of lack of gradients in memory
  - see https://pytorch.org/tutorials/beginner/nn_tutorial.html for a basic rundown of the pytorch library
-
-data
-model specifications
-training loop
-
-    model layers
-    various hyperparameters
-    training hyperparameters
