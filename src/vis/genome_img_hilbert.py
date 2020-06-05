@@ -25,23 +25,39 @@ rgb_map = {
 }
 
 
-def make_img(filename):
+def make_img_from_variants(filename):
+    with open(filename, 'r') as file:
+        last_line = file.readlines()[-1]
+    print(filename)
+    n_bases, _, _ = seq_util.io.parse_variant_line(last_line)
+    seq = seq_util.io.read_variants_as_seq(filename)
+    out_path = seq_util.io.output_path('var_img_', filename, '.png')
+    make_img(n_bases, seq, 0xffffffff, out_path)
+
+
+
+def make_img_from_sequence(filename):
     # this is an approximate size to guide the image composition
     n_bases = os.stat(filename).st_size
+    seq = seq_util.io.read_seq(filename)
+    out_path = seq_util.io.output_path('seq_img_', filename, '.png')
+    # default value is black
+    make_img(n_bases, seq, 0xff000000, out_path)
+
+
+def make_img(n_bases, seq, background_color, out_path):
     iters = int(math.ceil(math.log(n_bases, 4)))
     width = 2**iters
-    print(n_bases, width)
     
-    img_array = np.empty((width, width), dtype=np.uint32)
-    seq = seq_util.io.read_seq(filename)
+    img_array = np.zeros((width, width), dtype=np.uint32)
     coords = hilbert_curve(iters)
 
     for base, (x, y) in zip(seq, coords):
-        # default value is black
-        img_array[x, y] = rgb_map.get(base, 0xff000000)
-    
+        img_array[x, y] = rgb_map.get(base, background_color)
+
     genome_img = Image.fromarray(img_array, mode='RGBA')
-    genome_img.save(seq_util.io.output_path('vis_img_', filename, '.png'), format="PNG")
+    genome_img.save(out_path, format="PNG")
+
 
 # direction is 0, 1, 2, or 3
 # iteration is recursion depth
@@ -75,6 +91,7 @@ def hilbert_curve(iter, direction=0, x=0, y=0):
         yield from hilbert_curve(next_iter, direction=3, x=x+d, y=y+d)
         yield from hilbert_curve(next_iter, direction=2, x=x, y=y + d)
 
+
 def test_hilbert_curve(n):
     a = hilbert_curve(n)
     img_array = np.zeros((2**n, 2**n))
@@ -82,6 +99,7 @@ def test_hilbert_curve(n):
         img_array[x, y] = idx
     img = Image.fromarray(np.uint8(img_array*5), mode='RGBA')
     img.save('vis_test_hilbert_curve.png')
+
 
 def test_img_save():
     a = np.array([[0xffb80000, 0xff5bb800], [0xff00b6b8, 0xff5f00b8]], dtype=np.uint32)
@@ -94,5 +112,7 @@ def test_img_save():
 
 
 if __name__ == '__main__':
-    make_img('data/ref_genome/test.fasta')
-    # make_img('data/ref_genome/chr22.fa')
+    make_img_from_sequence('data/ref_genome/test.fasta')
+    make_img_from_sequence('data/ref_genome/chr22.fa')
+    make_img_from_variants('data/vcf/test_freq.frq')
+    make_img_from_variants('data/vcf/chr22_freq.frq')
