@@ -1,0 +1,198 @@
+Model specification:
+MultilayerEncoder(
+  (encode_layers): ModuleDict(
+    (input_dropout): SeqDropout(
+      (dropout): Dropout2d(p=0.05, inplace=False)
+    )
+    (conv00): Conv1d(4, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu00): ReLU()
+    (pool0): MaxPool1d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
+    (norm0): BatchNorm1d(10, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout0): Dropout(p=0.05, inplace=False)
+    (conv10): Conv1d(10, 20, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu10): ReLU()
+    (pool1): MaxPool1d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
+    (norm1): BatchNorm1d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout1): Dropout(p=0.05, inplace=False)
+    (view): View()
+    (linear0): Linear(in_features=60, out_features=100, bias=True)
+  )
+  (decode_layers): ModuleDict(
+    (latent_noise): GaussianNoise()
+    (linear0): Linear(in_features=100, out_features=60, bias=True)
+    (view): View()
+    (relu00): ReLU()
+    (norm0): BatchNorm1d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool0): Upsample(scale_factor=3.0, mode=linear)
+    (conv00): ConvTranspose1d(20, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu10): ReLU()
+    (norm1): BatchNorm1d(10, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool1): Upsample(scale_factor=3.0, mode=linear)
+    (conv10): ConvTranspose1d(10, 4, kernel_size=(3,), stride=(1,), padding=(1,))
+    (softmax): Softmax(dim=1)
+  )
+)
+Training for 20 epochs
+epoch 0, avg loss 0.5326246159164597, validation acc. 0.4444444444444444
+/home/devin/d/data/src/chgi/env/lib/python3.6/site-packages/torch/nn/functional.py:2973: UserWarning: Default upsampling behavior when mode=linear is changed to align_corners=False since 0.4.0. Please specify align_corners=True if the old behavior is desired. See the documentation of nn.Upsample for details.
+  "See the documentation of nn.Upsample for details.".format(mode))
+epoch 1, avg loss 0.5082858484157984, validation acc. 0.4888888888888889
+epoch 2, avg loss 0.49824464924687106, validation acc. 0.4925925925925926
+epoch 3, avg loss 0.4918875101873343, validation acc. 0.47962962962962963
+epoch 4, avg loss 0.487139326719929, validation acc. 0.4888888888888889
+epoch 5, avg loss 0.4834469407957664, validation acc. 0.5185185185185185
+epoch 6, avg loss 0.4804986961668344, validation acc. 0.49074074074074076
+epoch 7, avg loss 0.47795020773899644, validation acc. 0.5185185185185185
+epoch 8, avg loss 0.4756095591584127, validation acc. 0.4888888888888889
+epoch 9, avg loss 0.4736259871785589, validation acc. 0.5203703703703704
+epoch 10, avg loss 0.4717787625120698, validation acc. 0.48703703703703705
+epoch 11, avg loss 0.47017164064718664, validation acc. 0.5018518518518519
+epoch 12, avg loss 0.46889928550921756, validation acc. 0.5370370370370371
+epoch 13, avg loss 0.4676156725439665, validation acc. 0.5277777777777778
+epoch 14, avg loss 0.46654448607306687, validation acc. 0.5296296296296297
+epoch 15, avg loss 0.4655377492415819, validation acc. 0.5203703703703704
+epoch 16, avg loss 0.4645264106581537, validation acc. 0.5537037037037037
+epoch 17, avg loss 0.4636491939157462, validation acc. 0.5462962962962963
+epoch 18, avg loss 0.46266554497021567, validation acc. 0.5222222222222223
+epoch 19, avg loss 0.4617195338010788, validation acc. 0.5462962962962963
+Saving model to /home/devin/d/data/src/chgi/src/ae/autoencoder/aem0chr22_excerpt_longMultilayer3x100d0.05n0.3l0.0_20at0.01.pth
+Model specification:
+MultilayerEncoder(
+  (encode_layers): ModuleDict(
+    (input_dropout): SeqDropout(
+      (dropout): Dropout2d(p=0.05, inplace=False)
+    )
+    (conv00): Conv1d(4, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu00): ReLU()
+    (conv01): Conv1d(10, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu01): ReLU()
+    (pool0): MaxPool1d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
+    (norm0): BatchNorm1d(10, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout0): Dropout(p=0.05, inplace=False)
+    (conv10): Conv1d(10, 20, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu10): ReLU()
+    (conv11): Conv1d(20, 20, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu11): ReLU()
+    (pool1): MaxPool1d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
+    (norm1): BatchNorm1d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout1): Dropout(p=0.05, inplace=False)
+    (view): View()
+    (linear0): Linear(in_features=60, out_features=100, bias=True)
+  )
+  (decode_layers): ModuleDict(
+    (latent_noise): GaussianNoise()
+    (linear0): Linear(in_features=100, out_features=60, bias=True)
+    (view): View()
+    (relu00): ReLU()
+    (norm0): BatchNorm1d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool0): Upsample(scale_factor=3.0, mode=linear)
+    (conv01): ConvTranspose1d(20, 20, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu01): ReLU()
+    (conv00): ConvTranspose1d(20, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu10): ReLU()
+    (norm1): BatchNorm1d(10, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool1): Upsample(scale_factor=3.0, mode=linear)
+    (conv11): ConvTranspose1d(10, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu11): ReLU()
+    (conv10): ConvTranspose1d(10, 4, kernel_size=(3,), stride=(1,), padding=(1,))
+    (softmax): Softmax(dim=1)
+  )
+)
+Training for 20 epochs
+epoch 0, avg loss 0.5424215552189368, validation acc. 0.42592592592592593
+epoch 1, avg loss 0.5148533718245064, validation acc. 0.4685185185185185
+epoch 2, avg loss 0.5023756586176028, validation acc. 0.48148148148148145
+epoch 3, avg loss 0.49362173333442466, validation acc. 0.4740740740740741
+epoch 4, avg loss 0.4870303895029661, validation acc. 0.4962962962962963
+epoch 5, avg loss 0.48151248989881373, validation acc. 0.4759259259259259
+epoch 6, avg loss 0.47644425150301817, validation acc. 0.5333333333333333
+epoch 7, avg loss 0.4719216938927877, validation acc. 0.524074074074074
+epoch 8, avg loss 0.4672372416626635, validation acc. 0.5166666666666667
+epoch 9, avg loss 0.46309924333644426, validation acc. 0.5074074074074074
+epoch 10, avg loss 0.45892858664980896, validation acc. 0.5462962962962963
+epoch 11, avg loss 0.4546733571846279, validation acc. 0.5611111111111111
+epoch 12, avg loss 0.45067216635500784, validation acc. 0.5296296296296297
+epoch 13, avg loss 0.4466262337865589, validation acc. 0.5740740740740741
+epoch 14, avg loss 0.44240683114035523, validation acc. 0.5833333333333334
+epoch 15, avg loss 0.4370781387731755, validation acc. 0.5296296296296297
+epoch 16, avg loss 0.43139032079911915, validation acc. 0.5851851851851851
+epoch 17, avg loss 0.4247693839101054, validation acc. 0.5740740740740741
+epoch 18, avg loss 0.4161579880086209, validation acc. 0.6129629629629629
+epoch 19, avg loss 0.40939988936666105, validation acc. 0.6037037037037037
+Saving model to /home/devin/d/data/src/chgi/src/ae/autoencoder/aem0chr22_excerpt_longMultilayer3x100d0.05n0.3l0.0_20at0.01.pth
+Model specification:
+MultilayerEncoder(
+  (encode_layers): ModuleDict(
+    (input_dropout): SeqDropout(
+      (dropout): Dropout2d(p=0.05, inplace=False)
+    )
+    (conv00): Conv1d(4, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu00): ReLU()
+    (conv01): Conv1d(10, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu01): ReLU()
+    (conv02): Conv1d(10, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu02): ReLU()
+    (pool0): MaxPool1d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
+    (norm0): BatchNorm1d(10, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout0): Dropout(p=0.05, inplace=False)
+    (conv10): Conv1d(10, 20, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu10): ReLU()
+    (conv11): Conv1d(20, 20, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu11): ReLU()
+    (conv12): Conv1d(20, 20, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu12): ReLU()
+    (pool1): MaxPool1d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
+    (norm1): BatchNorm1d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout1): Dropout(p=0.05, inplace=False)
+    (view): View()
+    (linear0): Linear(in_features=60, out_features=100, bias=True)
+  )
+  (decode_layers): ModuleDict(
+    (latent_noise): GaussianNoise()
+    (linear0): Linear(in_features=100, out_features=60, bias=True)
+    (view): View()
+    (relu00): ReLU()
+    (norm0): BatchNorm1d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool0): Upsample(scale_factor=3.0, mode=linear)
+    (conv02): ConvTranspose1d(20, 20, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu02): ReLU()
+    (conv01): ConvTranspose1d(20, 20, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu01): ReLU()
+    (conv00): ConvTranspose1d(20, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu10): ReLU()
+    (norm1): BatchNorm1d(10, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool1): Upsample(scale_factor=3.0, mode=linear)
+    (conv12): ConvTranspose1d(10, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu12): ReLU()
+    (conv11): ConvTranspose1d(10, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu11): ReLU()
+    (conv10): ConvTranspose1d(10, 4, kernel_size=(3,), stride=(1,), padding=(1,))
+    (softmax): Softmax(dim=1)
+  )
+)
+Training for 20 epochs
+epoch 0, avg loss 0.5531341209364452, validation acc. 0.40555555555555556
+epoch 1, avg loss 0.5243205403734883, validation acc. 0.46296296296296297
+epoch 2, avg loss 0.512140118121672, validation acc. 0.4722222222222222
+epoch 3, avg loss 0.5049696583595636, validation acc. 0.4666666666666667
+epoch 4, avg loss 0.49926527580447333, validation acc. 0.5018518518518519
+epoch 5, avg loss 0.4934469134312311, validation acc. 0.48703703703703705
+epoch 6, avg loss 0.4881206043547006, validation acc. 0.4888888888888889
+epoch 7, avg loss 0.48280594891888634, validation acc. 0.5314814814814814
+epoch 8, avg loss 0.4779255446287797, validation acc. 0.5092592592592593
+epoch 9, avg loss 0.4722132149038555, validation acc. 0.5166666666666667
+epoch 10, avg loss 0.4643537436940258, validation acc. 0.5444444444444444
+epoch 11, avg loss 0.453886057468627, validation acc. 0.5648148148148148
+epoch 12, avg loss 0.44673136350491066, validation acc. 0.5888888888888889
+epoch 13, avg loss 0.4402859098566093, validation acc. 0.5907407407407408
+epoch 14, avg loss 0.43255867233915296, validation acc. 0.5907407407407408
+epoch 15, avg loss 0.4214689357246426, validation acc. 0.6203703703703703
+epoch 16, avg loss 0.4141647537138394, validation acc. 0.6055555555555555
+epoch 17, avg loss 0.4087170805004861, validation acc. 0.5981481481481481
+epoch 18, avg loss 0.40445433388189445, validation acc. 0.6277777777777778
+epoch 19, avg loss 0.40074639312869353, validation acc. 0.5814814814814815
+Saving model to /home/devin/d/data/src/chgi/src/ae/autoencoder/aem0chr22_excerpt_longMultilayer3x100d0.05n0.3l0.0_20at0.01.pth
+
+real	72m38.921s
+user	297m57.574s
+sys	5m47.599s

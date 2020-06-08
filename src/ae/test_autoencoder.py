@@ -15,7 +15,8 @@ class Test_Autoencoder(unittest.TestCase):
 
 
     def setUp(self):
-        self.ae = Autoencoder(window_len=5, latent_len=2, seq_len=17, seq_per_batch=7)
+        self.ae = Autoencoder(kernel_len=5, latent_len=2, seq_len=17,
+                    seq_per_batch=7, input_dropout_freq=0.0, latent_noise_std=0.0)
         self.filename = "data/ref_genome/test.fasta"
         self.train_loader, self.valid_loader = load_data(self.ae, self.filename, split_prop=0.2)
         self.shape = (5, 4, 3)
@@ -36,7 +37,7 @@ class Test_Autoencoder(unittest.TestCase):
         for x, x_true in self.train_loader:
             latent = self.ae.encode(x)
             reconstructed = self.ae.decode(latent)
-            latent_shape = (self.ae.seq_per_batch, self.ae.latent_len, self.ae.seq_len - (self.ae.window_len - 1))
+            latent_shape = (self.ae.seq_per_batch, self.ae.latent_len, self.ae.seq_len - (self.ae.kernel_len - 1))
             self.assertEqual(latent.shape, latent_shape)
             self.assertEqual(reconstructed.shape, x.shape)
             break  # only test the first batch
@@ -123,6 +124,20 @@ class Test_Autoencoder(unittest.TestCase):
 
         y = torch.arange(self.ones.nelement()).reshape(self.shape).float()
         self.assertEqual(nd_loss(x, z, y).item(), 1.0)
+
+
+    def test_MultilayerEncoder(self):
+        seq_per_batch = 10
+        latent_len = 100
+        ae = MultilayerEncoder(kernel_len=3, latent_len=latent_len, seq_len=128, seq_per_batch=seq_per_batch,
+                    input_dropout_freq=0.05, latent_noise_std=0.2, hidden_len=10, pool_size=2,
+                    n_conv_and_pool=2, n_conv_before_pool=2, n_linear=2)
+        train_loader, _ = load_data(ae, self.filename, split_prop=0.05)
+        for x, _ in train_loader:
+            reconstructed, latent = ae.forward(x)
+            self.assertEqual(latent.shape, (seq_per_batch, latent_len))
+            self.assertEqual(reconstructed.shape, x.shape)
+            break
 
 
 if __name__ == '__main__':

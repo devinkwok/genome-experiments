@@ -23,7 +23,7 @@ def experiment(hparams, key, values):
 def exp1_window_size():
     hparams = {
         'name': "ae01",
-        'window_len': 1,
+        'kernel_len': 1,
         'latent_len': 1,
         'seq_len': 32,
         'seq_per_batch': 4,
@@ -31,21 +31,21 @@ def exp1_window_size():
         'split_prop': 0.2,
         'epochs': 20,
         'learn_rate': 0.01,
-        'dropout_freq': 0.0,
-        'noise_std': 0.0,
+        'input_dropout_freq': 0.0,
+        'latent_noise_std': 0.0,
     }
     # one latent var isn't enough, >= 2 bits should capture all 4 bp
     experiment(hparams, 'latent_len', [1, 2, 4])
 
     # similar experiment on window size 3, >= 2 * 3 bits should capture all variation
-    hparams['window_len'] = 3
+    hparams['kernel_len'] = 3
     experiment(hparams, 'latent_len', [2, 4, 6, 12])
 
 
 def exp2_input_drop():
     hparams = {
         'name': "ae01-drop",
-        'window_len': 1,
+        'kernel_len': 1,
         'latent_len': 1,
         'seq_len': 32,
         'seq_per_batch': 4,
@@ -53,8 +53,8 @@ def exp2_input_drop():
         'split_prop': 0.2,
         'epochs': 20,
         'learn_rate': 0.01,
-        'dropout_freq': 0.2,
-        'noise_std': 0.0,
+        'input_dropout_freq': 0.2,
+        'latent_noise_std': 0.0,
     }
     # dropout should reduce accuracy by similar amount
     experiment(hparams, 'latent_len', [1, 2, 4])
@@ -65,7 +65,7 @@ def exp3_latent_noise():
     # adding more noise to latent variable on pre-trained network should reduce performance
     hparams = {
         'name': "ae01-noise",
-        'window_len': 3,
+        'kernel_len': 3,
         'latent_len': 6,
         'seq_len': 32,
         'seq_per_batch': 4,
@@ -73,18 +73,18 @@ def exp3_latent_noise():
         'split_prop': 0.9,  # disable training
         'epochs': 5,  # 5 runs of validation
         'learn_rate': 0.0,  # disable training
-        'dropout_freq': 0.0,
+        'input_dropout_freq': 0.0,
         'load_prev_model_state': "outputs/src/ae/autoencoder/ae01droptest3x6_drop0.2_20_at0.01.pth",
         'save_model': False,
         'disable_eval': True,
     }
-    experiment(hparams, 'noise_std', [0.0, 0.2, 0.5, 1.0, 2.0, 5.0])
+    experiment(hparams, 'latent_noise_std', [0.0, 0.2, 0.5, 1.0, 2.0, 5.0])
 
 
 def exp4_larger_windows():
     hparams = {
         'name': "ae01",
-        'window_len': 6,
+        'kernel_len': 6,
         'latent_len': 1,
         'seq_len': 32,
         'seq_per_batch': 4,
@@ -92,18 +92,18 @@ def exp4_larger_windows():
         'split_prop': 0.2,
         'epochs': 20,
         'learn_rate': 0.01,
-        'dropout_freq': 0.1,
-        'noise_std': 0.3,
+        'input_dropout_freq': 0.1,
+        'latent_noise_std': 0.3,
     }
     experiment(hparams, 'latent_len', [6, 9, 12, 18, 24])
-    hparams['window_len'] = 12
+    hparams['kernel_len'] = 12
     experiment(hparams, 'latent_len', [12, 18, 24, 30])
 
 
 def exp5_neighbourhood_loss():
     hparams = {
         'name': "ae01-nbl",
-        'window_len': 8,
+        'kernel_len': 8,
         'latent_len': 16,
         'seq_len': 32,
         'seq_per_batch': 4,
@@ -111,10 +111,59 @@ def exp5_neighbourhood_loss():
         'split_prop': 0.2,
         'epochs': 20,
         'learn_rate': 0.01,
-        'dropout_freq': 0.1,
-        'noise_std': 0.3,
+        'input_dropout_freq': 0.1,
+        'latent_noise_std': 0.3,
     }
     experiment(hparams, 'neighbour_loss_prop', [0, 0.1, 0.2, 0.5, 1.0])
+
+
+def exp6_multilayer():
+    hparams = {
+        'model': 'Multilayer',
+        'name': "aem0",
+        'kernel_len': 3,
+        'latent_len': 30,
+        'seq_len': 27,
+        'seq_per_batch': 20,
+        'input_path': "data/ref_genome/chr22_excerpt_800k.fa",
+        'split_prop': 0.05,
+        'epochs': 20,
+        'learn_rate': 0.01,
+        'input_dropout_freq': 0.05,
+        'latent_noise_std': 0.3,
+        'hidden_len': 10,
+        'pool_size': 3,
+        'n_conv_and_pool': 2,
+        'n_conv_before_pool': 1,
+        'n_linear': 1,
+        'neighbour_loss_prop': 0.0,
+    }
+    experiment(hparams, 'n_conv_before_pool', [1, 2, 3])
+
+
+def exp7_multilayer_long():
+    hparams = {
+        'model': 'Multilayer',
+        'name': "aem0",
+        'kernel_len': 3,
+        'latent_len': 30,
+        'seq_len': 27,
+        'seq_per_batch': 20,
+        'input_path': "data/ref_genome/chr22_excerpt_4m.fa",
+        'split_prop': 0.05,
+        'epochs': 100,
+        'learn_rate': 0.001,
+        'input_dropout_freq': 0.05,
+        'latent_noise_std': 0.3,
+        'hidden_len': 10,
+        'pool_size': 3,
+        'n_conv_and_pool': 2,
+        'n_conv_before_pool': 1,
+        'n_linear': 1,
+        'neighbour_loss_prop': 0.0,
+    }
+    experiment(hparams, 'latent_len', [30])
+
 
 
 if __name__ == '__main__':
@@ -125,8 +174,10 @@ if __name__ == '__main__':
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
     
-    exp1_window_size()
-    exp2_input_drop()
-    exp3_latent_noise()
-    exp4_larger_windows()
-    exp5_neighbourhood_loss()
+    # exp1_window_size()
+    # exp2_input_drop()
+    # exp3_latent_noise()
+    # exp4_larger_windows()
+    # exp5_neighbourhood_loss()
+    # exp6_multilayer()
+    exp7_multilayer_long()

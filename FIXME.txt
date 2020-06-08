@@ -31,3 +31,10 @@ Implementation notes
  - see https://pytorch.org/tutorials/beginner/nn_tutorial.html for a basic rundown of the pytorch library
  - can't use BCEWithLogitsLoss because we are using Softmax, not Sigmoid, ignore the numerical instability for the prototype, but may have to manually implement loss function to combine log operations in future
  - looks like neighbour loss isn't very useful, needs more testing
+
+
+Multilayer issues
+-----------------
+ - not enough memory to load large sequence, this is due to data handling issues above
+ - try a dilation-based instead of pooling based architecture
+ - also try avgpool instead of maxpool

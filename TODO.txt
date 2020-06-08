@@ -52,6 +52,9 @@ deploy
     run on cluster
 
 
+visualize
+    outputs of each hidden unit
+
 see https://github.com/ShayanPersonal/stacked-autoencoder-pytorch/blob/master/model.py
 - have the input window size vary, see what conditions allow autoencoder to have zero reconstruction error
 - use missing inputs (input noise) to replicate Shannon English bits per word study
