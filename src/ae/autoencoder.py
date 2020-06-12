@@ -38,6 +38,7 @@ _DEFAULT_HYPERPARAMETERS = {
     'n_conv_and_pool': 1,
     'n_conv_before_pool': 1,
     'n_linear': 1,
+    'use_cuda_if_available': True,
 }
 
 
@@ -188,7 +189,8 @@ class MultilayerEncoder(Autoencoder):
         for i, (n_in, n_out) in enumerate(zip(reversed(in_size), reversed(out_size))):
             decode_layers['relu{}0'.format(i)] = nn.ReLU()
             decode_layers['norm{}'.format(i)] = nn.BatchNorm1d(n_out)
-            decode_layers['pool{}'.format(i)] = nn.Upsample(scale_factor=pool_size, mode='linear')
+            decode_layers['pool{}'.format(i)] = nn.Upsample(scale_factor=pool_size,
+                    mode='linear', align_corners=False)
             for j in reversed(range(1, n_conv_before_pool)):
                 decode_layers['conv{}{}'.format(i, j)] = nn.ConvTranspose1d(
                         n_out, n_out, kernel_len, 1, pad)
@@ -236,8 +238,6 @@ def evaluate(model, x, true_x):
 # model effectiveness while dropout and noise are included
 def train(model, train_loader, valid_loader, optimizer, loss_fn, epochs, disable_eval):
     # target CPU or GPU
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model.to(device)
 
     validation = iter(valid_loader)
 
@@ -263,6 +263,8 @@ def train(model, train_loader, valid_loader, optimizer, loss_fn, epochs, disable
 def run(hparams):
     config = dict(_DEFAULT_HYPERPARAMETERS)
     config.update(hparams)
+    if config['use_cuda_if_available'] and torch.cuda.is_available():
+        torch.cuda.set_device('cuda')
 
     if config['model'] == 'Multilayer':
         model = MultilayerEncoder(config['kernel_len'], config['latent_len'], config['seq_len'],
