@@ -1,0 +1,270 @@
+Model specification:
+MultilayerEncoder(
+  (encode_layers): ModuleDict(
+    (input_dropout): SeqDropout(
+      (dropout): Dropout2d(p=0.05, inplace=False)
+    )
+    (conv00): Conv1d(4, 36, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu00): ReLU()
+    (pool0): MaxPool1d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
+    (norm0): BatchNorm1d(36, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout0): Dropout(p=0.05, inplace=False)
+    (conv10): Conv1d(36, 72, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu10): ReLU()
+    (pool1): MaxPool1d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
+    (norm1): BatchNorm1d(72, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout1): Dropout(p=0.05, inplace=False)
+    (view): View()
+    (linear0): Linear(in_features=288, out_features=80, bias=True)
+  )
+  (decode_layers): ModuleDict(
+    (latent_noise): GaussianNoise()
+    (linear0): Linear(in_features=80, out_features=288, bias=True)
+    (view): View()
+    (relu00): ReLU()
+    (norm0): BatchNorm1d(72, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool0): Upsample(scale_factor=4.0, mode=linear)
+    (conv00): ConvTranspose1d(72, 36, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu10): ReLU()
+    (norm1): BatchNorm1d(36, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool1): Upsample(scale_factor=4.0, mode=linear)
+    (conv10): ConvTranspose1d(36, 4, kernel_size=(9,), stride=(1,), padding=(4,))
+    (softmax): Softmax(dim=1)
+  )
+)
+Config values:
+{'name': 'aem0', 'model': 'Multilayer', 'kernel_len': 9, 'latent_len': 80, 'seq_len': 64, 'seq_per_batch': 20, 'input_path': 'data/ref_genome/chr22_excerpt_4m.fa', 'split_prop': 0.05, 'epochs': 5, 'learn_rate': 1.0, 'input_dropout_freq': 0.05, 'latent_noise_std': 0.3, 'save_model': True, 'disable_eval': False, 'neighbour_loss_prop': 0.0, 'load_prev_model_state': None, 'hidden_len': 36, 'pool_size': 4, 'n_conv_and_pool': 2, 'n_conv_before_pool': 1, 'n_linear': 1}
+Training for 5 epochs
+epoch 0, avg loss 37.33223665534277, validation acc. 0.2765625
+/home/devin/d/data/src/chgi/env/lib/python3.6/site-packages/torch/nn/functional.py:2973: UserWarning: Default upsampling behavior when mode=linear is changed to align_corners=False since 0.4.0. Please specify align_corners=True if the old behavior is desired. See the documentation of nn.Upsample for details.
+  "See the documentation of nn.Upsample for details.".format(mode))
+epoch 1, avg loss 37.387619324928906, validation acc. 0.26796875
+epoch 2, avg loss 37.38778007216736, validation acc. 0.24296875
+epoch 3, avg loss 37.387656512831065, validation acc. 0.23671875
+epoch 4, avg loss 37.38760462959779, validation acc. 0.24765625
+[FrameInfo(frame=<frame object at 0x7f908390b618>, filename='./src/seq_util/io.py', lineno=11, function='output_path', code_context=['    print(inspect.stack(), os.path.split(caller)[0], path_to_filename(caller))\n'], index=0), FrameInfo(frame=<frame object at 0x45920e8>, filename='/home/devin/d/data/src/chgi/src/ae/autoencoder.py', lineno=296, function='run', code_context=["        out_file = seq_util.io.output_path(config['name'], config['input_path'], model_str + '.pth')\n"], index=0), FrameInfo(frame=<frame object at 0x7f90d5cc1248>, filename='src/ae/experiment.py', lineno=20, function='experiment', code_context=['        ae.run(hparams)\n'], index=0), FrameInfo(frame=<frame object at 0x4585bc8>, filename='src/ae/experiment.py', lineno=167, function='exp7_multilayer_long', code_context=["    experiment(hparams, 'latent_len', [80, 160, 240])\n"], index=0), FrameInfo(frame=<frame object at 0x2828368>, filename='src/ae/experiment.py', lineno=186, function='<module>', code_context=['    exp7_multilayer_long()\n'], index=0)] src/ae experiment
+Saving model to outputs/src/ae/experiment/aem0chr22_excerpt_4mMultilayer9x80d0.05n0.3l0.0_5at1.0.pth
+Model specification:
+MultilayerEncoder(
+  (encode_layers): ModuleDict(
+    (input_dropout): SeqDropout(
+      (dropout): Dropout2d(p=0.05, inplace=False)
+    )
+    (conv00): Conv1d(4, 36, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu00): ReLU()
+    (pool0): MaxPool1d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
+    (norm0): BatchNorm1d(36, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout0): Dropout(p=0.05, inplace=False)
+    (conv10): Conv1d(36, 72, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu10): ReLU()
+    (pool1): MaxPool1d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
+    (norm1): BatchNorm1d(72, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout1): Dropout(p=0.05, inplace=False)
+    (view): View()
+    (linear0): Linear(in_features=288, out_features=160, bias=True)
+  )
+  (decode_layers): ModuleDict(
+    (latent_noise): GaussianNoise()
+    (linear0): Linear(in_features=160, out_features=288, bias=True)
+    (view): View()
+    (relu00): ReLU()
+    (norm0): BatchNorm1d(72, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool0): Upsample(scale_factor=4.0, mode=linear)
+    (conv00): ConvTranspose1d(72, 36, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu10): ReLU()
+    (norm1): BatchNorm1d(36, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool1): Upsample(scale_factor=4.0, mode=linear)
+    (conv10): ConvTranspose1d(36, 4, kernel_size=(9,), stride=(1,), padding=(4,))
+    (softmax): Softmax(dim=1)
+  )
+)
+Config values:
+{'name': 'aem0', 'model': 'Multilayer', 'kernel_len': 9, 'latent_len': 160, 'seq_len': 64, 'seq_per_batch': 20, 'input_path': 'data/ref_genome/chr22_excerpt_4m.fa', 'split_prop': 0.05, 'epochs': 5, 'learn_rate': 1.0, 'input_dropout_freq': 0.05, 'latent_noise_std': 0.3, 'save_model': True, 'disable_eval': False, 'neighbour_loss_prop': 0.0, 'load_prev_model_state': None, 'hidden_len': 36, 'pool_size': 4, 'n_conv_and_pool': 2, 'n_conv_before_pool': 1, 'n_linear': 1}
+Training for 5 epochs
+epoch 0, avg loss 37.56745015870135, validation acc. 0.24765625
+epoch 1, avg loss 37.609609283171494, validation acc. 0.259375
+epoch 2, avg loss 37.60964167249957, validation acc. 0.23046875
+epoch 3, avg loss 37.60965516810663, validation acc. 0.2484375
+epoch 4, avg loss 37.6096740621498, validation acc. 0.23515625
+[FrameInfo(frame=<frame object at 0x7f908390b618>, filename='./src/seq_util/io.py', lineno=11, function='output_path', code_context=['    # make sure directory exists\n'], index=0), FrameInfo(frame=<frame object at 0x45920e8>, filename='/home/devin/d/data/src/chgi/src/ae/autoencoder.py', lineno=296, function='run', code_context=["        out_file = seq_util.io.output_path(config['name'], config['input_path'], model_str + '.pth')\n"], index=0), FrameInfo(frame=<frame object at 0x7f90d5cc1248>, filename='src/ae/experiment.py', lineno=20, function='experiment', code_context=['        ae.run(hparams)\n'], index=0), FrameInfo(frame=<frame object at 0x4585bc8>, filename='src/ae/experiment.py', lineno=167, function='exp7_multilayer_long', code_context=["    experiment(hparams, 'latent_len', [80, 160, 240])\n"], index=0), FrameInfo(frame=<frame object at 0x2828368>, filename='src/ae/experiment.py', lineno=186, function='<module>', code_context=['    exp7_multilayer_long()\n'], index=0)] src/ae experiment
+Saving model to outputs/src/ae/experiment/aem0chr22_excerpt_4mMultilayer9x160d0.05n0.3l0.0_5at1.0.pth
+Model specification:
+MultilayerEncoder(
+  (encode_layers): ModuleDict(
+    (input_dropout): SeqDropout(
+      (dropout): Dropout2d(p=0.05, inplace=False)
+    )
+    (conv00): Conv1d(4, 36, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu00): ReLU()
+    (pool0): MaxPool1d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
+    (norm0): BatchNorm1d(36, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout0): Dropout(p=0.05, inplace=False)
+    (conv10): Conv1d(36, 72, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu10): ReLU()
+    (pool1): MaxPool1d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
+    (norm1): BatchNorm1d(72, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout1): Dropout(p=0.05, inplace=False)
+    (view): View()
+    (linear0): Linear(in_features=288, out_features=240, bias=True)
+  )
+  (decode_layers): ModuleDict(
+    (latent_noise): GaussianNoise()
+    (linear0): Linear(in_features=240, out_features=288, bias=True)
+    (view): View()
+    (relu00): ReLU()
+    (norm0): BatchNorm1d(72, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool0): Upsample(scale_factor=4.0, mode=linear)
+    (conv00): ConvTranspose1d(72, 36, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu10): ReLU()
+    (norm1): BatchNorm1d(36, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool1): Upsample(scale_factor=4.0, mode=linear)
+    (conv10): ConvTranspose1d(36, 4, kernel_size=(9,), stride=(1,), padding=(4,))
+    (softmax): Softmax(dim=1)
+  )
+)
+Config values:
+{'name': 'aem0', 'model': 'Multilayer', 'kernel_len': 9, 'latent_len': 240, 'seq_len': 64, 'seq_per_batch': 20, 'input_path': 'data/ref_genome/chr22_excerpt_4m.fa', 'split_prop': 0.05, 'epochs': 5, 'learn_rate': 1.0, 'input_dropout_freq': 0.05, 'latent_noise_std': 0.3, 'save_model': True, 'disable_eval': False, 'neighbour_loss_prop': 0.0, 'load_prev_model_state': None, 'hidden_len': 36, 'pool_size': 4, 'n_conv_and_pool': 2, 'n_conv_before_pool': 1, 'n_linear': 1}
+Training for 5 epochs
+epoch 0, avg loss 37.41600338669305, validation acc. 0.259375
+epoch 1, avg loss 37.548145103148535, validation acc. 0.26328125
+epoch 2, avg loss 37.58860179590883, validation acc. 0.25625
+epoch 3, avg loss 37.687267339226565, validation acc. 0.2390625
+epoch 4, avg loss 37.68939543901973, validation acc. 0.22265625
+[FrameInfo(frame=<frame object at 0x7f908390b618>, filename='./src/seq_util/io.py', lineno=11, function='output_path', code_context=['    # make sure directory exists\n'], index=0), FrameInfo(frame=<frame object at 0x45920e8>, filename='/home/devin/d/data/src/chgi/src/ae/autoencoder.py', lineno=296, function='run', code_context=["        out_file = seq_util.io.output_path(config['name'], config['input_path'], model_str + '.pth')\n"], index=0), FrameInfo(frame=<frame object at 0x7f90d5cc1248>, filename='src/ae/experiment.py', lineno=20, function='experiment', code_context=['        ae.run(hparams)\n'], index=0), FrameInfo(frame=<frame object at 0x4585bc8>, filename='src/ae/experiment.py', lineno=167, function='exp7_multilayer_long', code_context=["    experiment(hparams, 'latent_len', [80, 160, 240])\n"], index=0), FrameInfo(frame=<frame object at 0x2828368>, filename='src/ae/experiment.py', lineno=186, function='<module>', code_context=['    exp7_multilayer_long()\n'], index=0)] src/ae experiment
+Saving model to outputs/src/ae/experiment/aem0chr22_excerpt_4mMultilayer9x240d0.05n0.3l0.0_5at1.0.pth
+Model specification:
+MultilayerEncoder(
+  (encode_layers): ModuleDict(
+    (input_dropout): SeqDropout(
+      (dropout): Dropout2d(p=0.05, inplace=False)
+    )
+    (conv00): Conv1d(4, 12, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu00): ReLU()
+    (pool0): MaxPool1d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
+    (norm0): BatchNorm1d(12, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout0): Dropout(p=0.05, inplace=False)
+    (conv10): Conv1d(12, 24, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu10): ReLU()
+    (pool1): MaxPool1d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
+    (norm1): BatchNorm1d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout1): Dropout(p=0.05, inplace=False)
+    (view): View()
+    (linear0): Linear(in_features=96, out_features=240, bias=True)
+  )
+  (decode_layers): ModuleDict(
+    (latent_noise): GaussianNoise()
+    (linear0): Linear(in_features=240, out_features=96, bias=True)
+    (view): View()
+    (relu00): ReLU()
+    (norm0): BatchNorm1d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool0): Upsample(scale_factor=4.0, mode=linear)
+    (conv00): ConvTranspose1d(24, 12, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu10): ReLU()
+    (norm1): BatchNorm1d(12, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool1): Upsample(scale_factor=4.0, mode=linear)
+    (conv10): ConvTranspose1d(12, 4, kernel_size=(9,), stride=(1,), padding=(4,))
+    (softmax): Softmax(dim=1)
+  )
+)
+Config values:
+{'name': 'aem0', 'model': 'Multilayer', 'kernel_len': 9, 'latent_len': 240, 'seq_len': 64, 'seq_per_batch': 20, 'input_path': 'data/ref_genome/chr22_excerpt_4m.fa', 'split_prop': 0.05, 'epochs': 5, 'learn_rate': 1.0, 'input_dropout_freq': 0.05, 'latent_noise_std': 0.3, 'save_model': True, 'disable_eval': False, 'neighbour_loss_prop': 0.0, 'load_prev_model_state': None, 'hidden_len': 12, 'pool_size': 4, 'n_conv_and_pool': 2, 'n_conv_before_pool': 1, 'n_linear': 1}
+Training for 5 epochs
+epoch 0, avg loss 0.4595009794751491, validation acc. 0.59296875
+epoch 1, avg loss 0.4116295189000134, validation acc. 0.6015625
+epoch 2, avg loss 0.3994509452662449, validation acc. 0.61328125
+epoch 3, avg loss 0.3924051189923969, validation acc. 0.62421875
+epoch 4, avg loss 0.3887897868301808, validation acc. 0.603125
+[FrameInfo(frame=<frame object at 0x7f908390b618>, filename='./src/seq_util/io.py', lineno=11, function='output_path', code_context=['    # make sure directory exists\n'], index=0), FrameInfo(frame=<frame object at 0x45920e8>, filename='/home/devin/d/data/src/chgi/src/ae/autoencoder.py', lineno=296, function='run', code_context=["        out_file = seq_util.io.output_path(config['name'], config['input_path'], model_str + '.pth')\n"], index=0), FrameInfo(frame=<frame object at 0x7f90d5cc1248>, filename='src/ae/experiment.py', lineno=20, function='experiment', code_context=['        ae.run(hparams)\n'], index=0), FrameInfo(frame=<frame object at 0x4585bc8>, filename='src/ae/experiment.py', lineno=168, function='exp7_multilayer_long', code_context=["    experiment(hparams, 'hidden_len', [12, 24, 36])\n"], index=0), FrameInfo(frame=<frame object at 0x2828368>, filename='src/ae/experiment.py', lineno=186, function='<module>', code_context=['    exp7_multilayer_long()\n'], index=0)] src/ae experiment
+Saving model to outputs/src/ae/experiment/aem0chr22_excerpt_4mMultilayer9x240d0.05n0.3l0.0_5at1.0.pth
+Model specification:
+MultilayerEncoder(
+  (encode_layers): ModuleDict(
+    (input_dropout): SeqDropout(
+      (dropout): Dropout2d(p=0.05, inplace=False)
+    )
+    (conv00): Conv1d(4, 24, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu00): ReLU()
+    (pool0): MaxPool1d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
+    (norm0): BatchNorm1d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout0): Dropout(p=0.05, inplace=False)
+    (conv10): Conv1d(24, 48, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu10): ReLU()
+    (pool1): MaxPool1d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
+    (norm1): BatchNorm1d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout1): Dropout(p=0.05, inplace=False)
+    (view): View()
+    (linear0): Linear(in_features=192, out_features=240, bias=True)
+  )
+  (decode_layers): ModuleDict(
+    (latent_noise): GaussianNoise()
+    (linear0): Linear(in_features=240, out_features=192, bias=True)
+    (view): View()
+    (relu00): ReLU()
+    (norm0): BatchNorm1d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool0): Upsample(scale_factor=4.0, mode=linear)
+    (conv00): ConvTranspose1d(48, 24, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu10): ReLU()
+    (norm1): BatchNorm1d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool1): Upsample(scale_factor=4.0, mode=linear)
+    (conv10): ConvTranspose1d(24, 4, kernel_size=(9,), stride=(1,), padding=(4,))
+    (softmax): Softmax(dim=1)
+  )
+)
+Config values:
+{'name': 'aem0', 'model': 'Multilayer', 'kernel_len': 9, 'latent_len': 240, 'seq_len': 64, 'seq_per_batch': 20, 'input_path': 'data/ref_genome/chr22_excerpt_4m.fa', 'split_prop': 0.05, 'epochs': 5, 'learn_rate': 1.0, 'input_dropout_freq': 0.05, 'latent_noise_std': 0.3, 'save_model': True, 'disable_eval': False, 'neighbour_loss_prop': 0.0, 'load_prev_model_state': None, 'hidden_len': 24, 'pool_size': 4, 'n_conv_and_pool': 2, 'n_conv_before_pool': 1, 'n_linear': 1}
+Training for 5 epochs
+epoch 0, avg loss 0.4447176887139146, validation acc. 0.6296875
+epoch 1, avg loss 0.35279458257085056, validation acc. 0.7
+epoch 2, avg loss 0.32869823470921866, validation acc. 0.7171875
+epoch 3, avg loss 0.3193621848767376, validation acc. 0.703125
+epoch 4, avg loss 0.31390128895727204, validation acc. 0.73515625
+[FrameInfo(frame=<frame object at 0x7f908390b618>, filename='./src/seq_util/io.py', lineno=11, function='output_path', code_context=['    # make sure directory exists\n'], index=0), FrameInfo(frame=<frame object at 0x45920e8>, filename='/home/devin/d/data/src/chgi/src/ae/autoencoder.py', lineno=296, function='run', code_context=["        out_file = seq_util.io.output_path(config['name'], config['input_path'], model_str + '.pth')\n"], index=0), FrameInfo(frame=<frame object at 0x7f90d5cc1248>, filename='src/ae/experiment.py', lineno=20, function='experiment', code_context=['        ae.run(hparams)\n'], index=0), FrameInfo(frame=<frame object at 0x4585bc8>, filename='src/ae/experiment.py', lineno=168, function='exp7_multilayer_long', code_context=["    experiment(hparams, 'hidden_len', [12, 24, 36])\n"], index=0), FrameInfo(frame=<frame object at 0x2828368>, filename='src/ae/experiment.py', lineno=186, function='<module>', code_context=['    exp7_multilayer_long()\n'], index=0)] src/ae experiment
+Saving model to outputs/src/ae/experiment/aem0chr22_excerpt_4mMultilayer9x240d0.05n0.3l0.0_5at1.0.pth
+Model specification:
+MultilayerEncoder(
+  (encode_layers): ModuleDict(
+    (input_dropout): SeqDropout(
+      (dropout): Dropout2d(p=0.05, inplace=False)
+    )
+    (conv00): Conv1d(4, 36, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu00): ReLU()
+    (pool0): MaxPool1d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
+    (norm0): BatchNorm1d(36, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout0): Dropout(p=0.05, inplace=False)
+    (conv10): Conv1d(36, 72, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu10): ReLU()
+    (pool1): MaxPool1d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
+    (norm1): BatchNorm1d(72, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout1): Dropout(p=0.05, inplace=False)
+    (view): View()
+    (linear0): Linear(in_features=288, out_features=240, bias=True)
+  )
+  (decode_layers): ModuleDict(
+    (latent_noise): GaussianNoise()
+    (linear0): Linear(in_features=240, out_features=288, bias=True)
+    (view): View()
+    (relu00): ReLU()
+    (norm0): BatchNorm1d(72, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool0): Upsample(scale_factor=4.0, mode=linear)
+    (conv00): ConvTranspose1d(72, 36, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu10): ReLU()
+    (norm1): BatchNorm1d(36, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool1): Upsample(scale_factor=4.0, mode=linear)
+    (conv10): ConvTranspose1d(36, 4, kernel_size=(9,), stride=(1,), padding=(4,))
+    (softmax): Softmax(dim=1)
+  )
+)
+Config values:
+{'name': 'aem0', 'model': 'Multilayer', 'kernel_len': 9, 'latent_len': 240, 'seq_len': 64, 'seq_per_batch': 20, 'input_path': 'data/ref_genome/chr22_excerpt_4m.fa', 'split_prop': 0.05, 'epochs': 5, 'learn_rate': 1.0, 'input_dropout_freq': 0.05, 'latent_noise_std': 0.3, 'save_model': True, 'disable_eval': False, 'neighbour_loss_prop': 0.0, 'load_prev_model_state': None, 'hidden_len': 36, 'pool_size': 4, 'n_conv_and_pool': 2, 'n_conv_before_pool': 1, 'n_linear': 1}
+Training for 5 epochs
+epoch 0, avg loss 37.57377985113528, validation acc. 0.2484375
+epoch 1, avg loss 36.94433983434808, validation acc. 0.2828125
+epoch 2, avg loss 36.94598834638045, validation acc. 0.2453125
+epoch 3, avg loss 36.929367984552336, validation acc. 0.2671875
+epoch 4, avg loss 36.94966254932193, validation acc. 0.2546875
+[FrameInfo(frame=<frame object at 0x7f908390b618>, filename='./src/seq_util/io.py', lineno=11, function='output_path', code_context=['    # make sure directory exists\n'], index=0), FrameInfo(frame=<frame object at 0x45920e8>, filename='/home/devin/d/data/src/chgi/src/ae/autoencoder.py', lineno=296, function='run', code_context=["        out_file = seq_util.io.output_path(config['name'], config['input_path'], model_str + '.pth')\n"], index=0), FrameInfo(frame=<frame object at 0x7f90d5cc1248>, filename='src/ae/experiment.py', lineno=20, function='experiment', code_context=['        ae.run(hparams)\n'], index=0), FrameInfo(frame=<frame object at 0x4585bc8>, filename='src/ae/experiment.py', lineno=168, function='exp7_multilayer_long', code_context=["    experiment(hparams, 'hidden_len', [12, 24, 36])\n"], index=0), FrameInfo(frame=<frame object at 0x2828368>, filename='src/ae/experiment.py', lineno=186, function='<module>', code_context=['    exp7_multilayer_long()\n'], index=0)] src/ae experiment
+Saving model to outputs/src/ae/experiment/aem0chr22_excerpt_4mMultilayer9x240d0.05n0.3l0.0_5at1.0.pth
+
+real	93m39.480s
+user	422m20.950s
+sys	6m46.095s

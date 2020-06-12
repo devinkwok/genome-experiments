@@ -54,6 +54,11 @@ deploy
 
 visualize
     outputs of each hidden unit
+    have option to validate within epoch, or integrate tensorboard
+
+
+replace SGD with momentum optimizer
+
 
 see https://github.com/ShayanPersonal/stacked-autoencoder-pytorch/blob/master/model.py
 - have the input window size vary, see what conditions allow autoencoder to have zero reconstruction error

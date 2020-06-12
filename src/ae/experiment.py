@@ -127,7 +127,7 @@ def exp6_multilayer():
         'seq_per_batch': 20,
         'input_path': "data/ref_genome/chr22_excerpt_800k.fa",
         'split_prop': 0.05,
-        'epochs': 20,
+        'epochs': 5,
         'learn_rate': 0.01,
         'input_dropout_freq': 0.05,
         'latent_noise_std': 0.3,
@@ -138,31 +138,34 @@ def exp6_multilayer():
         'n_linear': 1,
         'neighbour_loss_prop': 0.0,
     }
-    experiment(hparams, 'n_conv_before_pool', [1, 2, 3])
+    experiment(hparams, 'learn_rate', [10., 5., 2.])
+    # experiment(hparams, 'n_conv_before_pool', [1, 2, 3])
 
 
 def exp7_multilayer_long():
     hparams = {
         'model': 'Multilayer',
         'name': "aem0",
-        'kernel_len': 3,
-        'latent_len': 30,
-        'seq_len': 27,
+        'kernel_len': 9,
+        'latent_len': 240,
+        'seq_len': 64,
         'seq_per_batch': 20,
         'input_path': "data/ref_genome/chr22_excerpt_4m.fa",
+        # 'load_prev_model_state': "outputs/src/ae/autoencoder/aem0chr22_excerpt_4mMultilayer3x30d0.05n0.3l0.0_20at2.0.pth",
         'split_prop': 0.05,
-        'epochs': 100,
-        'learn_rate': 0.001,
+        'epochs': 5,
+        'learn_rate': 1.,
         'input_dropout_freq': 0.05,
         'latent_noise_std': 0.3,
-        'hidden_len': 10,
-        'pool_size': 3,
+        'hidden_len': 36,
+        'pool_size': 4,
         'n_conv_and_pool': 2,
         'n_conv_before_pool': 1,
         'n_linear': 1,
         'neighbour_loss_prop': 0.0,
     }
-    experiment(hparams, 'latent_len', [30])
+    experiment(hparams, 'latent_len', [80, 160, 240])
+    experiment(hparams, 'hidden_len', [12, 24, 36])
 
 
 

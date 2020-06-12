@@ -1,0 +1,67 @@
+Model specification:
+MultilayerEncoder(
+  (encode_layers): ModuleDict(
+    (input_dropout): SeqDropout(
+      (dropout): Dropout2d(p=0.05, inplace=False)
+    )
+    (conv00): Conv1d(4, 36, kernel_size=(8,), stride=(1,), padding=(4,))
+    (relu00): ReLU()
+    (pool0): MaxPool1d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
+    (norm0): BatchNorm1d(36, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout0): Dropout(p=0.05, inplace=False)
+    (conv10): Conv1d(36, 72, kernel_size=(8,), stride=(1,), padding=(4,))
+    (relu10): ReLU()
+    (pool1): MaxPool1d(kernel_size=4, stride=4, padding=0, dilation=1, ceil_mode=False)
+    (norm1): BatchNorm1d(72, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout1): Dropout(p=0.05, inplace=False)
+    (view): View()
+    (linear0): Linear(in_features=288, out_features=80, bias=True)
+  )
+  (decode_layers): ModuleDict(
+    (latent_noise): GaussianNoise()
+    (linear0): Linear(in_features=80, out_features=288, bias=True)
+    (view): View()
+    (relu00): ReLU()
+    (norm0): BatchNorm1d(72, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool0): Upsample(scale_factor=4.0, mode=linear)
+    (conv00): ConvTranspose1d(72, 36, kernel_size=(8,), stride=(1,), padding=(4,))
+    (relu10): ReLU()
+    (norm1): BatchNorm1d(36, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool1): Upsample(scale_factor=4.0, mode=linear)
+    (conv10): ConvTranspose1d(36, 4, kernel_size=(8,), stride=(1,), padding=(4,))
+    (softmax): Softmax(dim=1)
+  )
+)
+Config values:
+{'name': 'aem0', 'model': 'Multilayer', 'kernel_len': 8, 'latent_len': 80, 'seq_len': 64, 'seq_per_batch': 20, 'input_path': 'data/ref_genome/chr22_excerpt_4m.fa', 'split_prop': 0.05, 'epochs': 5, 'learn_rate': 1.0, 'input_dropout_freq': 0.05, 'latent_noise_std': 0.3, 'save_model': True, 'disable_eval': False, 'neighbour_loss_prop': 0.0, 'load_prev_model_state': None, 'hidden_len': 36, 'pool_size': 4, 'n_conv_and_pool': 2, 'n_conv_before_pool': 1, 'n_linear': 1}
+Training for 5 epochs
+/home/devin/d/data/src/chgi/env/lib/python3.6/site-packages/torch/nn/functional.py:2973: UserWarning: Default upsampling behavior when mode=linear is changed to align_corners=False since 0.4.0. Please specify align_corners=True if the old behavior is desired. See the documentation of nn.Upsample for details.
+  "See the documentation of nn.Upsample for details.".format(mode))
+/home/devin/d/data/src/chgi/env/lib/python3.6/site-packages/torch/nn/modules/loss.py:516: UserWarning: Using a target size (torch.Size([20, 4, 64])) that is different to the input size (torch.Size([20, 4, 59])) is deprecated. Please ensure they have the same size.
+  return F.binary_cross_entropy(input, target, weight=self.weight, reduction=self.reduction)
+Traceback (most recent call last):
+  File "src/ae/experiment.py", line 186, in <module>
+    exp7_multilayer_long()
+  File "src/ae/experiment.py", line 167, in exp7_multilayer_long
+    experiment(hparams, 'latent_len', [80, 160, 240])
+  File "src/ae/experiment.py", line 20, in experiment
+    ae.run(hparams)
+  File "/home/devin/d/data/src/chgi/src/ae/autoencoder.py", line 293, in run
+    config['epochs'], config['disable_eval'])
+  File "/home/devin/d/data/src/chgi/src/ae/autoencoder.py", line 251, in train
+    loss = loss_fn(z, true_x, y)
+  File "/home/devin/d/data/src/chgi/env/lib/python3.6/site-packages/torch/nn/modules/module.py", line 550, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/devin/d/data/src/chgi/src/ae/autoencoder.py", line 94, in forward
+    return self.bce_loss(x, z)
+  File "/home/devin/d/data/src/chgi/env/lib/python3.6/site-packages/torch/nn/modules/module.py", line 550, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/devin/d/data/src/chgi/env/lib/python3.6/site-packages/torch/nn/modules/loss.py", line 516, in forward
+    return F.binary_cross_entropy(input, target, weight=self.weight, reduction=self.reduction)
+  File "/home/devin/d/data/src/chgi/env/lib/python3.6/site-packages/torch/nn/functional.py", line 2372, in binary_cross_entropy
+    "!= input nelement ({})".format(target.numel(), input.numel()))
+ValueError: Target and input must have the same number of elements. target nelement (5120) != input nelement (4720)
+
+real	0m6.461s
+user	0m7.750s
+sys	0m1.294s

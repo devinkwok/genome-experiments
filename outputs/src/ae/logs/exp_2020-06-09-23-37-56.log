@@ -1,0 +1,135 @@
+Model specification:
+MultilayerEncoder(
+  (encode_layers): ModuleDict(
+    (input_dropout): SeqDropout(
+      (dropout): Dropout2d(p=0.05, inplace=False)
+    )
+    (conv00): Conv1d(4, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu00): ReLU()
+    (pool0): MaxPool1d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
+    (norm0): BatchNorm1d(10, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout0): Dropout(p=0.05, inplace=False)
+    (conv10): Conv1d(10, 20, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu10): ReLU()
+    (pool1): MaxPool1d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
+    (norm1): BatchNorm1d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout1): Dropout(p=0.05, inplace=False)
+    (view): View()
+    (linear0): Linear(in_features=60, out_features=30, bias=True)
+  )
+  (decode_layers): ModuleDict(
+    (latent_noise): GaussianNoise()
+    (linear0): Linear(in_features=30, out_features=60, bias=True)
+    (view): View()
+    (relu00): ReLU()
+    (norm0): BatchNorm1d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool0): Upsample(scale_factor=3.0, mode=linear)
+    (conv00): ConvTranspose1d(20, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu10): ReLU()
+    (norm1): BatchNorm1d(10, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool1): Upsample(scale_factor=3.0, mode=linear)
+    (conv10): ConvTranspose1d(10, 4, kernel_size=(3,), stride=(1,), padding=(1,))
+    (softmax): Softmax(dim=1)
+  )
+)
+Config values:
+{'name': 'aem0', 'model': 'Multilayer', 'kernel_len': 3, 'latent_len': 30, 'seq_len': 27, 'seq_per_batch': 20, 'input_path': 'data/ref_genome/chr22_excerpt_800k.fa', 'split_prop': 0.05, 'epochs': 5, 'learn_rate': 10.0, 'input_dropout_freq': 0.05, 'latent_noise_std': 0.3, 'save_model': True, 'disable_eval': False, 'neighbour_loss_prop': 0.0, 'load_prev_model_state': None, 'hidden_len': 10, 'pool_size': 3, 'n_conv_and_pool': 2, 'n_conv_before_pool': 1, 'n_linear': 1}
+Training for 5 epochs
+epoch 0, avg loss 38.52792325544057, validation acc. 0.2074074074074074
+/home/devin/d/data/src/chgi/env/lib/python3.6/site-packages/torch/nn/functional.py:2973: UserWarning: Default upsampling behavior when mode=linear is changed to align_corners=False since 0.4.0. Please specify align_corners=True if the old behavior is desired. See the documentation of nn.Upsample for details.
+  "See the documentation of nn.Upsample for details.".format(mode))
+epoch 1, avg loss 38.56021851121093, validation acc. 0.26296296296296295
+epoch 2, avg loss 38.56096789202244, validation acc. 0.20925925925925926
+epoch 3, avg loss 38.56141754397385, validation acc. 0.2111111111111111
+epoch 4, avg loss 38.559319210738586, validation acc. 0.2574074074074074
+Saving model to /home/devin/d/data/src/chgi/src/ae/autoencoder/aem0chr22_excerpt_800kMultilayer3x30d0.05n0.3l0.0_5at10.0.pth
+Model specification:
+MultilayerEncoder(
+  (encode_layers): ModuleDict(
+    (input_dropout): SeqDropout(
+      (dropout): Dropout2d(p=0.05, inplace=False)
+    )
+    (conv00): Conv1d(4, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu00): ReLU()
+    (pool0): MaxPool1d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
+    (norm0): BatchNorm1d(10, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout0): Dropout(p=0.05, inplace=False)
+    (conv10): Conv1d(10, 20, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu10): ReLU()
+    (pool1): MaxPool1d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
+    (norm1): BatchNorm1d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout1): Dropout(p=0.05, inplace=False)
+    (view): View()
+    (linear0): Linear(in_features=60, out_features=30, bias=True)
+  )
+  (decode_layers): ModuleDict(
+    (latent_noise): GaussianNoise()
+    (linear0): Linear(in_features=30, out_features=60, bias=True)
+    (view): View()
+    (relu00): ReLU()
+    (norm0): BatchNorm1d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool0): Upsample(scale_factor=3.0, mode=linear)
+    (conv00): ConvTranspose1d(20, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu10): ReLU()
+    (norm1): BatchNorm1d(10, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool1): Upsample(scale_factor=3.0, mode=linear)
+    (conv10): ConvTranspose1d(10, 4, kernel_size=(3,), stride=(1,), padding=(1,))
+    (softmax): Softmax(dim=1)
+  )
+)
+Config values:
+{'name': 'aem0', 'model': 'Multilayer', 'kernel_len': 3, 'latent_len': 30, 'seq_len': 27, 'seq_per_batch': 20, 'input_path': 'data/ref_genome/chr22_excerpt_800k.fa', 'split_prop': 0.05, 'epochs': 5, 'learn_rate': 5.0, 'input_dropout_freq': 0.05, 'latent_noise_std': 0.3, 'save_model': True, 'disable_eval': False, 'neighbour_loss_prop': 0.0, 'load_prev_model_state': None, 'hidden_len': 10, 'pool_size': 3, 'n_conv_and_pool': 2, 'n_conv_before_pool': 1, 'n_linear': 1}
+Training for 5 epochs
+epoch 0, avg loss 0.46591618303343546, validation acc. 0.5370370370370371
+epoch 1, avg loss 0.4324743609687836, validation acc. 0.4981481481481482
+epoch 2, avg loss 0.4192788062657384, validation acc. 0.5685185185185185
+epoch 3, avg loss 0.4117428257364592, validation acc. 0.5
+epoch 4, avg loss 0.4069166997943422, validation acc. 0.4981481481481482
+Saving model to /home/devin/d/data/src/chgi/src/ae/autoencoder/aem0chr22_excerpt_800kMultilayer3x30d0.05n0.3l0.0_5at5.0.pth
+Model specification:
+MultilayerEncoder(
+  (encode_layers): ModuleDict(
+    (input_dropout): SeqDropout(
+      (dropout): Dropout2d(p=0.05, inplace=False)
+    )
+    (conv00): Conv1d(4, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu00): ReLU()
+    (pool0): MaxPool1d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
+    (norm0): BatchNorm1d(10, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout0): Dropout(p=0.05, inplace=False)
+    (conv10): Conv1d(10, 20, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu10): ReLU()
+    (pool1): MaxPool1d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
+    (norm1): BatchNorm1d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout1): Dropout(p=0.05, inplace=False)
+    (view): View()
+    (linear0): Linear(in_features=60, out_features=30, bias=True)
+  )
+  (decode_layers): ModuleDict(
+    (latent_noise): GaussianNoise()
+    (linear0): Linear(in_features=30, out_features=60, bias=True)
+    (view): View()
+    (relu00): ReLU()
+    (norm0): BatchNorm1d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool0): Upsample(scale_factor=3.0, mode=linear)
+    (conv00): ConvTranspose1d(20, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu10): ReLU()
+    (norm1): BatchNorm1d(10, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool1): Upsample(scale_factor=3.0, mode=linear)
+    (conv10): ConvTranspose1d(10, 4, kernel_size=(3,), stride=(1,), padding=(1,))
+    (softmax): Softmax(dim=1)
+  )
+)
+Config values:
+{'name': 'aem0', 'model': 'Multilayer', 'kernel_len': 3, 'latent_len': 30, 'seq_len': 27, 'seq_per_batch': 20, 'input_path': 'data/ref_genome/chr22_excerpt_800k.fa', 'split_prop': 0.05, 'epochs': 5, 'learn_rate': 2.0, 'input_dropout_freq': 0.05, 'latent_noise_std': 0.3, 'save_model': True, 'disable_eval': False, 'neighbour_loss_prop': 0.0, 'load_prev_model_state': None, 'hidden_len': 10, 'pool_size': 3, 'n_conv_and_pool': 2, 'n_conv_before_pool': 1, 'n_linear': 1}
+Training for 5 epochs
+epoch 0, avg loss 0.4604106168041555, validation acc. 0.4962962962962963
+epoch 1, avg loss 0.43513654226021803, validation acc. 0.512962962962963
+epoch 2, avg loss 0.4227238186722179, validation acc. 0.5685185185185185
+epoch 3, avg loss 0.41269996083683247, validation acc. 0.587037037037037
+epoch 4, avg loss 0.4045123405218553, validation acc. 0.5203703703703704
+Saving model to /home/devin/d/data/src/chgi/src/ae/autoencoder/aem0chr22_excerpt_800kMultilayer3x30d0.05n0.3l0.0_5at2.0.pth
+
+real	9m59.961s
+user	46m34.439s
+sys	1m0.999s

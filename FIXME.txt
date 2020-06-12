@@ -38,3 +38,9 @@ Multilayer issues
  - not enough memory to load large sequence, this is due to data handling issues above
  - try a dilation-based instead of pooling based architecture
  - also try avgpool instead of maxpool
+
+Visualization
+------------
+ - different brightness for overlapping genes?
+
+- save checkpoints for model, maybe add tensorboard

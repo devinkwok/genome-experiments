@@ -5,13 +5,14 @@ import math
 import os
 
 import numpy as np
+import pandas as pd
 from PIL import Image
 
 import k_mers
 import seq_util.io
 
 
-rgb_map = {
+base_map = {
     b'a': 0xffb80000,
     b'c': 0xff5bb800,
     b't': 0xff00b6b8,
@@ -24,16 +25,36 @@ rgb_map = {
     b'N': 0xff000000,
 }
 
+annotation_map = {
+    'gene': 0xff31f7a8,
+    'transcript': 0xffbff731,
+    'exon': 0xfff7f431,
+    'CDS': 0xff31f7e3,
+    'start_codon': 0xffe54202,
+    'stop_codon': 0xffe804b6,
+    'five_prime_UTR': 0xff5866fc,
+    'three_prime_UTR': 0xff9271fc,
+    'stop_codon_redefined_as_selenocysteine': 0xfff989e1,
+}
+
+def make_img_from_annotations(filename):
+    df = pd.read_csv(filename, sep='\t', names=['sequence', 'source', 'feature', 'start', 'end', 'score', 'strand', 'phase', 'attributes'])
+    n_bases = df['end'].iloc[-1]
+    for feature in df['feature'].unique():
+        color = annotation_map[feature]
+        df_masked = df[df['feature'] == feature]
+        out_path = seq_util.io.output_path(feature + '_img_', filename, '.png')
+        seq = seq_util.io.iterate_regions_as_seq(df_masked)
+        make_img(n_bases, seq, {True: color}, 0x00000000, out_path)
+
 
 def make_img_from_variants(filename):
     with open(filename, 'r') as file:
         last_line = file.readlines()[-1]
-    print(filename)
     n_bases, _, _ = seq_util.io.parse_variant_line(last_line)
     seq = seq_util.io.read_variants_as_seq(filename)
     out_path = seq_util.io.output_path('var_img_', filename, '.png')
-    make_img(n_bases, seq, 0xffffffff, out_path)
-
+    make_img(n_bases, seq, base_map, 0xffffffff, out_path)
 
 
 def make_img_from_sequence(filename):
@@ -42,10 +63,10 @@ def make_img_from_sequence(filename):
     seq = seq_util.io.read_seq(filename)
     out_path = seq_util.io.output_path('seq_img_', filename, '.png')
     # default value is black
-    make_img(n_bases, seq, 0xff000000, out_path)
+    make_img(n_bases, seq, base_map, 0xff000000, out_path)
 
 
-def make_img(n_bases, seq, background_color, out_path):
+def make_img(n_bases, seq, color_map, background_color, out_path):
     iters = int(math.ceil(math.log(n_bases, 4)))
     width = 2**iters
     
@@ -53,7 +74,7 @@ def make_img(n_bases, seq, background_color, out_path):
     coords = hilbert_curve(iters)
 
     for base, (x, y) in zip(seq, coords):
-        img_array[x, y] = rgb_map.get(base, background_color)
+        img_array[x, y] = color_map.get(base, background_color)
 
     genome_img = Image.fromarray(img_array, mode='RGBA')
     genome_img.save(out_path, format="PNG")
@@ -112,7 +133,8 @@ def test_img_save():
 
 
 if __name__ == '__main__':
-    make_img_from_sequence('data/ref_genome/test.fasta')
-    make_img_from_sequence('data/ref_genome/chr22.fa')
-    make_img_from_variants('data/vcf/test_freq.frq')
-    make_img_from_variants('data/vcf/chr22_freq.frq')
+    # make_img_from_sequence('data/ref_genome/test.fasta')
+    # make_img_from_sequence('data/ref_genome/chr22.fa')
+    # make_img_from_variants('data/vcf/test_freq.frq')
+    # make_img_from_variants('data/vcf/chr22_freq.frq')
+    make_img_from_annotations('data/gff3/chr22_annotations.gff3')

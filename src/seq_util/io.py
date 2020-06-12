@@ -2,19 +2,22 @@ import inspect
 import os.path
 from pathlib import Path
 
+
 def output_path(prefix, input_file, suffix):
     # use filename of calling function to specify output directory
-    caller = inspect.stack()[1][1]
-    output_path = os.path.join('outputs',
+    caller = inspect.stack()[-1][1]
+    out_path = os.path.join('outputs',
                 os.path.split(caller)[0],
                 path_to_filename(caller))
     # make sure directory exists
-    Path(output_path).mkdir(parents=True, exist_ok=True)
+    Path(out_path).mkdir(parents=True, exist_ok=True)
     filename = prefix + path_to_filename(input_file) + suffix
-    return os.path.join(output_path, filename)
+    return os.path.join(out_path, filename)
+
 
 def path_to_filename(path):
     return os.path.splitext(os.path.split(path)[1])[0]
+
 
 def read_seq(filename, remove_lines=0, print_progress=0):
     with open(filename, mode='rb') as file:
@@ -30,6 +33,7 @@ def read_seq(filename, remove_lines=0, print_progress=0):
                 if print_progress > 0 and i % print_progress == 0:
                     print('read entries: ' + str(i), end='\r')
             char = file.read(1)
+
 
 def parse_variant_line(line):
     split_str = line.split()
@@ -57,7 +61,22 @@ def read_variants_as_seq(filename):
     variants = read_variants(filename)
     cur_pos = 0
     for position, major_allele, freq in variants:
-        for i in range(cur_pos, position):
+        for _ in range(cur_pos, position):
             yield b'N'
         yield major_allele
         cur_pos = position
+
+
+def iterate_regions_as_seq(dataframe):
+    cur_pos = 0
+    for _, row in dataframe.iterrows():
+        start_pos = row['start']
+        end_pos = row['end']
+        print(row, start_pos, end_pos)
+        assert start_pos <= end_pos
+        for _ in range(cur_pos, start_pos):
+            yield False
+        for _ in range(start_pos, end_pos + 1):
+            yield True
+        if cur_pos <= end_pos:
+            cur_pos = end_pos + 1

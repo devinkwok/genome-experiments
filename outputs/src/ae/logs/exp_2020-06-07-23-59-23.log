@@ -1,0 +1,63 @@
+Model specification:
+MultilayerEncoder(
+  (encode_layers): ModuleDict(
+    (input_dropout): SeqDropout(
+      (dropout): Dropout2d(p=0.05, inplace=False)
+    )
+    (conv00): Conv1d(4, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu00): ReLU()
+    (pool0): MaxPool1d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
+    (norm0): BatchNorm1d(10, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout0): Dropout(p=0.05, inplace=False)
+    (conv10): Conv1d(10, 20, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu10): ReLU()
+    (pool1): MaxPool1d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
+    (norm1): BatchNorm1d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout1): Dropout(p=0.05, inplace=False)
+    (view): View()
+    (linear0): Linear(in_features=60, out_features=30, bias=True)
+  )
+  (decode_layers): ModuleDict(
+    (latent_noise): GaussianNoise()
+    (linear0): Linear(in_features=30, out_features=60, bias=True)
+    (view): View()
+    (relu00): ReLU()
+    (norm0): BatchNorm1d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool0): Upsample(scale_factor=3.0, mode=linear)
+    (conv00): ConvTranspose1d(20, 10, kernel_size=(3,), stride=(1,), padding=(1,))
+    (relu10): ReLU()
+    (norm1): BatchNorm1d(10, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool1): Upsample(scale_factor=3.0, mode=linear)
+    (conv10): ConvTranspose1d(10, 4, kernel_size=(3,), stride=(1,), padding=(1,))
+    (softmax): Softmax(dim=1)
+  )
+)
+Training for 100 epochs
+epoch 0, avg loss 0.5464001514659191, validation acc. 0.4777777777777778
+/home/devin/d/data/src/chgi/env/lib/python3.6/site-packages/torch/nn/functional.py:2973: UserWarning: Default upsampling behavior when mode=linear is changed to align_corners=False since 0.4.0. Please specify align_corners=True if the old behavior is desired. See the documentation of nn.Upsample for details.
+  "See the documentation of nn.Upsample for details.".format(mode))
+epoch 1, avg loss 0.5201873213385102, validation acc. 0.42777777777777776
+epoch 2, avg loss 0.5118735702169818, validation acc. 0.4703703703703704
+epoch 3, avg loss 0.5065465587791449, validation acc. 0.48333333333333334
+epoch 4, avg loss 0.502734171118646, validation acc. 0.4685185185185185
+epoch 5, avg loss 0.49958041448454166, validation acc. 0.5
+epoch 6, avg loss 0.4969078725192656, validation acc. 0.4537037037037037
+epoch 7, avg loss 0.4945481799559628, validation acc. 0.4759259259259259
+epoch 8, avg loss 0.4924244337158446, validation acc. 0.4462962962962963
+epoch 9, avg loss 0.49061956132155266, validation acc. 0.45925925925925926
+epoch 10, avg loss 0.48898312805273775, validation acc. 0.4962962962962963
+epoch 11, avg loss 0.48757541379068253, validation acc. 0.47962962962962963
+epoch 12, avg loss 0.486279015053995, validation acc. 0.512962962962963
+epoch 13, avg loss 0.4851518705772352, validation acc. 0.4888888888888889
+epoch 14, avg loss 0.4840680692179922, validation acc. 0.4981481481481482
+epoch 15, avg loss 0.483064012975005, validation acc. 0.45555555555555555
+epoch 16, avg loss 0.48207366965050397, validation acc. 0.49074074074074076
+epoch 17, avg loss 0.48115867530398737, validation acc. 0.45740740740740743
+epoch 18, avg loss 0.4802254819426576, validation acc. 0.5018518518518519
+epoch 19, avg loss 0.4792948260865664, validation acc. 0.4981481481481482
+epoch 20, avg loss 0.4783489173642884, validation acc. 0.4925925925925926
+epoch 21, avg loss 0.4774466329039356, validation acc. 0.4888888888888889
+epoch 22, avg loss 0.4765642960913721, validation acc. 0.4981481481481482
+epoch 23, avg loss 0.4757250633884318, validation acc. 0.512962962962963
+epoch 24, avg loss 0.4748835683476323, validation acc. 0.5296296296296297
+epoch 25, avg loss 0.4740212393640754, validation acc. 0.5
