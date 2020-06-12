@@ -242,6 +242,9 @@ def train(model, train_loader, valid_loader, optimizer, loss_fn, epochs, disable
         device = torch.device('cuda')
     else:
         device = torch.device('cpu')
+
+    print("Using device:")
+    print(device)
     
     validation = iter(valid_loader)
 
