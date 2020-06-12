@@ -236,26 +236,33 @@ def evaluate(model, x, true_x):
 
 # disable_eval is a quick hack to turn evaluation code off and on, this is useful for testing
 # model effectiveness while dropout and noise are included
-def train(model, train_loader, valid_loader, optimizer, loss_fn, epochs, disable_eval):
+def train(model, train_loader, valid_loader, optimizer, loss_fn, epochs, disable_eval, use_cuda=False):
     # target CPU or GPU
-
+    if use_cuda and torch.cuda.is_available():
+        device = torch.device('cuda')
+    else:
+        device = torch.device('cpu')
+    
     validation = iter(valid_loader)
 
+    model.to(device)
     for i in range(epochs):
         model.train()
         model.total_epochs += 1
         loss_sum = 0
-        for x, true_x in train_loader:
+        for x in train_loader:
+            x = x.to(device)
             optimizer.zero_grad()
             z, y = model.forward(x)
-            loss = loss_fn(z, true_x, y)
+            loss = loss_fn(z, x, y)
             loss_sum += loss.item()
             loss.backward()
             optimizer.step()
 
         if not disable_eval:
             model.eval()
-        accuracy, _ = evaluate(model, *next(validation))
+            valid_data = next(validation).to(device)
+        accuracy, _ = evaluate(model, valid_data, valid_data)
         print("epoch {}, avg loss {}, validation acc. {}".format(
                 i, loss_sum / len(train_loader), accuracy))
 
@@ -264,43 +271,37 @@ def run(hparams):
     config = dict(_DEFAULT_HYPERPARAMETERS)
     config.update(hparams)
 
-    if config['use_cuda_if_available'] and torch.cuda.is_available():
-        device = torch.device('cuda')
+    if config['model'] == 'Multilayer':
+        model = MultilayerEncoder(config['kernel_len'], config['latent_len'], config['seq_len'],
+                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'],
+                config['hidden_len'], config['pool_size'], config['n_conv_and_pool'],
+                config['n_conv_before_pool'], config['n_linear'])
     else:
-        device = torch.device('cpu')
+        model = Autoencoder(config['kernel_len'], config['latent_len'], config['seq_len'],
+                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'])
 
-    with torch.cuda.device(device):
-        if config['model'] == 'Multilayer':
-            model = MultilayerEncoder(config['kernel_len'], config['latent_len'], config['seq_len'],
-                    config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'],
-                    config['hidden_len'], config['pool_size'], config['n_conv_and_pool'],
-                    config['n_conv_before_pool'], config['n_linear'])
-        else:
-            model = Autoencoder(config['kernel_len'], config['latent_len'], config['seq_len'],
-                    config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'])
+    if not config['load_prev_model_state'] is None:
+        model.load_state_dict(torch.load(config['load_prev_model_state']))
+    train_loader, valid_loader = load_data(model, config['input_path'], config['split_prop'])
+    optimizer = torch.optim.SGD(model.parameters(), lr=config['learn_rate'])
+    loss_fn = NeighbourDistanceLoss(config['neighbour_loss_prop'])
 
-        if not config['load_prev_model_state'] is None:
-            model.load_state_dict(torch.load(config['load_prev_model_state']))
-        train_loader, valid_loader = load_data(model, config['input_path'], config['split_prop'])
-        optimizer = torch.optim.SGD(model.parameters(), lr=config['learn_rate'])
-        loss_fn = NeighbourDistanceLoss(config['neighbour_loss_prop'])
+    model_str = "{}{}x{}d{}n{}l{}_{}at{}".format(config['model'],
+            model.kernel_len, model.latent_len, model.input_dropout_freq,
+            model.latent_noise_std, config['neighbour_loss_prop'],
+            model.total_epochs + config['epochs'], config['learn_rate'])
+    print("Model specification:")
+    print(model)
+    print("Config values:")
+    print(config)
+    print("Training for {} epochs".format(config['epochs']))
 
-        model_str = "{}{}x{}d{}n{}l{}_{}at{}".format(config['model'],
-                model.kernel_len, model.latent_len, model.input_dropout_freq,
-                model.latent_noise_std, config['neighbour_loss_prop'],
-                model.total_epochs + config['epochs'], config['learn_rate'])
-        print("Model specification:")
-        print(model)
-        print("Config values:")
-        print(config)
-        print("Training for {} epochs".format(config['epochs']))
+    train(model, train_loader, valid_loader, optimizer, loss_fn,
+            config['epochs'], config['disable_eval'], use_cuda=config['use_cuda_if_available'])
 
-        train(model, train_loader, valid_loader, optimizer, loss_fn,
-                config['epochs'], config['disable_eval'])
-
-        if config['save_model']:
-            out_file = seq_util.io.output_path(config['name'], config['input_path'], model_str + '.pth')
-            print("Saving model to {}".format(out_file))
-            torch.save(model.state_dict(), out_file)
+    if config['save_model']:
+        out_file = seq_util.io.output_path(config['name'], config['input_path'], model_str + '.pth')
+        print("Saving model to {}".format(out_file))
+        torch.save(model.state_dict(), out_file)
 
     return model, train_loader, valid_loader, optimizer, loss_fn

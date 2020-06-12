@@ -25,16 +25,16 @@ class Test_Autoencoder(unittest.TestCase):
 
 
     def test_load_data(self):
-        for x, x_true in self.train_loader:
+        for x in self.train_loader:
             self.assertEqual(x.shape, (self.ae.seq_per_batch, data_in.N_BASE, self.ae.seq_len))
             break  # only test the first batch
-        for x, x_true in self.valid_loader:
+        for x in self.valid_loader:
             self.assertEqual(x.shape, (self.ae.seq_per_batch, data_in.N_BASE, self.ae.seq_len))
             break  # only test the first batch
 
 
     def test_forward(self):
-        for x, x_true in self.train_loader:
+        for x in self.train_loader:
             latent = self.ae.encode(x)
             reconstructed = self.ae.decode(latent)
             latent_shape = (self.ae.seq_per_batch, self.ae.latent_len, self.ae.seq_len - (self.ae.kernel_len - 1))
@@ -44,7 +44,7 @@ class Test_Autoencoder(unittest.TestCase):
 
 
     def test_predict(self):
-        for x, x_true in self.train_loader:
+        for x in self.train_loader:
             seq = predict(x)
             npt.assert_array_equal(seq, x)
             seq = predict(self.ae.forward(x)[0])
@@ -53,7 +53,7 @@ class Test_Autoencoder(unittest.TestCase):
 
 
     def test_evaluate(self):
-        for x, x_true in self.train_loader:
+        for x in self.train_loader:
             self.ae.eval()
             accuracy, error_indexes = evaluate(self.ae, x, predict(self.ae.forward(x)[0]))
             self.assertAlmostEqual(accuracy, 1.0)
@@ -133,7 +133,7 @@ class Test_Autoencoder(unittest.TestCase):
                     input_dropout_freq=0.05, latent_noise_std=0.2, hidden_len=10, pool_size=2,
                     n_conv_and_pool=2, n_conv_before_pool=2, n_linear=2)
         train_loader, _ = load_data(ae, self.filename, split_prop=0.05)
-        for x, _ in train_loader:
+        for x in train_loader:
             reconstructed, latent = ae.forward(x)
             self.assertEqual(latent.shape, (seq_per_batch, latent_len))
             self.assertEqual(reconstructed.shape, x.shape)

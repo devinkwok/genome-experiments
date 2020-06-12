@@ -53,7 +53,7 @@ class SeqData(torch.utils.data.Dataset):
 
 
     def __getitem__(self, index):
-        return self.seq[index,:,:], self.seq[index,:,:]
+        return self.seq[index,:,:]
 
 
 def read_seq(filename):
