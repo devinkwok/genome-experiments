@@ -263,40 +263,44 @@ def train(model, train_loader, valid_loader, optimizer, loss_fn, epochs, disable
 def run(hparams):
     config = dict(_DEFAULT_HYPERPARAMETERS)
     config.update(hparams)
+
     if config['use_cuda_if_available'] and torch.cuda.is_available():
-        torch.cuda.set_device('cuda')
-
-    if config['model'] == 'Multilayer':
-        model = MultilayerEncoder(config['kernel_len'], config['latent_len'], config['seq_len'],
-                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'],
-                config['hidden_len'], config['pool_size'], config['n_conv_and_pool'],
-                config['n_conv_before_pool'], config['n_linear'])
+        device = torch.device('cuda')
     else:
-        model = Autoencoder(config['kernel_len'], config['latent_len'], config['seq_len'],
-                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'])
+        device = torch.device('cpu')
 
-    if not config['load_prev_model_state'] is None:
-        model.load_state_dict(torch.load(config['load_prev_model_state']))
-    train_loader, valid_loader = load_data(model, config['input_path'], config['split_prop'])
-    optimizer = torch.optim.SGD(model.parameters(), lr=config['learn_rate'])
-    loss_fn = NeighbourDistanceLoss(config['neighbour_loss_prop'])
+    with torch.cuda.device(device):
+        if config['model'] == 'Multilayer':
+            model = MultilayerEncoder(config['kernel_len'], config['latent_len'], config['seq_len'],
+                    config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'],
+                    config['hidden_len'], config['pool_size'], config['n_conv_and_pool'],
+                    config['n_conv_before_pool'], config['n_linear'])
+        else:
+            model = Autoencoder(config['kernel_len'], config['latent_len'], config['seq_len'],
+                    config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'])
 
-    model_str = "{}{}x{}d{}n{}l{}_{}at{}".format(config['model'],
-            model.kernel_len, model.latent_len, model.input_dropout_freq,
-            model.latent_noise_std, config['neighbour_loss_prop'],
-            model.total_epochs + config['epochs'], config['learn_rate'])
-    print("Model specification:")
-    print(model)
-    print("Config values:")
-    print(config)
-    print("Training for {} epochs".format(config['epochs']))
+        if not config['load_prev_model_state'] is None:
+            model.load_state_dict(torch.load(config['load_prev_model_state']))
+        train_loader, valid_loader = load_data(model, config['input_path'], config['split_prop'])
+        optimizer = torch.optim.SGD(model.parameters(), lr=config['learn_rate'])
+        loss_fn = NeighbourDistanceLoss(config['neighbour_loss_prop'])
 
-    train(model, train_loader, valid_loader, optimizer, loss_fn,
-            config['epochs'], config['disable_eval'])
+        model_str = "{}{}x{}d{}n{}l{}_{}at{}".format(config['model'],
+                model.kernel_len, model.latent_len, model.input_dropout_freq,
+                model.latent_noise_std, config['neighbour_loss_prop'],
+                model.total_epochs + config['epochs'], config['learn_rate'])
+        print("Model specification:")
+        print(model)
+        print("Config values:")
+        print(config)
+        print("Training for {} epochs".format(config['epochs']))
 
-    if config['save_model']:
-        out_file = seq_util.io.output_path(config['name'], config['input_path'], model_str + '.pth')
-        print("Saving model to {}".format(out_file))
-        torch.save(model.state_dict(), out_file)
+        train(model, train_loader, valid_loader, optimizer, loss_fn,
+                config['epochs'], config['disable_eval'])
+
+        if config['save_model']:
+            out_file = seq_util.io.output_path(config['name'], config['input_path'], model_str + '.pth')
+            print("Saving model to {}".format(out_file))
+            torch.save(model.state_dict(), out_file)
 
     return model, train_loader, valid_loader, optimizer, loss_fn
