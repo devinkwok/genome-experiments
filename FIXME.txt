@@ -42,5 +42,11 @@ Multilayer issues
 Visualization
 ------------
  - different brightness for overlapping genes?
+ - pretty sure region annotation visualization is bugged
 
 - save checkpoints for model, maybe add tensorboard
+
+HPC
+ - tensors are immutable and return a new tensor when sent to another device using `to()`, whereas models are objects and sent to device simply by calling `to()`, that is:
+ `cuda_tensor = cpu_tensor.to(cuda_device)  # cpu_tensor is still on cpu, cuda_tensor is on device`
+ `model.to(cuda_device)  # don't need to reassign`

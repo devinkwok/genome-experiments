@@ -67,3 +67,8 @@ see https://github.com/ShayanPersonal/stacked-autoencoder-pytorch/blob/master/mo
 
 - SIFT/PolyPhen data can be used to find functional variants
 - could use Selene and train directly with DeepSEA data
+
+
+ - see https://medium.com/speechmatics/how-to-build-a-streaming-dataloader-with-pytorch-a66dd891d9dd
+ - design the dataloader for sequential and shuffled access
+ - shuffle by chromosome, or region, multiple heads (starting positions), or sequential

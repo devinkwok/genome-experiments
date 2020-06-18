@@ -168,6 +168,29 @@ def exp7_multilayer_long():
     experiment(hparams, 'hidden_len', [12, 24, 36])
 
 
+def exp8_multilayer_rerun():
+    hparams = {
+        'model': 'Multilayer',
+        'name': "aem0",
+        'kernel_len': 9,
+        'latent_len': 200,
+        'seq_len': 64,
+        'seq_per_batch': 40,
+        'input_path': "data/ref_genome/chr22.fa",
+        # 'load_prev_model_state': "outputs/src/ae/autoencoder/aem0chr22_excerpt_4mMultilayer3x30d0.05n0.3l0.0_20at2.0.pth",
+        'split_prop': 0.05,
+        'epochs': 20,
+        'learn_rate': 0.1,
+        'input_dropout_freq': 0.03,
+        'latent_noise_std': 0.2,
+        'hidden_len': 24,
+        'pool_size': 4,
+        'n_conv_and_pool': 2,
+        'n_conv_before_pool': 2,
+        'n_linear': 2,
+        'neighbour_loss_prop': 0.0,
+    }
+    experiment(hparams, 'input_dropout_freq', [0.0, 0.02, 0.05, 0.0, 0.02, 0.05, 0.0, 0.02, 0.05])
 
 if __name__ == '__main__':
     # for reproducibility
@@ -183,4 +206,5 @@ if __name__ == '__main__':
     # exp4_larger_windows()
     # exp5_neighbourhood_loss()
     # exp6_multilayer()
-    exp7_multilayer_long()
+    # exp7_multilayer_long()
+    exp8_multilayer_rerun()
