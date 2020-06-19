@@ -131,7 +131,7 @@ class Test_Autoencoder(unittest.TestCase):
         latent_len = 100
         ae = MultilayerEncoder(kernel_len=3, latent_len=latent_len, seq_len=128, seq_per_batch=seq_per_batch,
                     input_dropout_freq=0.05, latent_noise_std=0.2, hidden_len=10, pool_size=2,
-                    n_conv_and_pool=2, n_conv_before_pool=2, n_linear=2)
+                    n_conv_and_pool=2, n_conv_before_pool=2, n_linear=2, hidden_dropout_freq=0.0)
         train_loader, _ = load_data(ae, self.filename, split_prop=0.05)
         for x in train_loader:
             reconstructed, latent = ae.forward(x)

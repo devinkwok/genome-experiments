@@ -39,6 +39,7 @@ _DEFAULT_HYPERPARAMETERS = {
     'n_conv_before_pool': 1,
     'n_linear': 1,
     'use_cuda_if_available': True,
+    'hidden_dropout_freq': 0.1,
 }
 
 
@@ -145,7 +146,7 @@ class Autoencoder(nn.Module):
 class MultilayerEncoder(Autoencoder):
 
     def __init__(self, kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std,
-                hidden_len, pool_size, n_conv_and_pool, n_conv_before_pool, n_linear):
+                hidden_len, pool_size, n_conv_and_pool, n_conv_before_pool, n_linear, hidden_dropout_freq):
         
         super().__init__(kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std)
         self.seq_overlap = 0
@@ -167,7 +168,7 @@ class MultilayerEncoder(Autoencoder):
                 encode_layers['relu{}{}'.format(i, j)] = nn.ReLU()
             encode_layers['pool{}'.format(i)] = nn.MaxPool1d(pool_size)
             encode_layers['norm{}'.format(i)] = nn.BatchNorm1d(n_out)
-            encode_layers['dropout{}'.format(i)] = nn.Dropout(input_dropout_freq)
+            encode_layers['dropout{}'.format(i)] = nn.Dropout(hidden_dropout_freq)
 
         linear_size = int(seq_len / (pool_size ** n_conv_and_pool))
         encode_layers['view'] = View((-1, linear_size * out_size[-1]))
@@ -278,7 +279,7 @@ def run(hparams):
         model = MultilayerEncoder(config['kernel_len'], config['latent_len'], config['seq_len'],
                 config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'],
                 config['hidden_len'], config['pool_size'], config['n_conv_and_pool'],
-                config['n_conv_before_pool'], config['n_linear'])
+                config['n_conv_before_pool'], config['n_linear'], config['hidden_dropout_freq'])
     else:
         model = Autoencoder(config['kernel_len'], config['latent_len'], config['seq_len'],
                 config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'])

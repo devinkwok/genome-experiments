@@ -137,6 +137,7 @@ def exp6_multilayer():
         'n_conv_before_pool': 1,
         'n_linear': 1,
         'neighbour_loss_prop': 0.0,
+        'hidden_dropout_freq': 0.05,
     }
     experiment(hparams, 'learn_rate', [10., 5., 2.])
     # experiment(hparams, 'n_conv_before_pool', [1, 2, 3])
@@ -163,6 +164,7 @@ def exp7_multilayer_long():
         'n_conv_before_pool': 1,
         'n_linear': 1,
         'neighbour_loss_prop': 0.0,
+        'hidden_dropout_freq': 0.05,
     }
     experiment(hparams, 'latent_len', [80, 160, 240])
     experiment(hparams, 'hidden_len', [12, 24, 36])
@@ -171,7 +173,7 @@ def exp7_multilayer_long():
 def exp8_multilayer_rerun():
     hparams = {
         'model': 'Multilayer',
-        'name': "aem0",
+        'name': "aem0h",
         'kernel_len': 9,
         'latent_len': 200,
         'seq_len': 64,
@@ -189,8 +191,9 @@ def exp8_multilayer_rerun():
         'n_conv_before_pool': 2,
         'n_linear': 2,
         'neighbour_loss_prop': 0.0,
+        'hidden_dropout_freq': 0.05,
     }
-    experiment(hparams, 'input_dropout_freq', [0.0, 0.02, 0.05, 0.0, 0.02, 0.05, 0.0, 0.02, 0.05])
+    experiment(hparams, 'hidden_dropout_freq', [0.0, 0.05, 0.1, 0.2])
 
 if __name__ == '__main__':
     # for reproducibility
@@ -205,6 +208,6 @@ if __name__ == '__main__':
     # exp3_latent_noise()
     # exp4_larger_windows()
     # exp5_neighbourhood_loss()
-    # exp6_multilayer()
+    exp6_multilayer()
     # exp7_multilayer_long()
-    exp8_multilayer_rerun()
+    # exp8_multilayer_rerun()
