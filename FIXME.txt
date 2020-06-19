@@ -57,3 +57,5 @@ HPC
  - use cudnn library if available:
     torch.backends.cudnn.benchmark = True
     torch.backends.cudnn.enabled = True
+
+- order matters for input, target in loss functions (due to derivative implementations)

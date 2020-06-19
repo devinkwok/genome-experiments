@@ -76,3 +76,5 @@ note on DeepSEA data:
  - see https://medium.com/speechmatics/how-to-build-a-streaming-dataloader-with-pytorch-a66dd891d9dd
  - design the dataloader for sequential and shuffled access
  - shuffle by chromosome, or region, multiple heads (starting positions), or sequential
+
+ - need to save model checkpoints, and do command line parameter config

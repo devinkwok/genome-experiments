@@ -200,11 +200,11 @@ if __name__ == '__main__':
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
     
-    exp1_window_size()
+    # exp1_window_size()
     # exp2_input_drop()
     # exp3_latent_noise()
     # exp4_larger_windows()
     # exp5_neighbourhood_loss()
     # exp6_multilayer()
     # exp7_multilayer_long()
-    # exp8_multilayer_rerun()
+    exp8_multilayer_rerun()

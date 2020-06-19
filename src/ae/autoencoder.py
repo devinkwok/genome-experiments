@@ -40,6 +40,7 @@ _DEFAULT_HYPERPARAMETERS = {
     'n_conv_before_pool': 1,
     'n_linear': 1,
     'use_cuda_if_available': True,
+    'hidden_dropout_freq': 0.1
 }
 
 
@@ -90,11 +91,10 @@ class NeighbourDistanceLoss(nn.Module):
         self.mse_loss = nn.MSELoss()
     
     def forward(self, x, z, y):
-        print(x, z, y)
         if self.neighbour_loss_prop > 0.0:
-            return self.bce_loss(x, z) * (1 - self.neighbour_loss_prop) + \
+            return self.bce_loss(z, x) * (1 - self.neighbour_loss_prop) + \
                 self.mse_loss(y[:, :, :-1], y[:, :, 1:]) * self.neighbour_loss_prop
-        return self.bce_loss(x, z)
+        return self.bce_loss(z, x)
 
 
 class Autoencoder(nn.Module):
@@ -162,7 +162,7 @@ class Autoencoder(nn.Module):
 class MultilayerEncoder(Autoencoder):
 
     def __init__(self, kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn,
-                hidden_len, pool_size, n_conv_and_pool, n_conv_before_pool, n_linear):
+                hidden_len, pool_size, n_conv_and_pool, n_conv_before_pool, n_linear, hidden_dropout_freq):
         
         super().__init__(kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn)
         self.seq_overlap = 0
@@ -184,7 +184,7 @@ class MultilayerEncoder(Autoencoder):
                 encode_layers['relu{}{}'.format(i, j)] = nn.ReLU()
             encode_layers['pool{}'.format(i)] = nn.MaxPool1d(pool_size)
             encode_layers['norm{}'.format(i)] = nn.BatchNorm1d(n_out)
-            encode_layers['dropout{}'.format(i)] = nn.Dropout(input_dropout_freq)
+            encode_layers['dropout{}'.format(i)] = nn.Dropout(hidden_dropout_freq)
 
         linear_size = int(seq_len / (pool_size ** n_conv_and_pool))
         encode_layers['view'] = View((-1, linear_size * out_size[-1]))
@@ -220,20 +220,14 @@ class MultilayerEncoder(Autoencoder):
         self.decode_layers = decode_layers
 
 
-    # takes in indexes instead of one-hot
-    def encode(self, x):
-        one_hot = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1)
-        return super().encode(one_hot.type(torch.float32))
-
-
-    # need to convert to one hot
+    # need to convert to one hot first
     def loss(self, x):
-        reconstructed, latent = self.forward(x)
-        one_hot = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1)
-        return self.loss_fn(one_hot.type(torch.float32), reconstructed, latent)
+        one_hot = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+        reconstructed, latent = self.forward(one_hot)
+        return self.loss_fn(one_hot, reconstructed, latent)
 
 
-    # takes in indexes instead of one-hot
+    # compare indexes instead of one-hot
     def evaluate(self, x, true_x):
         z, y = self.forward(x)
         predictions = torch.argmax(reconstruction, 1, keepdim=False)
@@ -289,8 +283,7 @@ def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, us
         for x in train_loader:
             x = x.to(device)
             optimizer.zero_grad()
-            # z, y = model.forward(x)
-            loss = model.loss(x, z, y) #FIXME
+            loss = model.loss(x)
             loss_sum += loss.item()
             loss.backward()
             optimizer.step()
@@ -312,7 +305,7 @@ def run(hparams):
         model = MultilayerEncoder(config['kernel_len'], config['latent_len'], config['seq_len'],
                 config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn,
                 config['hidden_len'], config['pool_size'], config['n_conv_and_pool'],
-                config['n_conv_before_pool'], config['n_linear'])
+                config['n_conv_before_pool'], config['n_linear'], config['hidden_dropout_freq'])
     else:
         model = Autoencoder(config['kernel_len'], config['latent_len'], config['seq_len'],
                 config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn)
