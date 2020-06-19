@@ -68,6 +68,10 @@ see https://github.com/ShayanPersonal/stacked-autoencoder-pytorch/blob/master/mo
 - SIFT/PolyPhen data can be used to find functional variants
 - could use Selene and train directly with DeepSEA data
 
+note on DeepSEA data:
+ - mat files are from matlab, consist of train (one-hot sequence) and label (919 TF factor, binary) arrays
+ - this has all been preprocessed and can be directly trained on
+ - see http://hgdownload.cse.ucsc.edu/goldenpath/hg19/encodeDCC/wgEncodeAwgTfbsUniform/ for TF data
 
  - see https://medium.com/speechmatics/how-to-build-a-streaming-dataloader-with-pytorch-a66dd891d9dd
  - design the dataloader for sequential and shuffled access

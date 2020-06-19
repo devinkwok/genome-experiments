@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import data_in
+from datasets import SequenceDataset
 import seq_util.io
 
 N_BASE = data_in.N_BASE
@@ -89,6 +90,7 @@ class NeighbourDistanceLoss(nn.Module):
         self.mse_loss = nn.MSELoss()
     
     def forward(self, x, z, y):
+        print(x, z, y)
         if self.neighbour_loss_prop > 0.0:
             return self.bce_loss(x, z) * (1 - self.neighbour_loss_prop) + \
                 self.mse_loss(y[:, :, :-1], y[:, :, 1:]) * self.neighbour_loss_prop
@@ -98,7 +100,7 @@ class NeighbourDistanceLoss(nn.Module):
 class Autoencoder(nn.Module):
 
 
-    def __init__(self, kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std):
+    def __init__(self, kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn):
         super().__init__()
         self.kernel_len = kernel_len
         self.latent_len = latent_len
@@ -106,6 +108,7 @@ class Autoencoder(nn.Module):
         self.seq_per_batch = seq_per_batch
         self.input_dropout_freq = input_dropout_freq
         self.latent_noise_std = latent_noise_std
+        self.loss_fn = loss_fn
         self.seq_overlap = self.kernel_len - 1
 
         self.total_epochs = 0  # tracks number of epochs this model has been trained
@@ -139,15 +142,29 @@ class Autoencoder(nn.Module):
         return reconstructed, latent
 
 
+    def loss(self, x):
+        reconstructed, latent = self.forward(x)
+        return self.loss_fn(x, reconstructed, latent)
+
+
+    def evaluate(self, x, true_x):
+        z, y = self.forward(x)
+        predictions = predict(z)
+        correct = (data_in.one_hot_to_seq(true_x) == data_in.one_hot_to_seq(predictions))
+        accuracy = torch.sum(correct).item() / correct.nelement()
+        error_indexes = torch.nonzero(torch.logical_not(correct), as_tuple=True)
+        return accuracy, error_indexes
+
+
 # class DilationEncoder(Autoencoder):
 #     pass
 
 class MultilayerEncoder(Autoencoder):
 
-    def __init__(self, kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std,
+    def __init__(self, kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn,
                 hidden_len, pool_size, n_conv_and_pool, n_conv_before_pool, n_linear):
         
-        super().__init__(kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std)
+        super().__init__(kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn)
         self.seq_overlap = 0
 
         pad = int(kernel_len / 2)
@@ -203,16 +220,27 @@ class MultilayerEncoder(Autoencoder):
         self.decode_layers = decode_layers
 
 
-def load_data(model, input_path, split_prop):
-    dataset = data_in.SeqData.from_file(input_path, seq_len=model.seq_len,
-        overlap=model.seq_overlap, do_cull=True, cull_threshold=0.99)
-    split_size = int(split_prop * len(dataset))
-    train_data, valid_data = torch.utils.data.random_split(dataset, [len(dataset) - split_size, split_size])
-    train_loader = torch.utils.data.DataLoader(
-            train_data, batch_size=model.seq_per_batch, shuffle=True, num_workers=4)
-    valid_loader = torch.utils.data.DataLoader(
-            valid_data, batch_size=model.seq_per_batch, shuffle=True, num_workers=4)
-    return train_loader, valid_loader
+    # takes in indexes instead of one-hot
+    def encode(self, x):
+        one_hot = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1)
+        return super().encode(one_hot.type(torch.float32))
+
+
+    # need to convert to one hot
+    def loss(self, x):
+        reconstructed, latent = self.forward(x)
+        one_hot = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1)
+        return self.loss_fn(one_hot.type(torch.float32), reconstructed, latent)
+
+
+    # takes in indexes instead of one-hot
+    def evaluate(self, x, true_x):
+        z, y = self.forward(x)
+        predictions = torch.argmax(reconstruction, 1, keepdim=False)
+        correct = (true_x == predictions)
+        accuracy = torch.sum(correct).item() / correct.nelement()
+        error_indexes = torch.nonzero(torch.logical_not(correct), as_tuple=True)
+        return accuracy, error_indexes
 
 
 # if no output is above the cutoff, predict empty (none)
@@ -224,19 +252,24 @@ def predict(reconstruction, empty_cutoff_prob=(1 / N_BASE)):
     return output.permute(0, 2, 1)
 
 
-def evaluate(model, x, true_x):
-    z, y = model.forward(x)
-    predictions = predict(z)
-    correct = (data_in.one_hot_to_seq(true_x) == data_in.one_hot_to_seq(predictions))
-    accuracy = torch.sum(correct).item() / correct.nelement()
-    error_indexes = torch.nonzero(torch.logical_not(correct), as_tuple=True)
-    #FIXME accuracy doesn't seem to be on each input separately
-    return accuracy, error_indexes
+def load_data(model, input_path, split_prop):
+    if (type(model).__name__ == 'MultilayerEncoder'):
+        dataset = SequenceDataset(input_path, model.seq_len)
+    else:
+        dataset = data_in.SeqData.from_file(input_path, seq_len=model.seq_len,
+                overlap=model.seq_overlap, do_cull=True, cull_threshold=0.99)
+    split_size = int(split_prop * len(dataset))
+    train_data, valid_data = torch.utils.data.random_split(dataset, [len(dataset) - split_size, split_size])
+    train_loader = torch.utils.data.DataLoader(
+            train_data, batch_size=model.seq_per_batch, shuffle=True, num_workers=4)
+    valid_loader = torch.utils.data.DataLoader(
+            valid_data, batch_size=model.seq_per_batch, shuffle=True, num_workers=4)
+    return train_loader, valid_loader
 
 
 # disable_eval is a quick hack to turn evaluation code off and on, this is useful for testing
 # model effectiveness while dropout and noise are included
-def train(model, train_loader, valid_loader, optimizer, loss_fn, epochs, disable_eval, use_cuda=False):
+def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, use_cuda=False):
     # target CPU or GPU
     if use_cuda and torch.cuda.is_available():
         device = torch.device('cuda')
@@ -256,8 +289,8 @@ def train(model, train_loader, valid_loader, optimizer, loss_fn, epochs, disable
         for x in train_loader:
             x = x.to(device)
             optimizer.zero_grad()
-            z, y = model.forward(x)
-            loss = loss_fn(z, x, y)
+            # z, y = model.forward(x)
+            loss = model.loss(x, z, y) #FIXME
             loss_sum += loss.item()
             loss.backward()
             optimizer.step()
@@ -265,7 +298,7 @@ def train(model, train_loader, valid_loader, optimizer, loss_fn, epochs, disable
         if not disable_eval:
             model.eval()
             valid_data = next(validation).to(device)
-        accuracy, _ = evaluate(model, valid_data, valid_data)
+        accuracy, _ = model.evaluate(valid_data, valid_data)
         print("epoch {}, avg loss {}, validation acc. {}".format(
                 i, loss_sum / len(train_loader), accuracy))
 
@@ -274,20 +307,20 @@ def run(hparams):
     config = dict(_DEFAULT_HYPERPARAMETERS)
     config.update(hparams)
 
+    loss_fn = NeighbourDistanceLoss(config['neighbour_loss_prop'])
     if config['model'] == 'Multilayer':
         model = MultilayerEncoder(config['kernel_len'], config['latent_len'], config['seq_len'],
-                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'],
+                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn,
                 config['hidden_len'], config['pool_size'], config['n_conv_and_pool'],
                 config['n_conv_before_pool'], config['n_linear'])
     else:
         model = Autoencoder(config['kernel_len'], config['latent_len'], config['seq_len'],
-                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'])
+                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn)
 
     if not config['load_prev_model_state'] is None:
         model.load_state_dict(torch.load(config['load_prev_model_state']))
     train_loader, valid_loader = load_data(model, config['input_path'], config['split_prop'])
     optimizer = torch.optim.SGD(model.parameters(), lr=config['learn_rate'])
-    loss_fn = NeighbourDistanceLoss(config['neighbour_loss_prop'])
 
     model_str = "{}{}x{}d{}n{}l{}_{}at{}".format(config['model'],
             model.kernel_len, model.latent_len, model.input_dropout_freq,
@@ -299,7 +332,7 @@ def run(hparams):
     print(config)
     print("Training for {} epochs".format(config['epochs']))
 
-    train(model, train_loader, valid_loader, optimizer, loss_fn,
+    train(model, train_loader, valid_loader, optimizer,
             config['epochs'], config['disable_eval'], use_cuda=config['use_cuda_if_available'])
 
     if config['save_model']:

@@ -50,3 +50,10 @@ HPC
  - tensors are immutable and return a new tensor when sent to another device using `to()`, whereas models are objects and sent to device simply by calling `to()`, that is:
  `cuda_tensor = cpu_tensor.to(cuda_device)  # cpu_tensor is still on cpu, cuda_tensor is on device`
  `model.to(cuda_device)  # don't need to reassign`
+ - data parallelization: include loss function in forward pass https://blog.paperspace.com/pytorch-memory-multi-gpu-debugging/
+ - `del` tensors as soon as it is used to avoid memory leak (or modify in place?)
+ - gradients are kept until `backward` is called, this can cause memory leak for tensors with gradients, solution is to calculate using `tensor.items()`
+ - multiprocess may need to run `torch.cuda.empy_cache()`
+ - use cudnn library if available:
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.enabled = True
