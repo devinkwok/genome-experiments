@@ -1,6 +1,6 @@
 import sys
 sys.path.append('./src/')
-from collections import OrderedDict
+import argparse
 
 import numpy as np
 import torch
@@ -17,7 +17,7 @@ N_BASE = data_in.N_BASE
 # where n is number of subsequences per batch, N_BASE is number of channels
 # and subseq_len is the length of subsequences
 
-_DEFAULT_HYPERPARAMETERS = {
+__CONFIG_DEFAULT = {
     'name': 'DEFAULT',
     'model': 'Autoencoder',
     'kernel_len': 1,
@@ -25,7 +25,7 @@ _DEFAULT_HYPERPARAMETERS = {
     'seq_len': 1,
     'seq_per_batch': 1,
     'input_path': "",
-    'split_prop': 0.0,
+    'split_prop': 0.5,
     'epochs': 0,
     'learn_rate': 0.01,
     'input_dropout_freq': 0.0,
@@ -41,6 +41,8 @@ _DEFAULT_HYPERPARAMETERS = {
     'n_linear': 1,
     'use_cuda_if_available': True,
     'hidden_dropout_freq': 0.1,
+    'fixed_random_seed': True,
+    'n_dataloader_workers': 4,
 }
 
 
@@ -109,7 +111,6 @@ class Autoencoder(nn.Module):
         self.input_dropout_freq = input_dropout_freq
         self.latent_noise_std = latent_noise_std
         self.loss_fn = loss_fn
-        self.seq_overlap = self.kernel_len - 1
 
         self.total_epochs = 0  # tracks number of epochs this model has been trained
 
@@ -165,7 +166,6 @@ class MultilayerEncoder(Autoencoder):
                 hidden_len, pool_size, n_conv_and_pool, n_conv_before_pool, n_linear, hidden_dropout_freq):
         
         super().__init__(kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn)
-        self.seq_overlap = 0
 
         pad = int(kernel_len / 2)
         sizes = [N_BASE] + [hidden_len * (i + 1) for i in range(n_conv_and_pool)]
@@ -228,7 +228,8 @@ class MultilayerEncoder(Autoencoder):
     # need to convert to one hot first
     def loss(self, x):
         one_hot = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
-        reconstructed, latent = super().forward(one_hot)
+        latent = super().encode(one_hot)
+        reconstructed = self.decode(latent)
         return self.loss_fn(one_hot, reconstructed, latent)
 
 
@@ -251,18 +252,18 @@ def predict(reconstruction, empty_cutoff_prob=(1 / N_BASE)):
     return output.permute(0, 2, 1)
 
 
-def load_data(model, input_path, split_prop):
-    if (type(model).__name__ == 'MultilayerEncoder'):
+def load_data(model, input_path, split_prop, n_dataloader_workers):
+    if type(model) is MultilayerEncoder:
         dataset = SequenceDataset(input_path, model.seq_len)
     else:
         dataset = data_in.SeqData.from_file(input_path, seq_len=model.seq_len,
-                overlap=model.seq_overlap, do_cull=True, cull_threshold=0.99)
+                overlap=(model.kernel_len - 1), do_cull=True, cull_threshold=0.99)
     split_size = int(split_prop * len(dataset))
     train_data, valid_data = torch.utils.data.random_split(dataset, [len(dataset) - split_size, split_size])
-    train_loader = torch.utils.data.DataLoader(
-            train_data, batch_size=model.seq_per_batch, shuffle=True, num_workers=4)
-    valid_loader = torch.utils.data.DataLoader(
-            valid_data, batch_size=model.seq_per_batch, shuffle=True, num_workers=4)
+    train_loader = torch.utils.data.DataLoader(train_data,
+            batch_size=model.seq_per_batch, shuffle=True, num_workers=n_dataloader_workers)
+    valid_loader = torch.utils.data.DataLoader(valid_data,
+            batch_size=model.seq_per_batch, shuffle=True, num_workers=n_dataloader_workers)
     return train_loader, valid_loader
 
 
@@ -301,9 +302,14 @@ def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, us
                 i, loss_sum / len(train_loader), accuracy))
 
 
-def run(hparams):
-    config = dict(_DEFAULT_HYPERPARAMETERS)
-    config.update(hparams)
+def run(update_config):
+    config = dict(__CONFIG_DEFAULT)
+    config.update(update_config)
+
+    if config['fixed_random_seed']:
+        torch.manual_seed(0)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
     loss_fn = NeighbourDistanceLoss(config['neighbour_loss_prop'])
     if config['model'] == 'Multilayer':
@@ -317,7 +323,8 @@ def run(hparams):
 
     if not config['load_prev_model_state'] is None:
         model.load_state_dict(torch.load(config['load_prev_model_state']))
-    train_loader, valid_loader = load_data(model, config['input_path'], config['split_prop'])
+    train_loader, valid_loader = load_data(model, config['input_path'],
+            config['split_prop'], config['n_dataloader_workers'])
     optimizer = torch.optim.SGD(model.parameters(), lr=config['learn_rate'])
 
     model_str = "{}{}x{}d{}n{}l{}_{}at{}".format(config['model'],
@@ -339,3 +346,11 @@ def run(hparams):
         torch.save(model.state_dict(), out_file)
 
     return model, train_loader, valid_loader, optimizer, loss_fn
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser('Configuration and hyperparameters for autoencoder.')
+    for key, value in __CONFIG_DEFAULT.items():
+        parser.add_argument('--' + key, type=type(value), required=False, default=value)
+    config = parser.parse_args()
+    run(vars(config))

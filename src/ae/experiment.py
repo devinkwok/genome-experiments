@@ -196,13 +196,6 @@ def exp8_multilayer_rerun():
     experiment(hparams, 'hidden_dropout_freq', [0.0, 0.05, 0.1, 0.2])
 
 if __name__ == '__main__':
-    # for reproducibility
-    DEBUG = True
-    if DEBUG:
-        torch.manual_seed(0)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
-    
     # exp1_window_size()
     # exp2_input_drop()
     # exp3_latent_noise()

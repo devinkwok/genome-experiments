@@ -18,7 +18,7 @@ class Test_Autoencoder(unittest.TestCase):
         self.ae = Autoencoder(kernel_len=5, latent_len=2, seq_len=17, seq_per_batch=7,
                 input_dropout_freq=0.0, latent_noise_std=0.0, loss_fn=NeighbourDistanceLoss(0.0))
         self.filename = "data/ref_genome/test.fasta"
-        self.train_loader, self.valid_loader = load_data(self.ae, self.filename, split_prop=0.2)
+        self.train_loader, self.valid_loader = load_data(self.ae, self.filename, split_prop=0.2, n_dataloader_workers=2)
         self.shape = (5, 4, 3)
         self.ones = torch.ones(*self.shape)
         self.zeros = torch.zeros(*self.shape)
@@ -132,7 +132,7 @@ class Test_Autoencoder(unittest.TestCase):
         ae = MultilayerEncoder(kernel_len=3, latent_len=latent_len, seq_len=128, seq_per_batch=seq_per_batch,
                     input_dropout_freq=0.05, latent_noise_std=0.2, hidden_len=10, pool_size=2, loss_fn=NeighbourDistanceLoss(0.0),
                     n_conv_and_pool=2, n_conv_before_pool=2, n_linear=2, hidden_dropout_freq=0.0)
-        train_loader, _ = load_data(ae, self.filename, split_prop=0.05)
+        train_loader, _ = load_data(ae, self.filename, split_prop=0.05, n_dataloader_workers=2)
         for x in train_loader:
             reconstructed, latent = ae.forward(x)
             self.assertEqual(latent.shape, (seq_per_batch, latent_len))
