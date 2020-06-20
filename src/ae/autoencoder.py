@@ -235,8 +235,8 @@ class MultilayerEncoder(Autoencoder):
 
     # compare indexes instead of one-hot
     def evaluate(self, x, true_x):
-        z, y = self.forward(x)
-        predictions = torch.argmax(reconstruction, 1, keepdim=False)
+        z, _ = self.forward(x)
+        predictions = torch.argmax(z, 1, keepdim=False)
         correct = (true_x == predictions)
         accuracy = torch.sum(correct).item() / correct.nelement()
         error_indexes = torch.nonzero(torch.logical_not(correct), as_tuple=True)
