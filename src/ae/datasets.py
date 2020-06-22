@@ -22,42 +22,47 @@ N_BASE = 4
 class SequenceDataset(torch.utils.data.Dataset):
 
     def __init__(self, fasta_filename, subseq_len):
+        print("reading sequence from file...")
         bioseq = SeqIO.read(fasta_filename, "fasta")
-        no_gaps = bioseq.seq.ungap('N').ungap('n')
-        seq_array = [
-            no_gaps,
-            no_gaps[::-1],
-            no_gaps.complement(),
-            no_gaps.reverse_complement()
-            ]
-        self.seqs = [bioseq_to_np(x) for x in seq_array]
+        self.seq = bioseq.seq.ungap('N').ungap('n')
         self.subseq_len = subseq_len
+        self.augment_state = 0
+
 
     @property
     def subseq_len(self):
-        return self.__subseq_len
+        return self._subseq_len
+
 
     @subseq_len.setter
     def subseq_len(self, value):
-        self.__subseq_len = value
-        self._seq_len = len(self.seqs[0]) - self.__subseq_len + 1
+        self._subseq_len = value
+        self._seq_len = len(self.seq) - self._subseq_len + 1
 
 
     def __len__(self):
-        return self._seq_len * 4
+        return self._seq_len
 
 
     def __getitem__(self, index):
-        seq_type = int(index / self._seq_len)
-        seq_pos = index % self._seq_len
-        subseq = self.seqs[seq_type][seq_pos : seq_pos + self.subseq_len]
-        return torch.LongTensor(subseq)
+        subseq = self.seq[index:index + self.subseq_len]
+        # randomly assign reverse, complement, or reverse complement
+        self.augment_state += 1
+        if self.augment_state == 1:
+            subseq = subseq[::-1]
+        elif self.augment_state == 2:
+            subseq = subseq.complement()
+        elif self.augment_state == 3:
+            subseq = subseq.reverse_complement()
+        else:
+            self.augment_state = 0
+        return bioseq_to_tensor(subseq)
 
 
-def bioseq_to_np(bioseq):
+def bioseq_to_tensor(bioseq):
     str_array = np.array(bioseq)
     int_array = np.empty(len(bioseq), dtype='int8')
     for base, index in BASE_TO_INDEX.items():
         match = (str_array == base)
         int_array[match] = index
-    return int_array
+    return torch.LongTensor(int_array)
