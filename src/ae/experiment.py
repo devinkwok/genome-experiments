@@ -178,7 +178,7 @@ def exp8_multilayer_rerun():
         'kernel_len': 9,
         'latent_len': 200,
         'seq_len': 64,
-        'seq_per_batch': 40,
+        'seq_per_batch': 200,
         'input_path': "data/ref_genome/chr22.fa",
         # 'load_prev_model_state': "outputs/src/ae/autoencoder/aem0chr22_excerpt_4mMultilayer3x30d0.05n0.3l0.0_20at2.0.pth",
         'split_prop': 0.05,
@@ -193,8 +193,10 @@ def exp8_multilayer_rerun():
         'n_linear': 2,
         'neighbour_loss_prop': 0.0,
         'hidden_dropout_freq': 0.05,
+        'n_dataloader_workers': 4,
+        'checkpoint_interval': 1000000,
     }
-    experiment(hparams, 'hidden_dropout_freq', [0.0, 0.05, 0.1, 0.2])
+    experiment(hparams, 'learn_rate', [0.1, 0.01, 0.001])
 
 if __name__ == '__main__':
     # exp1_window_size()
@@ -202,6 +204,6 @@ if __name__ == '__main__':
     # exp3_latent_noise()
     # exp4_larger_windows()
     # exp5_neighbourhood_loss()
-    exp6_multilayer()
+    # exp6_multilayer()
     # exp7_multilayer_long()
-    # exp8_multilayer_rerun()
+    exp8_multilayer_rerun()

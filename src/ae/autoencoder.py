@@ -42,7 +42,7 @@ __CONFIG_DEFAULT = {
     'use_cuda_if_available': True,
     'hidden_dropout_freq': 0.1,
     'fixed_random_seed': True,
-    'n_dataloader_workers': 4,
+    'n_dataloader_workers': 2,
     'checkpoint_interval': 1000,
 }
 
@@ -275,7 +275,6 @@ def evaluate_model(model, valid_loader, device, disable_eval):
         model.eval()
     with torch.no_grad():
         total_acc, total_elements = 0, 0
-        # print(len(valid_loader))
         for batch in valid_loader:
             x = batch.to(device)
             accuracy, _ = model.evaluate(x, x)
@@ -313,7 +312,6 @@ def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, ch
             optimizer.step()
             optimizer.zero_grad()
             del x, loss
-            print(n_batches)
 
             if n_batches % checkpoint_interval == 0:
                 avg_loss = loss_sum / checkpoint_interval
