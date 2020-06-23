@@ -198,6 +198,40 @@ def exp8_multilayer_rerun():
     }
     experiment(hparams, 'learn_rate', [0.1, 0.01, 0.001])
 
+def exp9_latentlinear():
+
+    hparams = {
+        'name': 'linear',
+        'model': 'LatentLinearRegression',
+        'kernel_len': 9,
+        'latent_len': 200,
+        'seq_len': 64,
+        'seq_per_batch': 200,
+        'input_path': 'data/deepsea/deepsea-test.pyc',
+        'split_prop': 0.05,
+        'epochs': 2,
+        'learn_rate': 0.001,
+        'input_dropout_freq': 0.0,
+        'latent_noise_std': 0.0,
+        'save_model': True,
+        'disable_eval': False,
+        'neighbour_loss_prop': 0.0,
+        'load_prev_model_state': 'outputs/src/ae/experiment/aem0hchr22Multilayer9x200d0.03n0.2l0.0_3at1.0_0-79999.pth',
+        'hidden_len': 24,
+        'pool_size': 4,
+        'n_conv_and_pool': 2,
+        'n_conv_before_pool': 2,
+        'n_linear': 2,
+        'use_cuda_if_available': True,
+        'hidden_dropout_freq': 0.0,
+        'fixed_random_seed': True,
+        'n_dataloader_workers': 4,
+        'checkpoint_interval': 1,
+        'output_len': 2,      # for supervised model
+    }
+    experiment(hparams, 'learn_rate', [0.1, 0.01, 0.001])
+    
+
 if __name__ == '__main__':
     # exp1_window_size()
     # exp2_input_drop()
@@ -206,4 +240,5 @@ if __name__ == '__main__':
     # exp5_neighbourhood_loss()
     # exp6_multilayer()
     # exp7_multilayer_long()
-    exp8_multilayer_rerun()
+    # exp8_multilayer_rerun()
+    exp9_latentlinear()

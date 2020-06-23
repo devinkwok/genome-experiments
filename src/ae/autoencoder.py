@@ -44,6 +44,7 @@ __CONFIG_DEFAULT = {
     'fixed_random_seed': True,
     'n_dataloader_workers': 2,
     'checkpoint_interval': 1000,
+    'output_len': 919,      # for supervised model
 }
 
 
@@ -221,8 +222,11 @@ class MultilayerEncoder(Autoencoder):
         self.decode_layers = decode_layers
 
 
-    def encode(self, x):
-        one_hot = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+    def encode(self, x, is_onehot=False):
+        if not is_onehot:
+            one_hot = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+        else:
+            one_hot = x
         return super().encode(one_hot)
 
 
@@ -244,6 +248,62 @@ class MultilayerEncoder(Autoencoder):
         return accuracy, error_indexes
 
 
+class LatentLinearRegression(Autoencoder):
+
+    def __init__(self, kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn,
+                encoder, output_dim):
+        super().__init__(kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn)
+        self.encoder = encoder
+        self.linear = nn.Linear(latent_len, output_dim, bias=True)
+        self.sigmoid = nn.Sigmoid()
+        self.loss_fn = nn.BCELoss()
+
+
+    def forward(self, x):
+        with torch.no_grad():
+            latent = self.encoder.encode(x, is_onehot=True)
+        y = self.linear(latent)
+        return self.sigmoid(y)
+
+
+    def loss(self, x, labels):
+        y = self.forward(x)
+        return self.loss_fn(y, labels.type(torch.float32))
+
+
+    def evaluate(self, x, labels):
+        y = self.forward(x)
+        y_true = (y > 0.5)
+        label_true = (labels > 0.5)
+        y_false = torch.logical_not(y_true)
+        label_false = torch.logical_not(label_true)
+        true_pos = torch.sum(torch.logical_and(y_true, label_true)).item()
+        true_neg = torch.sum(torch.logical_and(y_false, label_false)).item()
+        false_pos = torch.sum(torch.logical_and(y_true, label_false)).item()
+        false_neg = torch.sum(torch.logical_and(y_false, label_true)).item()
+        return {'n_samples': y.nelement(),
+                'true_pos': true_pos,
+                'true_neg': true_neg,
+                'false_pos': false_pos,
+                'false_neg': false_neg}
+
+
+class LabelledSequence(torch.utils.data.Dataset):
+
+    def __init__(self, filename, input_seq_len):
+        data = torch.load(filename)
+        self.labels = torch.tensor(data['labels'][:, (891, 914)])
+        self.one_hot = torch.tensor(data['x'][:, :, 500-int(input_seq_len/2):500+int(input_seq_len/2)])
+
+
+    def __len__(self):
+        return len(self.labels)
+
+
+    def __getitem__(self, index):
+        return self.one_hot[index], self.labels[index]
+
+
 # if no output is above the cutoff, predict empty (none)
 def predict(reconstruction, empty_cutoff_prob=(1 / N_BASE)):
     probabilities, indexes = torch.max(reconstruction, 1, keepdim=False)
@@ -253,12 +313,7 @@ def predict(reconstruction, empty_cutoff_prob=(1 / N_BASE)):
     return output.permute(0, 2, 1)
 
 
-def load_data(model, input_path, split_prop, n_dataloader_workers):
-    if type(model) is MultilayerEncoder:
-        dataset = SequenceDataset(input_path, model.seq_len)
-    else:
-        dataset = data_in.SeqData.from_file(input_path, seq_len=model.seq_len,
-                overlap=(model.kernel_len - 1), do_cull=True, cull_threshold=0.99)
+def load_data(model, dataset, split_prop, n_dataloader_workers):
     print("Split training and validation sets...")
     split_size = int(split_prop * len(dataset))
     train_data, valid_data = torch.utils.data.random_split(dataset, [len(dataset) - split_size, split_size])
@@ -274,14 +329,22 @@ def evaluate_model(model, valid_loader, device, disable_eval):
     if not disable_eval:
         model.eval()
     with torch.no_grad():
-        total_acc, total_elements = 0, 0
-        for batch in valid_loader:
-            x = batch.to(device)
-            accuracy, _ = model.evaluate(x, x)
-            total_acc += accuracy * batch.nelement()
-            total_elements += batch.nelement()
-            del batch, x
-    return total_acc / total_elements
+        total_metrics = {}
+        for sample, labels in valid_loader:
+            x = sample.to(device)
+            del sample
+            metrics = model.evaluate(x, labels)
+            del x
+            for key, value in metrics.items():
+                if key in total_metrics:
+                    total_metrics[key] += value
+                else:
+                    total_metrics[key] = value
+    total_metrics['accuracy'] = (total_metrics['true_pos'] + total_metrics['true_neg'])/ total_metrics['n_samples']
+    total_metrics['precision'] = total_metrics['true_pos'] / (total_metrics['true_pos'] + total_metrics['false_pos'] + 0.001)
+    total_metrics['recall'] = total_metrics['true_pos'] / (total_metrics['true_pos'] + total_metrics['false_neg'] + 0.001)
+    total_metrics['f1'] = 2 * total_metrics['precision'] * total_metrics['recall'] / (total_metrics['precision'] + total_metrics['recall'] + 0.001)
+    return total_metrics
 
 
 # disable_eval is a quick hack to turn evaluation code off and on, this is useful for testing
@@ -301,11 +364,11 @@ def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, ch
     for i in range(epochs):
         model.total_epochs += 1
         loss_sum = 0
-        for j, sample in enumerate(train_loader):
+        for sample, labels in train_loader:
             model.train()
             x = sample.to(device)
             del sample
-            loss = model.loss(x)
+            loss = model.loss(x, labels)
             loss_sum += loss.item()
             n_batches += 1
             loss.backward()
@@ -316,18 +379,20 @@ def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, ch
             if n_batches % checkpoint_interval == 0:
                 avg_loss = loss_sum / checkpoint_interval
                 loss_sum = 0
-                accuracy = evaluate_model(model, valid_loader, device, disable_eval)
-                print("epoch {}, batch {}, avg loss {}, validation acc. {}".format(
-                        i, j, avg_loss, accuracy))
-                yield model, i, j, accuracy
+                metrics = evaluate_model(model, valid_loader, device, disable_eval)
+                print("epoch {}, batch {}, avg loss {}, metrics {}".format(
+                        i, n_batches, avg_loss, metrics))
+                yield model, i, n_batches, metrics
 
-    accuracy = evaluate_model(model, valid_loader, device, disable_eval)
-    yield model, epochs, len(train_loader), accuracy
+    metrics = evaluate_model(model, valid_loader, device, disable_eval)
+    yield model, epochs, len(train_loader), metrics
 
 
 def run(update_config):
     config = dict(__CONFIG_DEFAULT)
     config.update(update_config)
+    print("Config values:")
+    print(config)
 
     if config['fixed_random_seed']:
         torch.manual_seed(0)
@@ -335,26 +400,35 @@ def run(update_config):
         torch.backends.cudnn.benchmark = False
 
     loss_fn = NeighbourDistanceLoss(config['neighbour_loss_prop'])
-    if config['model'] == 'Multilayer':
+
+    if config['model'] == 'Multilayer' or config['model'] == 'LatentLinearRegression':
         model = MultilayerEncoder(config['kernel_len'], config['latent_len'], config['seq_len'],
                 config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn,
                 config['hidden_len'], config['pool_size'], config['n_conv_and_pool'],
                 config['n_conv_before_pool'], config['n_linear'], config['hidden_dropout_freq'])
+        if config['model'] == 'Multilayer':
+            dataset = SequenceDataset(config['input_path'], model.seq_len)
     else:
         model = Autoencoder(config['kernel_len'], config['latent_len'], config['seq_len'],
                 config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn)
+        dataset = data_in.SeqData.from_file(config['input_path'], seq_len=model.seq_len,
+                overlap=(model.kernel_len - 1), do_cull=True, cull_threshold=0.99)
 
-    if not config['load_prev_model_state'] is None:
+    if not (config['load_prev_model_state'] is None):
         print("Loading model...")
-        model.load_state_dict(torch.load(config['load_prev_model_state']))
-    print("Loading data...")
-    train_loader, valid_loader = load_data(model, config['input_path'],
-            config['split_prop'], config['n_dataloader_workers'])
-    optimizer = torch.optim.SGD(model.parameters(), lr=config['learn_rate'])
+        model.load_state_dict(torch.load(config['load_prev_model_state'], map_location=torch.device('cpu')))
+    if config['model'] == 'LatentLinearRegression':
+        encoder = model
+        model = LatentLinearRegression(config['kernel_len'], config['latent_len'], config['seq_len'],
+                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn,
+                encoder, config['output_len'])
+        dataset = LabelledSequence(config['input_path'], config['seq_len'])
     print("Model specification:")
     print(model)
-    print("Config values:")
-    print(config)
+    print("Loading data...")
+    train_loader, valid_loader = load_data(model, dataset, 
+            config['split_prop'], config['n_dataloader_workers'])
+    optimizer = torch.optim.SGD(model.parameters(), lr=config['learn_rate'])
     print("Training for {} epochs".format(config['epochs']))
 
     checkpoints = train(model, train_loader, valid_loader, optimizer, config['epochs'],
