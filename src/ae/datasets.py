@@ -21,31 +21,37 @@ N_BASE = 4
 # 
 class SequenceDataset(torch.utils.data.Dataset):
 
-    def __init__(self, fasta_filename, subseq_len):
+    def __init__(self, fasta_filename, seq_len, stride=1, overlap=None, get_label=False, make_onehot=False):
         print("reading sequence from file...")
         bioseq = SeqIO.read(fasta_filename, "fasta")
         self.seq = bioseq.seq.ungap('N').ungap('n')
-        self.subseq_len = subseq_len
         self.augment_state = 0
+        if overlap is None:
+            self.stride = stride
+        else:
+            self.stride = seq_len - overlap
+        self.seq_len = seq_len
+        self.get_label = get_label
+        self.make_onehot = make_onehot
 
 
     @property
-    def subseq_len(self):
-        return self._subseq_len
-
-
-    @subseq_len.setter
-    def subseq_len(self, value):
-        self._subseq_len = value
-        self._seq_len = len(self.seq) - self._subseq_len + 1
-
-
-    def __len__(self):
+    def seq_len(self):
         return self._seq_len
 
 
+    @seq_len.setter
+    def seq_len(self, value):
+        self._seq_len = value
+        self._total_len = int((len(self.seq) - self._seq_len + 1) / self.stride)
+
+
+    def __len__(self):
+        return self._total_len
+
+
     def __getitem__(self, index):
-        subseq = self.seq[index:index + self.subseq_len]
+        subseq = self.seq[index * self.stride : index * self.stride + self.seq_len]
         # randomly assign reverse, complement, or reverse complement
         self.augment_state += 1
         if self.augment_state == 1:
@@ -56,7 +62,14 @@ class SequenceDataset(torch.utils.data.Dataset):
             subseq = subseq.reverse_complement()
         else:
             self.augment_state = 0
-        return bioseq_to_tensor(subseq)
+        x = bioseq_to_tensor(subseq)
+        label = x
+        if self.make_onehot:
+            one_hot = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+        if self.get_label:
+            return x, label
+        else:
+            return x
 
 
 def bioseq_to_tensor(bioseq):

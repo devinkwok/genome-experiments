@@ -125,8 +125,8 @@ def exp6_multilayer():
         'latent_len': 30,
         'seq_len': 27,
         'seq_per_batch': 20,
-        # 'input_path': "data/ref_genome/chr22_excerpt_800k.fa",
-        'input_path': "data/ref_genome/chr22.fa",
+        'input_path': "data/ref_genome/chr22_excerpt_800k.fa",
+        # 'input_path': "data/ref_genome/chr22.fa",
         'split_prop': 0.05,
         'epochs': 5,
         'learn_rate': 0.01,
@@ -210,13 +210,14 @@ def exp9_latentlinear():
         'input_path': 'data/deepsea/deepsea-test.pyc',
         'split_prop': 0.05,
         'epochs': 2,
-        'learn_rate': 0.001,
+        'learn_rate': 0.0001,
         'input_dropout_freq': 0.0,
         'latent_noise_std': 0.0,
         'save_model': True,
         'disable_eval': False,
         'neighbour_loss_prop': 0.0,
-        'load_prev_model_state': 'outputs/src/ae/experiment/aem0hchr22Multilayer9x200d0.03n0.2l0.0_3at1.0_0-79999.pth',
+        # 'load_prev_model_state': 'outputs/src/ae/experiment/aem0hchr22Multilayer9x200d0.03n0.2l0.0_3at1.0_0-79999.pth',
+        'load_prev_model_state': 'outputs/src/ae/experiment/aem0hchr22Multilayer9x200d0.03n0.2l0.0_4at0.01_1-153990.pth',
         'hidden_len': 24,
         'pool_size': 4,
         'n_conv_and_pool': 2,
@@ -229,7 +230,7 @@ def exp9_latentlinear():
         'checkpoint_interval': 1,
         'output_len': 2,      # for supervised model
     }
-    experiment(hparams, 'learn_rate', [0.1, 0.01, 0.001])
+    experiment(hparams, 'learn_rate', [0.01, 0.001])
     
 
 if __name__ == '__main__':

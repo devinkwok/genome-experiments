@@ -77,4 +77,5 @@ note on DeepSEA data:
  - design the dataloader for sequential and shuffled access
  - shuffle by chromosome, or region, multiple heads (starting positions), or sequential
 
- - need to save model checkpoints, and do command line parameter config
+
+ - run tests on simple sequences, 

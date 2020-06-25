@@ -44,7 +44,10 @@ __CONFIG_DEFAULT = {
     'fixed_random_seed': True,
     'n_dataloader_workers': 2,
     'checkpoint_interval': 1000,
-    'output_len': 919,      # for supervised model
+    'output_len': 919,  # for supervised model
+    'TEST_get_label': False,
+    'TEST_get_as_onehot': False,
+    'TEST_use_old_dataset': False,
 }
 
 
@@ -104,7 +107,8 @@ class NeighbourDistanceLoss(nn.Module):
 class Autoencoder(nn.Module):
 
 
-    def __init__(self, kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn):
+    def __init__(self, kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn,
+                convert_to_onehot=False):
         super().__init__()
         self.kernel_len = kernel_len
         self.latent_len = latent_len
@@ -113,6 +117,7 @@ class Autoencoder(nn.Module):
         self.input_dropout_freq = input_dropout_freq
         self.latent_noise_std = latent_noise_std
         self.loss_fn = loss_fn
+        self.convert_to_onehot = convert_to_onehot
 
         self.total_epochs = 0  # tracks number of epochs this model has been trained
 
@@ -127,7 +132,9 @@ class Autoencoder(nn.Module):
         self.decode_layers['softmax'] = nn.Softmax(dim=1)
 
 
-    def encode(self, x):
+    def encode(self, x, override_convert_to_onehot=False):
+        if self.convert_to_onehot and not override_convert_to_onehot:
+            x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
         for layer in self.encode_layers.values():
             x = layer(x)
         return x
@@ -139,24 +146,31 @@ class Autoencoder(nn.Module):
         return y
 
 
-    def forward(self, x):
-        latent = self.encode(x)
+    def forward(self, x, override_convert_to_onehot=False):
+        latent = self.encode(x, override_convert_to_onehot)
         reconstructed = self.decode(latent)
         return reconstructed, latent
 
 
-    def loss(self, x):
-        reconstructed, latent = self.forward(x)
-        return self.loss_fn(x, reconstructed, latent)
+    def loss(self, x, y=None):
+        if self.convert_to_onehot:
+            x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+        reconstructed, latent = self.forward(x, override_convert_to_onehot=True)
+        if y is None:
+            return self.loss_fn(x, reconstructed, latent)
+        else:
+            y = F.one_hot(y, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+            return self.loss_fn(y, reconstructed, latent)
 
 
     def evaluate(self, x, true_x):
-        z, y = self.forward(x)
+        if self.convert_to_onehot:
+            x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+        z, y = self.forward(x, override_convert_to_onehot=True)
         predictions = predict(z)
-        correct = (data_in.one_hot_to_seq(true_x) == data_in.one_hot_to_seq(predictions))
-        accuracy = torch.sum(correct).item() / correct.nelement()
-        error_indexes = torch.nonzero(torch.logical_not(correct), as_tuple=True)
-        return accuracy, error_indexes
+        correct = (true_x == data_in.one_hot_to_seq(predictions))
+        # error_indexes = torch.nonzero(torch.logical_not(correct), as_tuple=True)
+        return {'correct': torch.sum(correct).item(), 'n_samples': correct.nelement()}
 
 
 # class DilationEncoder(Autoencoder):
@@ -165,9 +179,11 @@ class Autoencoder(nn.Module):
 class MultilayerEncoder(Autoencoder):
 
     def __init__(self, kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn,
+                convert_to_onehot,
                 hidden_len, pool_size, n_conv_and_pool, n_conv_before_pool, n_linear, hidden_dropout_freq):
         
-        super().__init__(kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn)
+        super().__init__(kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq,
+                    latent_noise_std, loss_fn, convert_to_onehot)
 
         pad = int(kernel_len / 2)
         sizes = [N_BASE] + [hidden_len * (i + 1) for i in range(n_conv_and_pool)]
@@ -222,37 +238,23 @@ class MultilayerEncoder(Autoencoder):
         self.decode_layers = decode_layers
 
 
-    def encode(self, x, is_onehot=False):
-        if not is_onehot:
-            one_hot = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
-        else:
-            one_hot = x
-        return super().encode(one_hot)
-
-
-    # need to convert to one hot first
-    def loss(self, x):
-        one_hot = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
-        latent = super().encode(one_hot)
-        reconstructed = self.decode(latent)
-        return self.loss_fn(one_hot, reconstructed, latent)
-
-
     # compare indexes instead of one-hot
     def evaluate(self, x, true_x):
-        z, _ = self.forward(x)
+        if self.convert_to_onehot:
+            x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+        z, _ = self.forward(x, override_convert_to_onehot=True)
         predictions = torch.argmax(z, 1, keepdim=False)
         correct = (true_x == predictions)
         accuracy = torch.sum(correct).item() / correct.nelement()
-        error_indexes = torch.nonzero(torch.logical_not(correct), as_tuple=True)
-        return accuracy, error_indexes
+        return {'correct': torch.sum(correct).item(), 'n_samples': correct.nelement()}
 
 
 class LatentLinearRegression(Autoencoder):
 
     def __init__(self, kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn,
                 encoder, output_dim):
-        super().__init__(kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn)
+        super().__init__(kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq,
+                    latent_noise_std, loss_fn, convert_to_onehot=False)
         self.encoder = encoder
         self.linear = nn.Linear(latent_len, output_dim, bias=True)
         self.sigmoid = nn.Sigmoid()
@@ -261,7 +263,7 @@ class LatentLinearRegression(Autoencoder):
 
     def forward(self, x):
         with torch.no_grad():
-            latent = self.encoder.encode(x, is_onehot=True)
+            latent = self.encoder.encode(x)
         y = self.linear(latent)
         return self.sigmoid(y)
 
@@ -325,31 +327,47 @@ def load_data(model, dataset, split_prop, n_dataloader_workers):
     return train_loader, valid_loader
 
 
-def evaluate_model(model, valid_loader, device, disable_eval):
+def evaluate_model(model, valid_loader, device, disable_eval, convert_to_onehot=False):
     if not disable_eval:
         model.eval()
     with torch.no_grad():
         total_metrics = {}
-        for sample, labels in valid_loader:
-            x = sample.to(device)
-            del sample
-            metrics = model.evaluate(x, labels)
-            del x
+        for sample in valid_loader:
+
+            if len(sample) == 2:
+                x, labels = sample[0].to(device), sample[1].to(device)
+                del sample
+                metrics = model.evaluate(x, labels)
+            else:
+                labels = None
+                x = sample.to(device)
+                del sample
+                metrics = model.evaluate(x, x)
+
+            del x, labels
             for key, value in metrics.items():
                 if key in total_metrics:
                     total_metrics[key] += value
                 else:
                     total_metrics[key] = value
-    total_metrics['accuracy'] = (total_metrics['true_pos'] + total_metrics['true_neg'])/ total_metrics['n_samples']
-    total_metrics['precision'] = total_metrics['true_pos'] / (total_metrics['true_pos'] + total_metrics['false_pos'] + 0.001)
-    total_metrics['recall'] = total_metrics['true_pos'] / (total_metrics['true_pos'] + total_metrics['false_neg'] + 0.001)
-    total_metrics['f1'] = 2 * total_metrics['precision'] * total_metrics['recall'] / (total_metrics['precision'] + total_metrics['recall'] + 0.001)
+    EPSILON = 0.0001  # add epsilon to avoid division by 0
+    if 'true_pos' in total_metrics and 'true_neg' in total_metrics:
+        total_metrics['correct'] = total_metrics['true_pos'] + total_metrics['true_neg']
+    if 'correct' in total_metrics and 'n_samples' in total_metrics:
+        total_metrics['accuracy'] = total_metrics['correct'] / total_metrics['n_samples']
+    if 'true_pos' in total_metrics and 'false_pos' in total_metrics:
+        total_metrics['precision'] = total_metrics['true_pos'] / (total_metrics['true_pos'] + total_metrics['false_pos'] + EPSILON)
+    if 'true_pos' in total_metrics and 'false_neg' in total_metrics:
+        total_metrics['recall'] = total_metrics['true_pos'] / (total_metrics['true_pos'] + total_metrics['false_neg'] + EPSILON)
+    if 'precision' in total_metrics and 'recall' in total_metrics:
+        total_metrics['f1'] = 2 * total_metrics['precision'] * total_metrics['recall'] / (total_metrics['precision'] + total_metrics['recall'] + EPSILON)
     return total_metrics
 
 
 # disable_eval is a quick hack to turn evaluation code off and on, this is useful for testing
 # model effectiveness while dropout and noise are included
-def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, checkpoint_interval, use_cuda=False):
+def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, checkpoint_interval,
+            use_cuda=False, convert_to_onehot=False):
     # target CPU or GPU
     if use_cuda and torch.cuda.is_available():
         device = torch.device('cuda')
@@ -364,17 +382,23 @@ def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, ch
     for i in range(epochs):
         model.total_epochs += 1
         loss_sum = 0
-        for sample, labels in train_loader:
+        for sample in train_loader:
             model.train()
-            x = sample.to(device)
-            del sample
-            loss = model.loss(x, labels)
+            if len(sample) == 2:
+                x, labels = sample[0].to(device), sample[1].to(device)
+                del sample
+                loss = model.loss(x, labels)
+            else:
+                labels = None
+                x = sample.to(device)
+                del sample
+                loss = model.loss(x)
             loss_sum += loss.item()
             n_batches += 1
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
-            del x, loss
+            del x, loss, labels
 
             if n_batches % checkpoint_interval == 0:
                 avg_loss = loss_sum / checkpoint_interval
@@ -404,21 +428,29 @@ def run(update_config):
     if config['model'] == 'Multilayer' or config['model'] == 'LatentLinearRegression':
         model = MultilayerEncoder(config['kernel_len'], config['latent_len'], config['seq_len'],
                 config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn,
+                not config['TEST_get_as_onehot'],
                 config['hidden_len'], config['pool_size'], config['n_conv_and_pool'],
                 config['n_conv_before_pool'], config['n_linear'], config['hidden_dropout_freq'])
         if config['model'] == 'Multilayer':
-            dataset = SequenceDataset(config['input_path'], model.seq_len)
+            dataset = SequenceDataset(config['input_path'], model.seq_len,
+                    get_label=config['TEST_get_label'], make_onehot=config['TEST_get_as_onehot'])
     else:
         model = Autoencoder(config['kernel_len'], config['latent_len'], config['seq_len'],
-                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn)
-        dataset = data_in.SeqData.from_file(config['input_path'], seq_len=model.seq_len,
-                overlap=(model.kernel_len - 1), do_cull=True, cull_threshold=0.99)
+                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn,
+                not config['TEST_get_as_onehot'])
+        if config['TEST_use_old_dataset']:
+            dataset = data_in.SeqData.from_file(config['input_path'], seq_len=model.seq_len,
+                    overlap=(model.kernel_len - 1), do_cull=True, cull_threshold=0.99)
+        else:
+            dataset = SequenceDataset(config['input_path'], seq_len=model.seq_len, overlap=(model.kernel_len - 1),
+                    get_label=config['TEST_get_label'], make_onehot=config['TEST_get_as_onehot'])
 
     if not (config['load_prev_model_state'] is None):
         print("Loading model...")
         model.load_state_dict(torch.load(config['load_prev_model_state'], map_location=torch.device('cpu')))
     if config['model'] == 'LatentLinearRegression':
         encoder = model
+        encoder.convert_to_onehot = False
         model = LatentLinearRegression(config['kernel_len'], config['latent_len'], config['seq_len'],
                 config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn,
                 encoder, config['output_len'])
