@@ -1,3 +1,5 @@
+import timeit
+
 import torch
 
 import autoencoder as ae
@@ -14,10 +16,12 @@ def rename_state_dict(hparams, old_to_new_keys_dict):
     torch.save(state_dict, hparams['prev_model_state'])
 
 
-def experiment(hparams, key, values):
+def experiment(hparams, key, values, n_runs=1):
     for value in values:
         hparams[key] = value
-        ae.run(hparams)
+        run_fn = lambda: ae.run(hparams)
+        runtime = timeit.timeit(run_fn, number=n_runs)
+        print('Runtime: ', runtime)
 
 
 def exp1_window_size():
@@ -231,7 +235,219 @@ def exp9_latentlinear():
         'output_len': 2,      # for supervised model
     }
     experiment(hparams, 'learn_rate', [0.01, 0.001])
-    
+
+
+def exp10_TEST_use_old_dataset():
+
+    hparams = {
+        'name': 'TEST_use_old_dataset',
+        'model': 'Autoencoder',
+        'kernel_len': 3,
+        'latent_len': 6,
+        'seq_len': 40,
+        'seq_per_batch': 20,
+        'input_path': 'data/ref_genome/chr22_excerpt_800k.fa',
+        'split_prop': 0.05,
+        'epochs': 2,
+        'learn_rate': 0.1,
+        'input_dropout_freq': 0.0,
+        'latent_noise_std': 0.2,
+        'save_model': True,
+        'disable_eval': True,
+        'neighbour_loss_prop': 0.0,
+        'use_cuda_if_available': True,
+        'fixed_random_seed': True,
+        'n_dataloader_workers': 4,
+        'checkpoint_interval': 100,
+        'TEST_use_old_dataset': False,
+        'TEST_get_as_onehot': False,
+        'TEST_get_label': False,
+    }
+    experiment(hparams, 'TEST_use_old_dataset', [False, True], n_runs=5)
+
+
+def exp11_TEST_get_as_onehot():
+
+    hparams = {
+        'name': 'TEST_get_as_onehot',
+        'model': 'Autoencoder',
+        'kernel_len': 3,
+        'latent_len': 6,
+        'seq_len': 40,
+        'seq_per_batch': 20,
+        'input_path': 'data/ref_genome/chr22_excerpt_800k.fa',
+        'split_prop': 0.05,
+        'epochs': 2,
+        'learn_rate': 0.1,
+        'input_dropout_freq': 0.0,
+        'latent_noise_std': 0.2,
+        'save_model': True,
+        'disable_eval': True,
+        'neighbour_loss_prop': 0.0,
+        'use_cuda_if_available': True,
+        'fixed_random_seed': True,
+        'n_dataloader_workers': 4,
+        'checkpoint_interval': 100,
+        'TEST_use_old_dataset': False,
+        'TEST_get_as_onehot': False,
+        'TEST_get_label': False,
+    }
+    experiment(hparams, 'TEST_get_as_onehot', [False, True], n_runs=5)
+
+    hparams = {
+        'name': 'TEST_get_as_onehot_multilayer',
+        'model': 'MultilayerAutoencoder',
+        'kernel_len': 9,
+        'latent_len': 200,
+        'seq_len': 64,
+        'seq_per_batch': 100,
+        'input_path': 'data/ref_genome/chr22_excerpt_800k.fa',
+        'split_prop': 0.05,
+        'epochs': 1,
+        'learn_rate': 0.1,
+        'input_dropout_freq': 0.05,
+        'latent_noise_std': 0.2,
+        'hidden_len': 24,
+        'pool_size': 4,
+        'n_conv_and_pool': 2,
+        'n_conv_before_pool': 2,
+        'n_linear': 2,
+        'hidden_dropout_freq': 0.05,
+        'save_model': True,
+        'disable_eval': True,
+        'neighbour_loss_prop': 0.0,
+        'use_cuda_if_available': True,
+        'fixed_random_seed': True,
+        'n_dataloader_workers': 4,
+        'checkpoint_interval': 10000,
+        'TEST_use_old_dataset': False,
+        'TEST_get_as_onehot': False,
+        'TEST_get_label': False,
+    }
+    experiment(hparams, 'TEST_get_as_onehot', [False, True], n_runs=5)
+
+
+def exp12_TEST_get_label():
+
+    hparams = {
+        'name': 'TEST_get_label',
+        'model': 'Autoencoder',
+        'kernel_len': 3,
+        'latent_len': 6,
+        'seq_len': 40,
+        'seq_per_batch': 20,
+        'input_path': 'data/ref_genome/chr22_excerpt_800k.fa',
+        'split_prop': 0.05,
+        'epochs': 2,
+        'learn_rate': 0.1,
+        'input_dropout_freq': 0.0,
+        'latent_noise_std': 0.2,
+        'save_model': True,
+        'disable_eval': True,
+        'neighbour_loss_prop': 0.0,
+        'use_cuda_if_available': True,
+        'fixed_random_seed': True,
+        'n_dataloader_workers': 4,
+        'checkpoint_interval': 100,
+        'TEST_use_old_dataset': False,
+        'TEST_get_as_onehot': False,
+        'TEST_get_label': False,
+    }
+    experiment(hparams, 'TEST_get_label', [False, True], n_runs=5)
+
+    hparams = {
+        'name': 'TEST_get_label_multilayer',
+        'model': 'MultilayerAutoencoder',
+        'kernel_len': 9,
+        'latent_len': 200,
+        'seq_len': 64,
+        'seq_per_batch': 100,
+        'input_path': 'data/ref_genome/chr22_excerpt_800k.fa',
+        'split_prop': 0.05,
+        'epochs': 1,
+        'learn_rate': 0.1,
+        'input_dropout_freq': 0.05,
+        'latent_noise_std': 0.2,
+        'hidden_len': 24,
+        'pool_size': 4,
+        'n_conv_and_pool': 2,
+        'n_conv_before_pool': 2,
+        'n_linear': 2,
+        'hidden_dropout_freq': 0.05,
+        'save_model': True,
+        'disable_eval': True,
+        'neighbour_loss_prop': 0.0,
+        'use_cuda_if_available': True,
+        'fixed_random_seed': True,
+        'n_dataloader_workers': 4,
+        'checkpoint_interval': 10000,
+        'TEST_use_old_dataset': False,
+        'TEST_get_as_onehot': False,
+        'TEST_get_label': False,
+    }
+    experiment(hparams, 'TEST_get_label', [False, True], n_runs=5)
+
+def exp13_test_flags():
+
+    hparams = {
+        'name': 'TEST_get_label',
+        'model': 'Autoencoder',
+        'kernel_len': 3,
+        'latent_len': 6,
+        'seq_len': 40,
+        'seq_per_batch': 20,
+        'input_path': 'data/ref_genome/test.fasta',
+        'split_prop': 0.05,
+        'epochs': 2,
+        'learn_rate': 0.1,
+        'input_dropout_freq': 0.0,
+        'latent_noise_std': 0.2,
+        'save_model': True,
+        'disable_eval': True,
+        'neighbour_loss_prop': 0.0,
+        'use_cuda_if_available': True,
+        'fixed_random_seed': True,
+        'n_dataloader_workers': 4,
+        'checkpoint_interval': 100,
+        'TEST_use_old_dataset': True,
+        'TEST_get_as_onehot': True,
+        'TEST_get_label': True,
+    }
+    experiment(hparams, 'TEST_get_label', [True], n_runs=5)
+
+    hparams = {
+        'name': 'TEST_get_label_multilayer',
+        'model': 'MultilayerAutoencoder',
+        'kernel_len': 9,
+        'latent_len': 200,
+        'seq_len': 64,
+        'seq_per_batch': 100,
+        'input_path': 'data/ref_genome/test.fasta',
+        'split_prop': 0.05,
+        'epochs': 1,
+        'learn_rate': 0.1,
+        'input_dropout_freq': 0.05,
+        'latent_noise_std': 0.2,
+        'hidden_len': 24,
+        'pool_size': 4,
+        'n_conv_and_pool': 2,
+        'n_conv_before_pool': 2,
+        'n_linear': 2,
+        'hidden_dropout_freq': 0.05,
+        'save_model': True,
+        'disable_eval': True,
+        'neighbour_loss_prop': 0.0,
+        'use_cuda_if_available': True,
+        'fixed_random_seed': True,
+        'n_dataloader_workers': 4,
+        'checkpoint_interval': 10000,
+        'TEST_use_old_dataset': True,
+        'TEST_get_as_onehot': True,
+        'TEST_get_label': True,
+    }
+    experiment(hparams, 'TEST_get_label', [True], n_runs=5)
+
+
 
 if __name__ == '__main__':
     # exp1_window_size()
@@ -242,4 +458,10 @@ if __name__ == '__main__':
     # exp6_multilayer()
     # exp7_multilayer_long()
     # exp8_multilayer_rerun()
-    exp9_latentlinear()
+    # exp9_latentlinear()
+
+    exp10_TEST_use_old_dataset()
+    exp11_TEST_get_as_onehot()
+    exp12_TEST_get_label()
+
+    # exp13_test_flags()

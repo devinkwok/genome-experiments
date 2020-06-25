@@ -45,9 +45,9 @@ __CONFIG_DEFAULT = {
     'n_dataloader_workers': 2,
     'checkpoint_interval': 1000,
     'output_len': 919,  # for supervised model
-    'TEST_get_label': False,
-    'TEST_get_as_onehot': False,
     'TEST_use_old_dataset': False,
+    'TEST_get_as_onehot': False,
+    'TEST_get_label': False,
 }
 
 
@@ -166,6 +166,8 @@ class Autoencoder(nn.Module):
     def evaluate(self, x, true_x):
         if self.convert_to_onehot:
             x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+        else:
+            true_x = data_in.one_hot_to_seq(true_x)
         z, y = self.forward(x, override_convert_to_onehot=True)
         predictions = predict(z)
         correct = (true_x == data_in.one_hot_to_seq(predictions))
@@ -242,6 +244,8 @@ class MultilayerEncoder(Autoencoder):
     def evaluate(self, x, true_x):
         if self.convert_to_onehot:
             x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+        else:
+            true_x = torch.argmax(true_x, 1, keepdim=False)
         z, _ = self.forward(x, override_convert_to_onehot=True)
         predictions = torch.argmax(z, 1, keepdim=False)
         correct = (true_x == predictions)

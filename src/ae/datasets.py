@@ -63,11 +63,11 @@ class SequenceDataset(torch.utils.data.Dataset):
         else:
             self.augment_state = 0
         x = bioseq_to_tensor(subseq)
-        label = x
         if self.make_onehot:
-            one_hot = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+            with torch.no_grad():
+                x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
         if self.get_label:
-            return x, label
+            return x, x
         else:
             return x
 
