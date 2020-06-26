@@ -263,7 +263,9 @@ def exp10_TEST_use_old_dataset():
         'TEST_get_as_onehot': True,
         'TEST_get_label': False,
     }
-    experiment(hparams, 'TEST_use_old_dataset', [False, True], n_runs=2)
+    experiment(hparams, 'TEST_use_old_dataset', [True], n_runs=5)
+    hparams['epochs'] = hparams['epochs'] * 4  # because old dataset augments the sequences first
+    experiment(hparams, 'TEST_use_old_dataset', [False], n_runs=5)
 
 
 def exp11_TEST_get_as_onehot():
@@ -292,7 +294,7 @@ def exp11_TEST_get_as_onehot():
         'TEST_get_as_onehot': False,
         'TEST_get_label': False,
     }
-    experiment(hparams, 'TEST_get_as_onehot', [False, True], n_runs=2)
+    experiment(hparams, 'TEST_get_as_onehot', [False, True], n_runs=5)
 
     hparams = {
         'name': 'TEST_get_as_onehot_multilayer',
@@ -324,7 +326,7 @@ def exp11_TEST_get_as_onehot():
         'TEST_get_as_onehot': False,
         'TEST_get_label': False,
     }
-    experiment(hparams, 'TEST_get_as_onehot', [False, True], n_runs=2)
+    experiment(hparams, 'TEST_get_as_onehot', [False, True], n_runs=5)
 
 
 def exp12_TEST_get_label():
@@ -353,7 +355,7 @@ def exp12_TEST_get_label():
         'TEST_get_as_onehot': False,
         'TEST_get_label': False,
     }
-    experiment(hparams, 'TEST_get_label', [False, True], n_runs=2)
+    experiment(hparams, 'TEST_get_label', [False, True], n_runs=5)
 
     hparams = {
         'name': 'TEST_get_label_multilayer',
@@ -385,7 +387,7 @@ def exp12_TEST_get_label():
         'TEST_get_as_onehot': False,
         'TEST_get_label': False,
     }
-    experiment(hparams, 'TEST_get_label', [False, True], n_runs=2)
+    experiment(hparams, 'TEST_get_label', [False, True], n_runs=5)
 
 def exp13_test_flags():
 

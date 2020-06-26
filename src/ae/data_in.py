@@ -23,6 +23,7 @@ class SeqData(torch.utils.data.Dataset):
 
     def __init__(self, tensor):
         self.seq = tensor
+        print("OLD", self.seq.shape, len(self))
 
 
     @classmethod
