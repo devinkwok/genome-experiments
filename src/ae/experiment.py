@@ -258,12 +258,12 @@ def exp10_TEST_use_old_dataset():
         'use_cuda_if_available': True,
         'fixed_random_seed': True,
         'n_dataloader_workers': 4,
-        'checkpoint_interval': 100,
+        'checkpoint_interval': 500,
         'TEST_use_old_dataset': False,
-        'TEST_get_as_onehot': False,
+        'TEST_get_as_onehot': True,
         'TEST_get_label': False,
     }
-    experiment(hparams, 'TEST_use_old_dataset', [False, True], n_runs=5)
+    experiment(hparams, 'TEST_use_old_dataset', [False, True], n_runs=2)
 
 
 def exp11_TEST_get_as_onehot():
@@ -292,7 +292,7 @@ def exp11_TEST_get_as_onehot():
         'TEST_get_as_onehot': False,
         'TEST_get_label': False,
     }
-    experiment(hparams, 'TEST_get_as_onehot', [False, True], n_runs=5)
+    experiment(hparams, 'TEST_get_as_onehot', [False, True], n_runs=2)
 
     hparams = {
         'name': 'TEST_get_as_onehot_multilayer',
@@ -324,7 +324,7 @@ def exp11_TEST_get_as_onehot():
         'TEST_get_as_onehot': False,
         'TEST_get_label': False,
     }
-    experiment(hparams, 'TEST_get_as_onehot', [False, True], n_runs=5)
+    experiment(hparams, 'TEST_get_as_onehot', [False, True], n_runs=2)
 
 
 def exp12_TEST_get_label():
@@ -353,7 +353,7 @@ def exp12_TEST_get_label():
         'TEST_get_as_onehot': False,
         'TEST_get_label': False,
     }
-    experiment(hparams, 'TEST_get_label', [False, True], n_runs=5)
+    experiment(hparams, 'TEST_get_label', [False, True], n_runs=2)
 
     hparams = {
         'name': 'TEST_get_label_multilayer',
@@ -385,7 +385,7 @@ def exp12_TEST_get_label():
         'TEST_get_as_onehot': False,
         'TEST_get_label': False,
     }
-    experiment(hparams, 'TEST_get_label', [False, True], n_runs=5)
+    experiment(hparams, 'TEST_get_label', [False, True], n_runs=2)
 
 def exp13_test_flags():
 
