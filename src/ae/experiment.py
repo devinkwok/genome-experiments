@@ -409,11 +409,11 @@ def exp13_test_flags():
         'fixed_random_seed': True,
         'n_dataloader_workers': 4,
         'checkpoint_interval': 100,
-        'TEST_use_old_dataset': True,
+        'TEST_use_old_dataset': False,
         'TEST_get_as_onehot': True,
-        'TEST_get_label': True,
+        'TEST_get_label': False,
     }
-    experiment(hparams, 'TEST_get_label', [True], n_runs=5)
+    experiment(hparams, 'TEST_use_old_dataset', [True], n_runs=1)
 
     hparams = {
         'name': 'TEST_get_label_multilayer',
@@ -443,9 +443,9 @@ def exp13_test_flags():
         'checkpoint_interval': 10000,
         'TEST_use_old_dataset': True,
         'TEST_get_as_onehot': True,
-        'TEST_get_label': True,
+        'TEST_get_label': False,
     }
-    experiment(hparams, 'TEST_get_label', [True], n_runs=5)
+    experiment(hparams, 'TEST_use_old_dataset', [True], n_runs=1)
 
 
 
