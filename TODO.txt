@@ -78,4 +78,17 @@ note on DeepSEA data:
  - shuffle by chromosome, or region, multiple heads (starting positions), or sequential
 
 
- - run tests on simple sequences, 
+ - run tests on simple sequences
+
+ - valid data loader doesn't need to shuffle, can double batch size
+ - chunk and stride based dataloader is next, for now use SequentialDataset
+ - add parameter for intermediate layer scaling factor in multilayer encoder
+ - add arbitrary sized feedforward  supervised regression model
+ - need to fix up unit tests
+ - need to clean up code paths based on performance experiments, make a separate branch for the performance tests
+ - build a simple transformer (one direction, one head, predict next base pair in sequence)
+
+Attention
+---------
+ - need to embed indexes as vectors (e.g. one hot, or matrix embedding)
+ - need to include task specific information (coordinate, chromosome), can test effectiveness by including or excluding

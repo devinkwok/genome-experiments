@@ -327,7 +327,7 @@ def load_data(model, dataset, split_prop, n_dataloader_workers):
     train_loader = torch.utils.data.DataLoader(train_data,
             batch_size=model.seq_per_batch, shuffle=True, num_workers=n_dataloader_workers)
     valid_loader = torch.utils.data.DataLoader(valid_data,
-            batch_size=model.seq_per_batch, shuffle=True, num_workers=n_dataloader_workers)
+            batch_size=model.seq_per_batch*2, shuffle=False, num_workers=n_dataloader_workers)
     return train_loader, valid_loader
 
 

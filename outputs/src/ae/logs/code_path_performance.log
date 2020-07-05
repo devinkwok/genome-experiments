@@ -1,0 +1,206 @@
+
+### TEST_use_old_dataset=True
+Runtime:  109.17434080102248
+### TEST_use_old_dataset=False
+Runtime:  93.63697273499565
+
+# the first of each pair is for single layer autoencoder
+# the second of each pair is for multilayer
+### TEST_get_as_onehot=False
+Runtime:  38.75151466700481
+### TEST_get_as_onehot=True
+Runtime:  37.47117223899113
+### TEST_get_as_onehot=False
+Runtime:  4.041950104001444
+### TEST_get_as_onehot=True
+Runtime:  4.106659759010654
+### TEST_get_label=False
+Runtime:  38.580211900989525
+### TEST_get_label=True
+Runtime:  45.332740610989276
+### TEST_get_label=False
+Runtime:  4.0479501860099845
+### TEST_get_label=True
+Runtime:  4.3756673479801975
+(base) devin@devin-gtx960:~$ top
+
+# with a longer run
+### TEST_get_as_onehot=False
+Runtime:  109.17236171598779
+### TEST_get_as_onehot=True
+Runtime:  98.93816355394665
+### TEST_get_as_onehot=False
+Runtime:  16.25778549996903
+### TEST_get_as_onehot=True
+Runtime:  16.767349421977997
+
+# memory use
+### TEST_get_as_onehot=False
+top - 23:17:11 up 3 days, 23:23,  3 users,  load average: 2.85, 2.99, 2.84
+Tasks: 260 total,   4 running, 256 sleeping,   0 stopped,   0 zombie
+%Cpu(s): 16.1 us,  0.3 sy,  0.0 ni, 65.7 id, 16.4 wa,  0.0 hi,  1.6 si,  0.0 st
+MiB Mem :  16007.6 total,    175.9 free,   5590.7 used,  10241.0 buff/cache
+MiB Swap:  20479.0 total,  20393.5 free,     85.5 used.  10082.5 avail Mem 
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND                                                                                                                                                                
+  40611 devin     20   0   34.1g   4.3g 349944 R  99.7  27.4   0:30.80 python                                                                                                                                                                 
+  40626 devin     20   0   32.2g   2.5g  63288 S  26.2  16.0   0:06.26 python                                                                                                                                                                 
+  40628 devin     20   0   32.2g   2.5g  63312 R  26.2  16.0   0:06.20 python                                                                                                                                                                 
+  40629 devin     20   0   32.2g   2.5g  63288 S  23.6  16.0   0:05.65 python                                                                                                                                                                 
+  40627 devin     20   0   32.2g   2.5g  63256 S  23.3  16.0   0:05.68 python                                                                                                                                                                 
+    203 root      20   0       0      0      0 S   0.7   0.0   6:35.75 kswapd0                                                                                                                                                                
+  20169 root      20   0       0      0      0 D   0.7   0.0   1:08.50 kworker/u64:0+flush-8:48                                                                                                                                               
+  40350 root      20   0       0      0      0 R   0.3   0.0   0:00.13 kworker/0:1-events                                                                                                                                                     
+  40620 root     -51   0       0      0      0 S   0.3   0.0   0:00.01 irq/68-nvidia                                                                                                                                                          
+  40647 devin     20   0   20616   3904   3104 R   0.3   0.0   0:00.02 top                                                                                                                                                                    
+      1 root      20   0  169100   7032   4268 S   0.0   0.0   0:04.55 systemd                                                                                                                                                                
+      2 root      20   0       0      0      0 S   0.0   0.0   0:00.03 kthreadd                                                                                                                                                               
+      3 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 rcu_gp                                                                                                                                                                 
+      4 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 rcu_par_gp                                                                                                                                                             
+      6 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 kworker/0:0H-kblockd                                                                                                                                                   
+      9 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 mm_percpu_wq                                                                                                                                                           
+     10 root      20   0       0      0      0 S   0.0   0.0   0:19.41 ksoftirqd/0                                                                                                                                                            
+     11 root      20   0       0      0      0 I   0.0   0.0   1:46.61 rcu_sched                                                                                                                                                              
+     12 root      rt   0       0      0      0 S   0.0   0.0   0:00.82 migration/0                                                                                                                                                            
+     13 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 idle_inject/0                                                                                                                                                          
+     14 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/0                                                                                                                                                                
+     15 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/1                                                                                                                                                                
+     16 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 idle_inject/1                                                                                                                                                          
+     17 root      rt   0       0      0      0 S   0.0   0.0   0:01.00 migration/1                                                                                                                                                            
+     18 root      20   0       0      0      0 S   0.0   0.0   0:09.78 ksoftirqd/1                                                                                                                                                            
+     20 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 kworker/1:0H-kblockd                                                                                                                                                   
+     21 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/2                                                                                                                                                                
+     22 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 idle_inject/2                                                                                                                                                          
+     23 root      rt   0       0      0      0 S   0.0   0.0   0:00.90 migration/2                                                                                                                                                            
+     24 root      20   0       0      0      0 S   0.0   0.0   0:03.66 ksoftirqd/2                                                                                                                                                            
+     26 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 kworker/2:0H                                                                                                                                                           
+     27 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/3                                                                                                                                                                
+     28 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 idle_inject/3                                                                                                                                                          
+     29 root      rt   0       0      0      0 S   0.0   0.0   0:01.34 migration/3                                                                                                                                                            
+     30 root      20   0       0      0      0 S   0.0   0.0   0:00.87 ksoftirqd/3                                                                                                                                                            
+     32 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 kworker/3:0H-kblockd                                                                                                                                                   
+     33 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/4                                                                                                                                                                
+     34 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 idle_inject/4                                                                                                                                                          
+     35 root      rt   0       0      0      0 S   0.0   0.0   0:01.16 migration/4                                                                                                                                                            
+     36 root      20   0       0      0      0 S   0.0   0.0   0:00.54 ksoftirqd/4                                                                                                                                                            
+     38 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 kworker/4:0H-kblockd                                                                                                                                                   
+     39 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/5                                                                                                                                                                
+     40 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 idle_inject/5                                                                                                                                                          
+     41 root      rt   0       0      0      0 S   0.0   0.0   0:01.17 migration/5                                                                                                                                                            
+     42 root      20   0       0      0      0 S   0.0   0.0   0:00.53 ksoftirqd/5                                                                                                                                                            
+     44 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 kworker/5:0H-kblockd                                                                                                                                                   
+     45 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/6                                                                                                                                                                
+     46 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 idle_inject/6                                                                                                                                                          
+     47 root      rt   0       0      0      0 S   0.0   0.0   0:00.95 migration/6                                                                                                                                                            
+     48 root      20   0       0      0      0 S   0.0   0.0   0:02.41 ksoftirqd/6                                                                                                                                                            
+     50 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 kworker/6:0H-kblockd                                                                                                                                                   
+     51 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/7                                                                                                                                                                
+     52 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 idle_inject/7                                                                                                                                                          
+     53 root      rt   0       0      0      0 S   0.0   0.0   0:00.90 migration/7                                                                                                                                                            
+     54 root      20   0       0      0      0 S   0.0   0.0   0:02.33 ksoftirqd/7                                                                                                                                                            
+(base) devin@devin-gtx960:~$ nvidia-smi
+Thu Jun 25 23:17:16 2020       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 440.64       Driver Version: 440.64       CUDA Version: 10.2     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|===============================+======================+======================|
+|   0  GeForce GTX 960     Off  | 00000000:08:00.0 Off |                  N/A |
+| 21%   40C    P2    53W / 150W |    411MiB /  1988MiB |     94%      Default |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                       GPU Memory |
+|  GPU       PID   Type   Process name                             Usage      |
+|=============================================================================|
+|    0     40611      C   python                                       400MiB |
++-----------------------------------------------------------------------------+
+
+
+
+ 
+### TEST_get_as_onehot=True
+(base) devin@devin-gtx960:~$ top
+
+top - 23:18:22 up 3 days, 23:24,  3 users,  load average: 3.39, 3.10, 2.89
+Tasks: 260 total,   4 running, 256 sleeping,   0 stopped,   0 zombie
+%Cpu(s): 18.8 us,  0.4 sy,  0.0 ni, 64.6 id, 15.8 wa,  0.0 hi,  0.4 si,  0.0 st
+MiB Mem :  16007.6 total,    150.0 free,   5297.8 used,  10559.8 buff/cache
+MiB Swap:  20479.0 total,  20395.5 free,     83.5 used.  10374.5 avail Mem 
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND                                                                                                                                                                
+  40658 devin     20   0   34.1g   4.3g 346328 R 100.0  27.4   0:20.83 python                                                                                                                                                                 
+  40673 devin     20   0   32.2g   2.5g  65140 S  37.2  16.0   0:05.21 python                                                                                                                                                                 
+  40675 devin     20   0   32.2g   2.5g  65132 S  32.2  16.0   0:04.57 python                                                                                                                                                                 
+  40676 devin     20   0   32.2g   2.5g  65456 R  30.6  16.0   0:04.47 python                                                                                                                                                                 
+  40674 devin     20   0   32.2g   2.5g  64948 S  29.9  16.0   0:04.45 python                                                                                                                                                                 
+    203 root      20   0       0      0      0 S   1.0   0.0   6:36.07 kswapd0                                                                                                                                                                
+     11 root      20   0       0      0      0 I   0.3   0.0   1:46.64 rcu_sched                                                                                                                                                              
+  19812 root      20   0       0      0      0 S   0.3   0.0   2:42.68 usb-storage                                                                                                                                                            
+  40669 root      20   0       0      0      0 S   0.3   0.0   0:00.02 nv_queue                                                                                                                                                               
+      1 root      20   0  169100   7032   4268 S   0.0   0.0   0:04.55 systemd                                                                                                                                                                
+      2 root      20   0       0      0      0 S   0.0   0.0   0:00.03 kthreadd                                                                                                                                                               
+      3 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 rcu_gp                                                                                                                                                                 
+      4 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 rcu_par_gp                                                                                                                                                             
+      6 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 kworker/0:0H-kblockd                                                                                                                                                   
+      9 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 mm_percpu_wq                                                                                                                                                           
+     10 root      20   0       0      0      0 S   0.0   0.0   0:19.43 ksoftirqd/0                                                                                                                                                            
+     12 root      rt   0       0      0      0 S   0.0   0.0   0:00.82 migration/0                                                                                                                                                            
+     13 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 idle_inject/0                                                                                                                                                          
+     14 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/0                                                                                                                                                                
+     15 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/1                                                                                                                                                                
+     16 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 idle_inject/1                                                                                                                                                          
+     17 root      rt   0       0      0      0 S   0.0   0.0   0:01.00 migration/1                                                                                                                                                            
+     18 root      20   0       0      0      0 S   0.0   0.0   0:09.78 ksoftirqd/1                                                                                                                                                            
+     20 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 kworker/1:0H-kblockd                                                                                                                                                   
+     21 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/2                                                                                                                                                                
+     22 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 idle_inject/2                                                                                                                                                          
+     23 root      rt   0       0      0      0 S   0.0   0.0   0:00.90 migration/2                                                                                                                                                            
+     24 root      20   0       0      0      0 S   0.0   0.0   0:03.67 ksoftirqd/2                                                                                                                                                            
+     26 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 kworker/2:0H                                                                                                                                                           
+     27 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/3                                                                                                                                                                
+     28 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 idle_inject/3                                                                                                                                                          
+     29 root      rt   0       0      0      0 S   0.0   0.0   0:01.34 migration/3                                                                                                                                                            
+     30 root      20   0       0      0      0 S   0.0   0.0   0:00.87 ksoftirqd/3                                                                                                                                                            
+     32 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 kworker/3:0H-kblockd                                                                                                                                                   
+     33 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/4                                                                                                                                                                
+     34 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 idle_inject/4                                                                                                                                                          
+     35 root      rt   0       0      0      0 S   0.0   0.0   0:01.16 migration/4                                                                                                                                                            
+     36 root      20   0       0      0      0 S   0.0   0.0   0:00.54 ksoftirqd/4                                                                                                                                                            
+     38 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 kworker/4:0H-kblockd                                                                                                                                                   
+     39 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/5                                                                                                                                                                
+     40 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 idle_inject/5                                                                                                                                                          
+     41 root      rt   0       0      0      0 S   0.0   0.0   0:01.17 migration/5                                                                                                                                                            
+     42 root      20   0       0      0      0 S   0.0   0.0   0:00.53 ksoftirqd/5                                                                                                                                                            
+     44 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 kworker/5:0H-kblockd                                                                                                                                                   
+     45 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/6                                                                                                                                                                
+     46 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 idle_inject/6                                                                                                                                                          
+     47 root      rt   0       0      0      0 S   0.0   0.0   0:00.95 migration/6                                                                                                                                                            
+     48 root      20   0       0      0      0 S   0.0   0.0   0:02.42 ksoftirqd/6                                                                                                                                                            
+     50 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 kworker/6:0H-kblockd                                                                                                                                                   
+     51 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/7                                                                                                                                                                
+     52 root     -51   0       0      0      0 S   0.0   0.0   0:00.00 idle_inject/7                                                                                                                                                          
+     53 root      rt   0       0      0      0 S   0.0   0.0   0:00.90 migration/7                                                                                                                                                            
+     54 root      20   0       0      0      0 S   0.0   0.0   0:02.34 ksoftirqd/7                                                                                                                                                            
+     56 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 kworker/7:0H-kblockd                                                                                                                                                   
+     57 root      20   0       0      0      0 S   0.0   0.0   0:00.00 cpuhp/8                                                                                                                                                                
+(base) devin@devin-gtx960:~$ nvidia-smi
+Thu Jun 25 23:18:29 2020       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 440.64       Driver Version: 440.64       CUDA Version: 10.2     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|===============================+======================+======================|
+|   0  GeForce GTX 960     Off  | 00000000:08:00.0 Off |                  N/A |
+| 21%   41C    P2    53W / 150W |    411MiB /  1988MiB |     95%      Default |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                       GPU Memory |
+|  GPU       PID   Type   Process name                             Usage      |
+|=============================================================================|
+|    0     40658      C   python                                       400MiB |
++-----------------------------------------------------------------------------+
+(base) devin@devin-gtx960:~$ nvidia-smi

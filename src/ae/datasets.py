@@ -34,6 +34,7 @@ class SequenceDataset(torch.utils.data.Dataset):
         self.seq_len = seq_len
         self.get_label = get_label
         self.make_onehot = make_onehot
+        print("NEW", len(self), self.stride, self.seq_len, len(self.seq), self._total_len)
 
 
     @property
