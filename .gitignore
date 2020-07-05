@@ -5,3 +5,4 @@ outputs/**/*.pth
 data/**
 ref/**
 env/**
+.data/**
