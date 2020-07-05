@@ -21,8 +21,8 @@ class Test_Data_In(unittest.TestCase):
         self.filename = "data/ref_genome/test_short.fasta"
 
 
-    def test_bioseq_to_np(self):
-        npt.assert_array_equal(bioseq_to_np(self.bioseq), self.int_seq)
+    def test_bioseq_to_tensor(self):
+        npt.assert_array_equal(bioseq_to_tensor(self.bioseq).numpy(), self.int_seq)
 
 
     def test_SequenceDataset(self):
@@ -33,6 +33,6 @@ class Test_Data_In(unittest.TestCase):
         dataset.subseq_len = SUBSEQ_LEN
         self.assertEqual(len(dataset), (len(bioseq) - SUBSEQ_LEN + 1) * 4)
         dataset.subseq_len = len(bioseq)
-        npt.assert_array_equal(dataset.__getitem__(0), bioseq_to_np(bioseq))
-        npt.assert_array_equal(dataset.__getitem__(2), bioseq_to_np(bioseq.complement()))
-        npt.assert_array_equal(dataset.__getitem__(3), bioseq_to_np(bioseq.reverse_complement()))
+        npt.assert_array_equal(dataset.__getitem__(0), bioseq_to_tensor(bioseq))
+        npt.assert_array_equal(dataset.__getitem__(2), bioseq_to_tensor(bioseq.complement()))
+        npt.assert_array_equal(dataset.__getitem__(3), bioseq_to_tensor(bioseq.reverse_complement()))
