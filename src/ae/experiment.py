@@ -517,6 +517,7 @@ if __name__ == '__main__':
     # exp12_TEST_get_label()
 
     # exp13_test_flags()
+    exp14_multilayer_depth()
 
     test_logged_models('outputs/src/ae/logs/exp_2020-06-10-16-57-37.log', 'data/ref_genome/test.fasta')
     # test_logged_models('outputs/src/ae/logs/exp_2020-07-05-23-11-40.log', 'data/ref_genome/chr22_excerpt_800k.fa')
