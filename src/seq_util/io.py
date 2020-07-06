@@ -1,3 +1,4 @@
+from time import gmtime, strftime
 import inspect
 import os.path
 from pathlib import Path
@@ -11,7 +12,7 @@ def output_path(prefix, input_file, suffix):
                 path_to_filename(caller))
     # make sure directory exists
     Path(out_path).mkdir(parents=True, exist_ok=True)
-    filename = prefix + path_to_filename(input_file) + suffix
+    filename = strftime("%Y-%m-%d_%H-%M-%S_", gmtime()) + prefix + path_to_filename(input_file) + suffix
     return os.path.join(out_path, filename)
 
 
