@@ -62,43 +62,36 @@ class PositionalEncoding(nn.Module):
         x = x + self.pe[:x.size(0), :]
         return self.dropout(x)
 
-import torchtext
-from torchtext.data.utils import get_tokenizer
-TEXT = torchtext.data.Field(tokenize=get_tokenizer("basic_english"),
-                            init_token='<sos>',
-                            eos_token='<eos>',
-                            lower=True)
-train_txt, val_txt, test_txt = torchtext.datasets.WikiText2.splits(TEXT)
-TEXT.build_vocab(train_txt)
+import sys
+sys.path.append('./src/ae/')
+from datasets import SequenceDataset
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def batchify(data, bsz):
-    data = TEXT.numericalize([data.examples[0].text])
-    # Divide the dataset into bsz parts.
-    nbatch = data.size(0) // bsz
-    # Trim off any extra elements that wouldn't cleanly fit (remainders).
-    data = data.narrow(0, 0, nbatch * bsz)
-    # Evenly divide the data across the bsz batches.
-    data = data.view(bsz, -1).t().contiguous()
-    return data.to(device)
-
+bptt = 35
 batch_size = 20
 eval_batch_size = 10
-train_data = batchify(train_txt, batch_size)
-val_data = batchify(val_txt, eval_batch_size)
-test_data = batchify(test_txt, eval_batch_size)
+valid_split = 0.2
+test_split = 0.1
+dataset = SequenceDataset('data/ref_genome/chr22_excerpt_4m.fa', seq_len=bptt + 1, stride=bptt, make_onehot=False)
+valid_size = int(len(dataset) * valid_split)
+test_size = int(len(dataset) * test_split)
+train_data, valid_data = torch.utils.data.random_split(dataset, [len(dataset) - valid_size, valid_size])
+valid_data, test_data = torch.utils.data.random_split(valid_data, [valid_size - test_size, test_size])
+train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=2)
+valid_loader = torch.utils.data.DataLoader(valid_data, batch_size=eval_batch_size, shuffle=False, num_workers=2)
+test_loader = torch.utils.data.DataLoader(test_data, batch_size=eval_batch_size, shuffle=False, num_workers=2)
 
-bptt = 35
-def get_batch(source, i):
-    seq_len = min(bptt, len(source) - 1 - i)
-    data = source[i:i+seq_len]
-    target = source[i+1:i+1+seq_len].view(-1)
+def get_batch(sequence):
+    sequence = sequence.permute(1, 0) # reorder to (sequence, batch) dimensions
+    data = sequence[:-1]  # trim off the last element as target
+    target = sequence[1:].reshape(bptt * batch_size)  # have to reshape due to reordering
     return data, target
 
 
-ntokens = len(TEXT.vocab.stoi) # the size of vocabulary
-emsize = 200 # embedding dimension
-nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
+ntokens = 4 # the size of vocabulary
+emsize = 10 # embedding dimension
+nhid = 10 # the dimension of the feedforward network model in nn.TransformerEncoder
 nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
 nhead = 2 # the number of heads in the multiheadattention models
 dropout = 0.2 # the dropout value
@@ -114,9 +107,8 @@ def train():
     model.train() # Turn on the train mode
     total_loss = 0.
     start_time = time.time()
-    ntokens = len(TEXT.vocab.stoi)
-    for batch, i in enumerate(range(0, train_data.size(0) - 1, bptt)):
-        data, targets = get_batch(train_data, i)
+    for batch, sequence in enumerate(train_loader):
+        data, targets = get_batch(sequence)
         optimizer.zero_grad()
         output = model(data)
         loss = criterion(output.view(-1, ntokens), targets)
@@ -132,19 +124,18 @@ def train():
             print('| epoch {:3d} | {:5d}/{:5d} batches | '
                   'lr {:02.2f} | ms/batch {:5.2f} | '
                   'loss {:5.2f} | ppl {:8.2f}'.format(
-                    epoch, batch, len(train_data) // bptt, scheduler.get_lr()[0],
+                    epoch, batch, len(train_loader) // bptt, scheduler.get_lr()[0],
                     elapsed * 1000 / log_interval,
                     cur_loss, math.exp(cur_loss)))
             total_loss = 0
             start_time = time.time()
 
-def evaluate(eval_model, data_source):
+def evaluate(eval_model, data_loader):
     eval_model.eval() # Turn on the evaluation mode
     total_loss = 0.
-    ntokens = len(TEXT.vocab.stoi)
     with torch.no_grad():
-        for i in range(0, data_source.size(0) - 1, bptt):
-            data, targets = get_batch(data_source, i)
+        for sequence in data_loader:
+            data, targets = get_batch(sequence)
             output = eval_model(data)
             output_flat = output.view(-1, ntokens)
             total_loss += len(data) * criterion(output_flat, targets).item()
@@ -157,7 +148,7 @@ best_model = None
 for epoch in range(1, epochs + 1):
     epoch_start_time = time.time()
     train()
-    val_loss = evaluate(model, val_data)
+    val_loss = evaluate(model, valid_loader)
     print('-' * 89)
     print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
           'valid ppl {:8.2f}'.format(epoch, (time.time() - epoch_start_time),
@@ -170,7 +161,7 @@ for epoch in range(1, epochs + 1):
 
     scheduler.step()
 
-test_loss = evaluate(best_model, test_data)
+test_loss = evaluate(best_model, test_loader)
 print('=' * 89)
 print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
     test_loss, math.exp(test_loss)))
