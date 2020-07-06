@@ -18,7 +18,7 @@ BASE_TO_INDEX = {
     'C': 2, 'c': 2,
     'T': 3, 't': 3,
     }
-
+INDEX_TO_BASE = ['A', 'G', 'C', 'T']
 N_BASE = 4
 
 # map style dataset holding entire sequence in memory
@@ -76,15 +76,6 @@ class SequenceDataset(torch.utils.data.Dataset):
             return x
 
 
-def bioseq_to_tensor(bioseq):
-    str_array = np.array(bioseq)
-    int_array = np.empty(len(bioseq), dtype='int8')
-    for base, index in BASE_TO_INDEX.items():
-        match = (str_array == base)
-        int_array[match] = index
-    return torch.LongTensor(int_array)
-
-
 class RandomRepeatSequence(torch.utils.data.Dataset):
 
 
@@ -109,3 +100,37 @@ class RandomRepeatSequence(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         return bioseq_to_tensor(self.seq[index * self.seq_len: (index + 1) * self.seq_len])
+
+
+def bioseq_to_tensor(bioseq):
+    str_array = np.array(bioseq)
+    int_array = np.empty(len(bioseq), dtype='int8')
+    for base, index in BASE_TO_INDEX.items():
+        match = (str_array == base)
+        int_array[match] = index
+    return torch.LongTensor(int_array)
+
+
+def seq_from_tensor(tensor):
+    return Seq(''.join([INDEX_TO_BASE[i] for i in tensor.detach().numpy()]))
+
+
+def print_target_vs_reconstruction(target, reconstruction):
+    print(' ', seq_from_tensor(target))
+    probabilities = reconstruction.detach().numpy().T
+    print('  ', end='')
+    for diff in target.detach().numpy() - np.argmax(probabilities, axis=0):
+        if diff == 0:
+            print('-', end='')
+        else:
+            print('x', end='')
+    print('')
+    for base, row in zip(INDEX_TO_BASE, probabilities):
+        print(base, end=' ')
+        for j in row:
+            if j > 0.1:
+                print(int(j * 10), end='')
+            else:
+                print(' ', end='')
+        print('')
+

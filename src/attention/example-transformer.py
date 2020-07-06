@@ -64,17 +64,17 @@ class PositionalEncoding(nn.Module):
 
 import sys
 sys.path.append('src/ae/')
-from datasets import SequenceDataset, RandomRepeatSequence
+from datasets import SequenceDataset, RandomRepeatSequence, print_target_vs_reconstruction
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-bptt = 10
-batch_size = 3
+bptt = 30
+batch_size = 10
 eval_batch_size = 10
 valid_split = 0.2
 test_split = 0.1
 # dataset = SequenceDataset('data/ref_genome/test.fasta', seq_len=bptt + 1, stride=bptt, make_onehot=False)
-dataset = RandomRepeatSequence(bptt + 1, 30000, 13)
+dataset = RandomRepeatSequence(bptt + 1, 30000, 3, repeat_len=4)
 valid_size = int(len(dataset) * valid_split)
 test_size = int(len(dataset) * test_split)
 train_data, valid_data = torch.utils.data.random_split(dataset, [len(dataset) - valid_size, valid_size])
@@ -83,6 +83,7 @@ train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, sh
 valid_loader = torch.utils.data.DataLoader(valid_data, batch_size=eval_batch_size, shuffle=False, num_workers=2)
 test_loader = torch.utils.data.DataLoader(test_data, batch_size=eval_batch_size, shuffle=False, num_workers=2)
 
+
 def get_batch(sequence, device):
     sequence = sequence.permute(1, 0) # reorder to (sequence, batch) dimensions
     size = sequence.shape[1]
@@ -90,10 +91,10 @@ def get_batch(sequence, device):
     target = sequence[1:].reshape(bptt * size)  # have to reshape due to reordering
     return data.to(device), target.to(device)
 
+
 def print_test_example(data, target, output):
     size = data.shape[1]
-    print(data.shape, target.shape, output.shape)
-    print(data[::,0], target.reshape((bptt, size))[::,0], output[::,0])
+    print_target_vs_reconstruction(target.reshape((bptt, size))[::, 0], F.softmax(output[::, 0], dim=1))
 
 
 ntokens = 4 # the size of vocabulary
@@ -137,7 +138,7 @@ def train():
                     cur_loss, math.exp(cur_loss), n_correct / n_total))
             total_loss = 0
             start_time = time.time()
-            # print_test_example(data, targets, output)
+            print_test_example(data, targets, output)
 
 def evaluate(eval_model, data_loader):
     eval_model.eval() # Turn on the evaluation mode
@@ -156,7 +157,7 @@ def evaluate(eval_model, data_loader):
             n_total += len(output_flat)
             if do_print:
                 do_print = False
-                # print_test_example(data, targets, output)
+                print_test_example(data, targets, output)
     return total_loss / len(data_loader), n_correct, n_total
 
 best_val_loss = float("inf")
