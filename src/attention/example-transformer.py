@@ -82,11 +82,11 @@ train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, sh
 valid_loader = torch.utils.data.DataLoader(valid_data, batch_size=eval_batch_size, shuffle=False, num_workers=2)
 test_loader = torch.utils.data.DataLoader(test_data, batch_size=eval_batch_size, shuffle=False, num_workers=2)
 
-def get_batch(sequence):
+def get_batch(sequence, device):
     sequence = sequence.permute(1, 0) # reorder to (sequence, batch) dimensions
     data = sequence[:-1]  # trim off the last element as target
     target = sequence[1:].reshape(bptt * batch_size)  # have to reshape due to reordering
-    return data, target
+    return data.to(device), target.to(device)
 
 
 ntokens = 4 # the size of vocabulary
@@ -108,7 +108,7 @@ def train():
     total_loss = 0.
     start_time = time.time()
     for batch, sequence in enumerate(train_loader):
-        data, targets = get_batch(sequence)
+        data, targets = get_batch(sequence, device)
         optimizer.zero_grad()
         output = model(data)
         loss = criterion(output.view(-1, ntokens), targets)
@@ -135,7 +135,7 @@ def evaluate(eval_model, data_loader):
     total_loss = 0.
     with torch.no_grad():
         for sequence in data_loader:
-            data, targets = get_batch(sequence)
+            data, targets = get_batch(sequence, device)
             output = eval_model(data)
             output_flat = output.view(-1, ntokens)
             total_loss += len(data) * criterion(output_flat, targets).item()
