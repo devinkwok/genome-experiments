@@ -84,8 +84,9 @@ test_loader = torch.utils.data.DataLoader(test_data, batch_size=eval_batch_size,
 
 def get_batch(sequence, device):
     sequence = sequence.permute(1, 0) # reorder to (sequence, batch) dimensions
+    size = sequence.shape[1]
     data = sequence[:-1]  # trim off the last element as target
-    target = sequence[1:].reshape(bptt * batch_size)  # have to reshape due to reordering
+    target = sequence[1:].reshape(bptt * size)  # have to reshape due to reordering
     return data.to(device), target.to(device)
 
 
@@ -124,7 +125,7 @@ def train():
             print('| epoch {:3d} | {:5d}/{:5d} batches | '
                   'lr {:02.2f} | ms/batch {:5.2f} | '
                   'loss {:5.2f} | ppl {:8.2f}'.format(
-                    epoch, batch, len(train_loader) // bptt, scheduler.get_lr()[0],
+                    epoch, batch, len(train_data) // bptt, scheduler.get_lr()[0],
                     elapsed * 1000 / log_interval,
                     cur_loss, math.exp(cur_loss)))
             total_loss = 0
@@ -139,7 +140,7 @@ def evaluate(eval_model, data_loader):
             output = eval_model(data)
             output_flat = output.view(-1, ntokens)
             total_loss += len(data) * criterion(output_flat, targets).item()
-    return total_loss / (len(data_source) - 1)
+    return total_loss / (len(data_loader) - 1)
 
 best_val_loss = float("inf")
 epochs = 3 # The number of epochs
