@@ -1,9 +1,12 @@
 import math
+import random
 
 import torch
 import torch.nn.functional as F
 import numpy as np
 from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.Alphabet import generic_dna
 
 
 # 1h means one hot
@@ -80,3 +83,29 @@ def bioseq_to_tensor(bioseq):
         match = (str_array == base)
         int_array[match] = index
     return torch.LongTensor(int_array)
+
+
+class RandomRepeatSequence(torch.utils.data.Dataset):
+
+
+    def __init__(self, seq_len, n_batch, n_repeats, repeat_len=1):
+        self.seq_len = seq_len
+        self.n_batch = n_batch
+        self.n_repeats = n_repeats
+        self.repeat_len = repeat_len
+
+        seq_str = ''
+        random.seed(0)
+        bases = list(BASE_TO_INDEX.keys())
+        while len(seq_str) < self.seq_len * self.n_batch:
+            arr = [random.choice(bases) for i in range(self.repeat_len)] * self.n_repeats
+            seq_str += ''.join(arr)
+        self.seq = Seq(seq_str, generic_dna)
+
+
+    def __len__(self):
+        return self.n_batch
+
+
+    def __getitem__(self, index):
+        return bioseq_to_tensor(self.seq[index * self.seq_len: (index + 1) * self.seq_len])

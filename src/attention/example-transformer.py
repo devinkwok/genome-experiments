@@ -63,17 +63,18 @@ class PositionalEncoding(nn.Module):
         return self.dropout(x)
 
 import sys
-sys.path.append('./src/ae/')
-from datasets import SequenceDataset
+sys.path.append('src/ae/')
+from datasets import SequenceDataset, RandomRepeatSequence
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-bptt = 35
-batch_size = 20
+bptt = 10
+batch_size = 3
 eval_batch_size = 10
 valid_split = 0.2
 test_split = 0.1
-dataset = SequenceDataset('data/ref_genome/chr22_excerpt_4m.fa', seq_len=bptt + 1, stride=bptt, make_onehot=False)
+# dataset = SequenceDataset('data/ref_genome/test.fasta', seq_len=bptt + 1, stride=bptt, make_onehot=False)
+dataset = RandomRepeatSequence(bptt + 1, 30000, 13)
 valid_size = int(len(dataset) * valid_split)
 test_size = int(len(dataset) * test_split)
 train_data, valid_data = torch.utils.data.random_split(dataset, [len(dataset) - valid_size, valid_size])
@@ -85,21 +86,26 @@ test_loader = torch.utils.data.DataLoader(test_data, batch_size=eval_batch_size,
 def get_batch(sequence, device):
     sequence = sequence.permute(1, 0) # reorder to (sequence, batch) dimensions
     size = sequence.shape[1]
-    data = sequence[:-1]  # trim off the last element as target
+    data = sequence[0:-1]  # trim off the last element as target
     target = sequence[1:].reshape(bptt * size)  # have to reshape due to reordering
     return data.to(device), target.to(device)
 
+def print_test_example(data, target, output):
+    size = data.shape[1]
+    print(data.shape, target.shape, output.shape)
+    print(data[::,0], target.reshape((bptt, size))[::,0], output[::,0])
+
 
 ntokens = 4 # the size of vocabulary
-emsize = 10 # embedding dimension
-nhid = 10 # the dimension of the feedforward network model in nn.TransformerEncoder
+emsize = 50 # embedding dimension
+nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
 nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
 nhead = 2 # the number of heads in the multiheadattention models
 dropout = 0.2 # the dropout value
 model = TransformerModel(ntokens, emsize, nhead, nhid, nlayers, dropout).to(device)
 
 criterion = nn.CrossEntropyLoss()
-lr = 5.0 # learning rate
+lr = 1.0 # learning rate
 optimizer = torch.optim.SGD(model.parameters(), lr=lr)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
 
@@ -118,42 +124,53 @@ def train():
         optimizer.step()
 
         total_loss += loss.item()
-        log_interval = 200
+        log_interval = 1000
         if batch % log_interval == 0 and batch > 0:
             cur_loss = total_loss / log_interval
             elapsed = time.time() - start_time
+            val_loss, n_correct, n_total = evaluate(model, valid_loader)
             print('| epoch {:3d} | {:5d}/{:5d} batches | '
                   'lr {:02.2f} | ms/batch {:5.2f} | '
-                  'loss {:5.2f} | ppl {:8.2f}'.format(
-                    epoch, batch, len(train_data) // bptt, scheduler.get_lr()[0],
+                  'loss {:5.2f} | ppl {:8.2f} | acc {:1.2f}'.format(
+                    epoch, batch, len(train_loader), scheduler.get_last_lr()[0],
                     elapsed * 1000 / log_interval,
-                    cur_loss, math.exp(cur_loss)))
+                    cur_loss, math.exp(cur_loss), n_correct / n_total))
             total_loss = 0
             start_time = time.time()
+            # print_test_example(data, targets, output)
 
 def evaluate(eval_model, data_loader):
     eval_model.eval() # Turn on the evaluation mode
     total_loss = 0.
+    n_total, n_correct = 0, 0
     with torch.no_grad():
+        do_print = True
         for sequence in data_loader:
             data, targets = get_batch(sequence, device)
             output = eval_model(data)
             output_flat = output.view(-1, ntokens)
-            total_loss += len(data) * criterion(output_flat, targets).item()
-    return total_loss / (len(data_loader) - 1)
+            total_loss += criterion(output_flat, targets).item()
+            predictions = torch.argmax(output_flat, 1)
+            incorrect = torch.nonzero(targets - predictions, as_tuple=False)
+            n_correct += len(output_flat) - len(incorrect)
+            n_total += len(output_flat)
+            if do_print:
+                do_print = False
+                # print_test_example(data, targets, output)
+    return total_loss / len(data_loader), n_correct, n_total
 
 best_val_loss = float("inf")
-epochs = 3 # The number of epochs
+epochs = 10 # The number of epochs
 best_model = None
 
 for epoch in range(1, epochs + 1):
     epoch_start_time = time.time()
     train()
-    val_loss = evaluate(model, valid_loader)
+    val_loss, n_correct, n_total = evaluate(model, valid_loader)
     print('-' * 89)
     print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
-          'valid ppl {:8.2f}'.format(epoch, (time.time() - epoch_start_time),
-                                     val_loss, math.exp(val_loss)))
+          'valid ppl {:8.2f} | acc {:1.2f}'.format(epoch, (time.time() - epoch_start_time),
+                                     val_loss, math.exp(val_loss), n_correct / n_total))
     print('-' * 89)
 
     if val_loss < best_val_loss:
@@ -162,8 +179,8 @@ for epoch in range(1, epochs + 1):
 
     scheduler.step()
 
-test_loss = evaluate(best_model, test_loader)
+test_loss, n_correct, n_total = evaluate(model, valid_loader)
 print('=' * 89)
-print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
-    test_loss, math.exp(test_loss)))
+print('| End of training | test loss {:5.2f} | test ppl {:8.2f} | acc {:1.2f}'.format(
+    test_loss, math.exp(test_loss), n_correct / n_total))
 print('=' * 89)
