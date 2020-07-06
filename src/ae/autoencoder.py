@@ -322,6 +322,8 @@ def predict(reconstruction, empty_cutoff_prob=(1 / N_BASE)):
 def load_data(model, dataset, split_prop, n_dataloader_workers):
     print("Split training and validation sets...")
     split_size = int(split_prop * len(dataset))
+    if split_size == len(dataset):
+        split_size = len(dataset) - 1
     train_data, valid_data = torch.utils.data.random_split(dataset, [len(dataset) - split_size, split_size])
     print("Create data loaders...")
     train_loader = torch.utils.data.DataLoader(train_data,
@@ -469,7 +471,8 @@ def run(update_config):
 
     checkpoints = train(model, train_loader, valid_loader, optimizer, config['epochs'],
             config['disable_eval'], config['checkpoint_interval'], use_cuda=config['use_cuda_if_available'])
-    for model, i, j, accuracy in checkpoints:
+    for model, i, j, metrics in checkpoints:
+        print("Model evaluation at epoch {}, batch {}, metrics {}".format(i, j, metrics))
         if config['save_model']:
             model_str = "{}{}x{}d{}n{}l{}_{}at{}_{}-{}".format(config['model'],
                     model.kernel_len, model.latent_len, model.input_dropout_freq,

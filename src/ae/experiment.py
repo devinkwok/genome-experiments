@@ -1,3 +1,4 @@
+import ast
 import timeit
 
 import torch
@@ -22,6 +23,28 @@ def experiment(hparams, key, values, n_runs=1):
         run_fn = lambda: ae.run(hparams)
         runtime = timeit.timeit(run_fn, number=n_runs)
         print('Runtime: ', runtime)
+
+
+# evaluates all existing models in log file with test data
+def test_logged_models(logfile, test_data):
+    with open(logfile, 'r') as file:
+        line = file.readline().rstrip()
+        while line:
+            if line == 'Config values:':
+                config = ast.literal_eval(file.readline())
+                print(config)
+                config['input_path'] = test_data
+                config['epochs'] = 1
+                config['disable_eval'] = True
+                config['split_prop'] = 1.0
+                config['save_model'] = False
+                config['learn_rate'] = 0.0
+                config['checkpoint_interval'] = 2
+            elif line.startswith('Saving model to '):
+                filename = line[len('Saving model to '):]
+                config['load_prev_model_state'] = filename
+                ae.run(config)
+            line = file.readline().rstrip()
 
 
 def exp1_window_size():
@@ -450,6 +473,33 @@ def exp13_test_flags():
     experiment(hparams, 'TEST_use_old_dataset', [True], n_runs=1)
 
 
+def exp14_multilayer_depth():
+    hparams = {
+        'model': 'Multilayer',
+        'name': "aemd",
+        'kernel_len': 9,
+        'latent_len': 200,
+        'seq_len': 64,
+        'seq_per_batch': 200,
+        'input_path': "data/ref_genome/chr22.fa",
+        # 'load_prev_model_state': "outputs/src/ae/autoencoder/aem0chr22_excerpt_4mMultilayer3x30d0.05n0.3l0.0_20at2.0.pth",
+        'split_prop': 0.05,
+        'epochs': 1,
+        'learn_rate': 0.1,
+        'input_dropout_freq': 0.03,
+        'latent_noise_std': 0.2,
+        'hidden_len': 24,
+        'pool_size': 2,
+        'n_conv_and_pool': 2,
+        'n_conv_before_pool': 2,
+        'n_linear': 2,
+        'neighbour_loss_prop': 0.0,
+        'hidden_dropout_freq': 0.05,
+        'n_dataloader_workers': 4,
+        'checkpoint_interval': 100000,
+    }
+    experiment(hparams, 'n_conv_and_pool', [1, 2, 3])
+
 
 if __name__ == '__main__':
     # exp1_window_size()
@@ -462,8 +512,11 @@ if __name__ == '__main__':
     # exp8_multilayer_rerun()
     # exp9_latentlinear()
 
-    exp10_TEST_use_old_dataset()
-    exp11_TEST_get_as_onehot()
-    exp12_TEST_get_label()
+    # exp10_TEST_use_old_dataset()
+    # exp11_TEST_get_as_onehot()
+    # exp12_TEST_get_label()
 
     # exp13_test_flags()
+
+    test_logged_models('outputs/src/ae/logs/exp_2020-06-10-16-57-37.log', 'data/ref_genome/test.fasta')
+    # test_logged_models('outputs/src/ae/logs/exp_2020-07-05-23-11-40.log', 'data/ref_genome/chr22_excerpt_800k.fa')
