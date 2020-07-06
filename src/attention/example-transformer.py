@@ -94,7 +94,7 @@ def get_batch(sequence, device):
 
 def print_test_example(data, target, output):
     size = data.shape[1]
-    print_target_vs_reconstruction(target.reshape((bptt, size))[::, 0], F.softmax(output[::, 0], dim=1))
+    print_target_vs_reconstruction(target.reshape((bptt, size))[::, 0].cpu(), F.softmax(output[::, 0], dim=1).cpu())
 
 
 ntokens = 4 # the size of vocabulary
