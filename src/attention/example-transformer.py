@@ -68,12 +68,12 @@ from datasets import SequenceDataset, RandomRepeatSequence, print_target_vs_reco
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-bptt = 30
+bptt = 200
 batch_size = 10
 eval_batch_size = 10
-valid_split = 0.2
-test_split = 0.1
-# dataset = SequenceDataset('data/ref_genome/test.fasta', seq_len=bptt + 1, stride=bptt, make_onehot=False)
+valid_split = 0.02
+test_split = 0.01
+dataset = SequenceDataset('data/ref_genome/test.fasta', seq_len=bptt + 1, stride=bptt, make_onehot=False)
 dataset = RandomRepeatSequence(bptt + 1, 30000, 3, repeat_len=4)
 valid_size = int(len(dataset) * valid_split)
 test_size = int(len(dataset) * test_split)
@@ -99,16 +99,16 @@ def print_test_example(data, target, output):
 
 ntokens = 4 # the size of vocabulary
 emsize = 50 # embedding dimension
-nhid = 200 # the dimension of the feedforward network model in nn.TransformerEncoder
+nhid = 100 # the dimension of the feedforward network model in nn.TransformerEncoder
 nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
 nhead = 2 # the number of heads in the multiheadattention models
 dropout = 0.2 # the dropout value
 model = TransformerModel(ntokens, emsize, nhead, nhid, nlayers, dropout).to(device)
 
 criterion = nn.CrossEntropyLoss()
-lr = 1.0 # learning rate
+lr = 0.1 # learning rate
 optimizer = torch.optim.SGD(model.parameters(), lr=lr)
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.95)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.7)
 
 import time
 def train():
@@ -125,7 +125,7 @@ def train():
         optimizer.step()
 
         total_loss += loss.item()
-        log_interval = 1000
+        log_interval = 100
         if batch % log_interval == 0 and batch > 0:
             cur_loss = total_loss / log_interval
             elapsed = time.time() - start_time

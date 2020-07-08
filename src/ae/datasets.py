@@ -19,6 +19,9 @@ BASE_TO_INDEX = {
     'T': 3, 't': 3,
     }
 INDEX_TO_BASE = ['A', 'G', 'C', 'T']
+MAGNITUDE = {
+    0: ' ', 1: '.', 2: '-', 3: '~', 4: '=', 5: '<', 6: '*', 7: '^', 8: '#', 9: '@',
+}
 N_BASE = 4
 
 # map style dataset holding entire sequence in memory
@@ -115,11 +118,12 @@ def seq_from_tensor(tensor):
     return Seq(''.join([INDEX_TO_BASE[i] for i in tensor.detach().numpy()]))
 
 
-def print_target_vs_reconstruction(target, reconstruction):
-    print(' ', seq_from_tensor(target))
+def print_target_vs_reconstruction(target, reconstruction, n_columns=89, print_as_numbers=False):
+    print(' ', seq_from_tensor(target[:n_columns - 2]))
     probabilities = reconstruction.detach().numpy().T
     print('  ', end='')
-    for diff in target.detach().numpy() - np.argmax(probabilities, axis=0):
+    differences = target.detach().numpy() - np.argmax(probabilities, axis=0)
+    for diff in differences[:n_columns - 2]:
         if diff == 0:
             print('-', end='')
         else:
@@ -127,10 +131,13 @@ def print_target_vs_reconstruction(target, reconstruction):
     print('')
     for base, row in zip(INDEX_TO_BASE, probabilities):
         print(base, end=' ')
-        for j in row:
-            if j > 0.1:
+        for j in row[:n_columns - 2]:
+            if print_as_numbers:
+                print(MAGNITUDE[int(j * 10)], end='')
+            elif j > 0.1:
                 print(int(j * 10), end='')
             else:
                 print(' ', end='')
         print('')
+    print('')
 
