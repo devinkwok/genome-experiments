@@ -1,5 +1,5 @@
 import sys
-sys.path.append('./src/ae/')
+sys.path.append('./src/seq_util/')
 
 import math
 import unittest
@@ -28,11 +28,19 @@ class Test_Data_In(unittest.TestCase):
     def test_SequenceDataset(self):
         dataset = SequenceDataset(self.filename, 1)
         bioseq = SeqIO.read(self.filename, "fasta").seq.ungap('N').ungap('n')
-        self.assertEqual(len(dataset), len(bioseq) * 4)
+        self.assertEqual(len(dataset), len(bioseq))
         SUBSEQ_LEN = 2
-        dataset.subseq_len = SUBSEQ_LEN
-        self.assertEqual(len(dataset), (len(bioseq) - SUBSEQ_LEN + 1) * 4)
-        dataset.subseq_len = len(bioseq)
-        npt.assert_array_equal(dataset.__getitem__(0), bioseq_to_tensor(bioseq))
-        npt.assert_array_equal(dataset.__getitem__(2), bioseq_to_tensor(bioseq.complement()))
-        npt.assert_array_equal(dataset.__getitem__(3), bioseq_to_tensor(bioseq.reverse_complement()))
+        dataset.seq_len = SUBSEQ_LEN
+        self.assertEqual(len(dataset), (len(bioseq) - SUBSEQ_LEN + 1))
+        dataset.seq_len = len(bioseq)
+
+
+    def test_RandomRepeatSequence(self):
+        n_batch = 3
+        repeat_len = 2
+        n_repeats = 4
+        dataset = RandomRepeatSequence(10, n_batch, n_repeats, repeat_len)
+        self.assertEqual(len(dataset), n_batch)
+        seq = dataset[0]
+        repeat_seq = seq[0:repeat_len]
+        npt.assert_array_equal(repeat_seq, seq[repeat_len:repeat_len * 2])
