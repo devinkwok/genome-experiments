@@ -1,5 +1,6 @@
 import sys
 sys.path.append('./src/ae/')
+sys.path.append('./src/seq_util/')
 
 import math
 import unittest
@@ -8,17 +9,32 @@ import torch
 import numpy as np
 import numpy.testing as npt
 
-import data_in
 from autoencoder import *
+from datasets import SequenceDataset
 
 class Test_Autoencoder(unittest.TestCase):
 
 
     def setUp(self):
-        self.ae = Autoencoder(kernel_len=5, latent_len=2, seq_len=17, seq_per_batch=7,
-                input_dropout_freq=0.0, latent_noise_std=0.0, loss_fn=NeighbourDistanceLoss(0.0))
+        self.kernel_len = 5
+        self.latent_len = 2
+        self.seq_len = 20
+        self.seq_per_batch = 7
+        self.input_dropout_freq = 0.0
+        self.latent_noise_std = 0.0
+        self.loss_fn = NeighbourDistanceLoss(0.0)
+        self.autoencoders = [
+            Autoencoder(self.kernel_len, self.latent_len, self.seq_len, self.seq_per_batch,
+                self.input_dropout_freq, self.latent_noise_std, self.loss_fn),
+            MultilayerEncoder(self.kernel_len, self.latent_len, self.seq_len, self.seq_per_batch,
+                    self.input_dropout_freq, self.latent_noise_std, self.loss_fn,
+                    hidden_len=10, pool_size=2, n_conv_and_pool=2, n_conv_before_pool=2,
+                    n_linear=2, hidden_dropout_freq=0.0),
+        ]
         self.filename = "data/ref_genome/test.fasta"
-        self.train_loader, self.valid_loader = load_data(self.ae, self.filename, split_prop=0.2, n_dataloader_workers=2)
+        self.dataset = SequenceDataset(self.filename, seq_len=self.seq_len)
+        self.train_loader, self.valid_loader = load_data(
+                    self.autoencoders[0], self.dataset, split_prop=0.2, n_dataloader_workers=2)
         self.shape = (5, 4, 3)
         self.ones = torch.ones(*self.shape)
         self.zeros = torch.zeros(*self.shape)
@@ -26,55 +42,49 @@ class Test_Autoencoder(unittest.TestCase):
 
     def test_load_data(self):
         for x in self.train_loader:
-            self.assertEqual(x.shape, (self.ae.seq_per_batch, data_in.N_BASE, self.ae.seq_len))
+            self.assertEqual(x.shape, (self.seq_per_batch, self.seq_len))
             break  # only test the first batch
         for x in self.valid_loader:
-            self.assertEqual(x.shape, (self.ae.seq_per_batch, data_in.N_BASE, self.ae.seq_len))
+            self.assertEqual(x.shape, (self.seq_per_batch * 2, self.seq_len))
             break  # only test the first batch
 
 
     def test_forward(self):
-        for x in self.train_loader:
-            latent = self.ae.encode(x)
-            reconstructed = self.ae.decode(latent)
-            latent_shape = (self.ae.seq_per_batch, self.ae.latent_len, self.ae.seq_len - (self.ae.kernel_len - 1))
-            self.assertEqual(latent.shape, latent_shape)
-            self.assertEqual(reconstructed.shape, x.shape)
-            break  # only test the first batch
+        for model in self.autoencoders:
+            for x in self.train_loader:
+                reconstructed, latent = model.forward(x)
+                latent_shape = (model.seq_per_batch, model.latent_len, model.seq_len - (model.kernel_len - 1))
+                #TODO need Multilayer encoder to be fully convolutional during training
+                # self.assertEqual(latent.shape, latent_shape)
+                self.assertEqual(reconstructed.shape, (x.shape[0], N_BASE, x.shape[1]))
+                break  # only test the first batch
 
 
-    def test_predict(self):
-        for x in self.train_loader:
-            seq = predict(x)
-            npt.assert_array_equal(seq, x)
-            seq = predict(self.ae.decode(self.ae.encode(x)))
-            npt.assert_array_equal(torch.sum(seq, dim=1), torch.ones(x.shape[0], x.shape[2]))
-            break  # only test the first batch
+    def test_loss(self):
+        for model in self.autoencoders:
+            for x in self.train_loader:
+                loss = model.loss(x)
+                self.assertEqual(0, len(loss.shape))
+                break  # only test the first batch
 
 
     def test_evaluate(self):
-        for x in self.train_loader:
-            self.ae.eval()
-            accuracy, error_indexes = self.ae.evaluate(x, predict(self.ae.decode(self.ae.encode(x))))
-            self.assertAlmostEqual(accuracy, 1.0)
-            self.assertEqual(x[error_indexes[0],:, error_indexes[1]].nelement(), 0)
+        for model in self.autoencoders:
+            for x in self.train_loader:
+                model.eval()
+                true_x = torch.argmax(model.forward(x)[0], dim=1, keepdim=False)
+                metrics = model.evaluate(x, true_x)
+                self.assertEqual(metrics['n_samples'], x.nelement())
+                self.assertEqual(metrics['correct'], x.nelement())
 
-            accuracy, error_indexes = self.ae.evaluate(x, data_in.complement(
-                predict(self.ae.decode(self.ae.encode(x)))))
-            flattened = x.permute(0, 2, 1).reshape((x.shape[0]*x.shape[2], x.shape[1]))
-            self.assertAlmostEqual(accuracy, 0)
-            npt.assert_array_equal(flattened, x[error_indexes[0],:, error_indexes[1]])
+                metrics = model.evaluate(x, true_x * -1 + 3)
+                self.assertEqual(metrics['correct'], 0)
 
-            one_error = predict(self.ae.decode(self.ae.encode(x)))
-            index_0, index_1 = 0, 1
-            error = one_error[index_0, :, index_1].clone().detach()
-            one_error[index_0, :, index_1] = error.flip(0)
-            accuracy, error_indexes = self.ae.evaluate(x, one_error)
-            self.assertLess(accuracy, 1.0)
-            self.assertEqual(error_indexes[0], index_0)
-            self.assertEqual(error_indexes[1], index_1)
+                true_x[0, 0] = true_x[0, 0] * -1 + 3
+                metrics = model.evaluate(x, true_x)
+                self.assertEqual(metrics['correct'], x.nelement() - 1)
 
-            break  # only test the first batch
+                break  # only test the first batch
 
 
     def test_SeqDropout(self):
@@ -124,22 +134,6 @@ class Test_Autoencoder(unittest.TestCase):
 
         y = torch.arange(self.ones.nelement()).reshape(self.shape).float()
         self.assertEqual(nd_loss(x, z, y).item(), 1.0)
-
-
-    def test_MultilayerEncoder(self):
-        seq_per_batch = 10
-        latent_len = 100
-        ae = MultilayerEncoder(kernel_len=3, latent_len=latent_len, seq_len=128, seq_per_batch=seq_per_batch,
-                    input_dropout_freq=0.05, latent_noise_std=0.2, hidden_len=10, pool_size=2, loss_fn=NeighbourDistanceLoss(0.0),
-                    n_conv_and_pool=2, n_conv_before_pool=2, n_linear=2, hidden_dropout_freq=0.0)
-        train_loader, _ = load_data(ae, self.filename, split_prop=0.05, n_dataloader_workers=2)
-        for x in train_loader:
-            reconstructed, latent = ae.forward(x)
-            self.assertEqual(latent.shape, (seq_per_batch, latent_len))
-            self.assertEqual(reconstructed.shape[0], x.shape[0])
-            self.assertEqual(reconstructed.shape[1], N_BASE)
-            self.assertEqual(reconstructed.shape[2], x.shape[1])
-            break
 
 
 if __name__ == '__main__':

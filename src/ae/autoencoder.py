@@ -7,11 +7,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-import data_in
-from datasets import SequenceDataset
+from seq_util.datasets import SequenceDataset, N_BASE
 import seq_util.io
 
-N_BASE = data_in.N_BASE
 
 # input tensors are (n, N_BASE, subseq_len)
 # where n is number of subsequences per batch, N_BASE is number of channels
@@ -45,9 +43,6 @@ __CONFIG_DEFAULT = {
     'n_dataloader_workers': 2,
     'checkpoint_interval': 1000,
     'output_len': 919,  # for supervised model
-    'TEST_use_old_dataset': False,
-    'TEST_get_as_onehot': False,
-    'TEST_get_label': False,
 }
 
 
@@ -107,8 +102,7 @@ class NeighbourDistanceLoss(nn.Module):
 class Autoencoder(nn.Module):
 
 
-    def __init__(self, kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn,
-                convert_to_onehot=False):
+    def __init__(self, kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn):
         super().__init__()
         self.kernel_len = kernel_len
         self.latent_len = latent_len
@@ -117,7 +111,6 @@ class Autoencoder(nn.Module):
         self.input_dropout_freq = input_dropout_freq
         self.latent_noise_std = latent_noise_std
         self.loss_fn = loss_fn
-        self.convert_to_onehot = convert_to_onehot
 
         self.total_epochs = 0  # tracks number of epochs this model has been trained
 
@@ -133,7 +126,7 @@ class Autoencoder(nn.Module):
 
 
     def encode(self, x, override_convert_to_onehot=False):
-        if self.convert_to_onehot and not override_convert_to_onehot:
+        if not override_convert_to_onehot:
             x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
         for layer in self.encode_layers.values():
             x = layer(x)
@@ -153,8 +146,7 @@ class Autoencoder(nn.Module):
 
 
     def loss(self, x, y=None):
-        if self.convert_to_onehot:
-            x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+        x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
         reconstructed, latent = self.forward(x, override_convert_to_onehot=True)
         if y is None:
             return self.loss_fn(x, reconstructed, latent)
@@ -164,28 +156,20 @@ class Autoencoder(nn.Module):
 
 
     def evaluate(self, x, true_x):
-        if self.convert_to_onehot:
-            x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
-        else:
-            true_x = data_in.one_hot_to_seq(true_x)
-        z, y = self.forward(x, override_convert_to_onehot=True)
-        predictions = predict(z)
-        correct = (true_x == data_in.one_hot_to_seq(predictions))
-        # error_indexes = torch.nonzero(torch.logical_not(correct), as_tuple=True)
+        x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+        z, _ = self.forward(x, override_convert_to_onehot=True)
+        predictions = torch.argmax(z, 1, keepdim=False)
+        correct = (true_x == predictions)
         return {'correct': torch.sum(correct).item(), 'n_samples': correct.nelement()}
 
-
-# class DilationEncoder(Autoencoder):
-#     pass
 
 class MultilayerEncoder(Autoencoder):
 
     def __init__(self, kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn,
-                convert_to_onehot,
                 hidden_len, pool_size, n_conv_and_pool, n_conv_before_pool, n_linear, hidden_dropout_freq):
         
         super().__init__(kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq,
-                    latent_noise_std, loss_fn, convert_to_onehot)
+                    latent_noise_std, loss_fn)
 
         pad = int(kernel_len / 2)
         sizes = [N_BASE] + [hidden_len * (i + 1) for i in range(n_conv_and_pool)]
@@ -240,25 +224,12 @@ class MultilayerEncoder(Autoencoder):
         self.decode_layers = decode_layers
 
 
-    # compare indexes instead of one-hot
-    def evaluate(self, x, true_x):
-        if self.convert_to_onehot:
-            x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
-        else:
-            true_x = torch.argmax(true_x, 1, keepdim=False)
-        z, _ = self.forward(x, override_convert_to_onehot=True)
-        predictions = torch.argmax(z, 1, keepdim=False)
-        correct = (true_x == predictions)
-        accuracy = torch.sum(correct).item() / correct.nelement()
-        return {'correct': torch.sum(correct).item(), 'n_samples': correct.nelement()}
-
-
 class LatentLinearRegression(Autoencoder):
 
     def __init__(self, kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq, latent_noise_std, loss_fn,
                 encoder, output_dim):
         super().__init__(kernel_len, latent_len, seq_len, seq_per_batch, input_dropout_freq,
-                    latent_noise_std, loss_fn, convert_to_onehot=False)
+                    latent_noise_std, loss_fn)
         self.encoder = encoder
         self.linear = nn.Linear(latent_len, output_dim, bias=True)
         self.sigmoid = nn.Sigmoid()
@@ -310,15 +281,6 @@ class LabelledSequence(torch.utils.data.Dataset):
         return self.one_hot[index], self.labels[index]
 
 
-# if no output is above the cutoff, predict empty (none)
-def predict(reconstruction, empty_cutoff_prob=(1 / N_BASE)):
-    probabilities, indexes = torch.max(reconstruction, 1, keepdim=False)
-    indexes[(probabilities <= empty_cutoff_prob)] = N_BASE
-    output = F.one_hot(indexes, num_classes=N_BASE + 1)
-    output = output[:,:,:-1]
-    return output.permute(0, 2, 1)
-
-
 def load_data(model, dataset, split_prop, n_dataloader_workers):
     print("Split training and validation sets...")
     split_size = int(split_prop * len(dataset))
@@ -333,7 +295,7 @@ def load_data(model, dataset, split_prop, n_dataloader_workers):
     return train_loader, valid_loader
 
 
-def evaluate_model(model, valid_loader, device, disable_eval, convert_to_onehot=False):
+def evaluate_model(model, valid_loader, device, disable_eval):
     if not disable_eval:
         model.eval()
     with torch.no_grad():
@@ -373,7 +335,7 @@ def evaluate_model(model, valid_loader, device, disable_eval, convert_to_onehot=
 # disable_eval is a quick hack to turn evaluation code off and on, this is useful for testing
 # model effectiveness while dropout and noise are included
 def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, checkpoint_interval,
-            use_cuda=False, convert_to_onehot=False):
+            use_cuda=False):
     # target CPU or GPU
     if use_cuda and torch.cuda.is_available():
         device = torch.device('cuda')
@@ -434,29 +396,20 @@ def run(update_config):
     if config['model'] == 'Multilayer' or config['model'] == 'LatentLinearRegression':
         model = MultilayerEncoder(config['kernel_len'], config['latent_len'], config['seq_len'],
                 config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn,
-                not config['TEST_get_as_onehot'],
                 config['hidden_len'], config['pool_size'], config['n_conv_and_pool'],
                 config['n_conv_before_pool'], config['n_linear'], config['hidden_dropout_freq'])
         if config['model'] == 'Multilayer':
-            dataset = SequenceDataset(config['input_path'], model.seq_len,
-                    get_label=config['TEST_get_label'], make_onehot=config['TEST_get_as_onehot'])
+            dataset = SequenceDataset(config['input_path'], model.seq_len)
     else:
         model = Autoencoder(config['kernel_len'], config['latent_len'], config['seq_len'],
-                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn,
-                not config['TEST_get_as_onehot'])
-        if config['TEST_use_old_dataset']:
-            dataset = data_in.SeqData.from_file(config['input_path'], seq_len=model.seq_len,
-                    overlap=(model.kernel_len - 1), do_cull=True, cull_threshold=0.99)
-        else:
-            dataset = SequenceDataset(config['input_path'], seq_len=model.seq_len, overlap=(model.kernel_len - 1),
-                    get_label=config['TEST_get_label'], make_onehot=config['TEST_get_as_onehot'])
+                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn)
+        dataset = SequenceDataset(config['input_path'], seq_len=model.seq_len, overlap=(model.kernel_len - 1))
 
     if not (config['load_prev_model_state'] is None):
         print("Loading model...")
         model.load_state_dict(torch.load(config['load_prev_model_state'], map_location=torch.device('cpu')))
     if config['model'] == 'LatentLinearRegression':
         encoder = model
-        encoder.convert_to_onehot = False
         model = LatentLinearRegression(config['kernel_len'], config['latent_len'], config['seq_len'],
                 config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn,
                 encoder, config['output_len'])

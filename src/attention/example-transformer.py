@@ -63,7 +63,7 @@ class PositionalEncoding(nn.Module):
         return self.dropout(x)
 
 import sys
-sys.path.append('src/ae/')
+sys.path.append('src/seq_util/')
 from datasets import SequenceDataset, RandomRepeatSequence, print_target_vs_reconstruction
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -73,7 +73,7 @@ batch_size = 10
 eval_batch_size = 10
 valid_split = 0.02
 test_split = 0.01
-dataset = SequenceDataset('data/ref_genome/test.fasta', seq_len=bptt + 1, stride=bptt, make_onehot=False)
+dataset = SequenceDataset('data/ref_genome/test.fasta', seq_len=bptt + 1, stride=bptt)
 dataset = RandomRepeatSequence(bptt + 1, 30000, 3, repeat_len=4)
 valid_size = int(len(dataset) * valid_split)
 test_size = int(len(dataset) * test_split)
@@ -138,7 +138,6 @@ def train():
                     cur_loss, math.exp(cur_loss), n_correct / n_total))
             total_loss = 0
             start_time = time.time()
-            print_test_example(data, targets, output)
 
 def evaluate(eval_model, data_loader):
     eval_model.eval() # Turn on the evaluation mode

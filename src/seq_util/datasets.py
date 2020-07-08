@@ -28,7 +28,7 @@ N_BASE = 4
 # 
 class SequenceDataset(torch.utils.data.Dataset):
 
-    def __init__(self, fasta_filename, seq_len, stride=1, overlap=None, get_label=False, make_onehot=False):
+    def __init__(self, fasta_filename, seq_len, stride=1, overlap=None):
         print("reading sequence from file...")
         bioseq = SeqIO.read(fasta_filename, "fasta")
         self.seq = bioseq.seq.ungap('N').ungap('n')
@@ -38,8 +38,6 @@ class SequenceDataset(torch.utils.data.Dataset):
         else:
             self.stride = seq_len - overlap
         self.seq_len = seq_len
-        self.get_label = get_label
-        self.make_onehot = make_onehot
 
 
     @property
@@ -69,14 +67,7 @@ class SequenceDataset(torch.utils.data.Dataset):
             subseq = subseq.reverse_complement()
         else:
             self.augment_state = 0
-        x = bioseq_to_tensor(subseq)
-        if self.make_onehot:
-            with torch.no_grad():
-                x = F.one_hot(x, num_classes=N_BASE).permute(1, 0).type(torch.float32)
-        if self.get_label:
-            return x, x
-        else:
-            return x
+        return bioseq_to_tensor(subseq)
 
 
 class RandomRepeatSequence(torch.utils.data.Dataset):
@@ -132,12 +123,11 @@ def print_target_vs_reconstruction(target, reconstruction, n_columns=89, print_a
     for base, row in zip(INDEX_TO_BASE, probabilities):
         print(base, end=' ')
         for j in row[:n_columns - 2]:
-            if print_as_numbers:
+            if not print_as_numbers:
                 print(MAGNITUDE[int(j * 10)], end='')
             elif j > 0.1:
                 print(int(j * 10), end='')
             else:
                 print(' ', end='')
         print('')
-    print('')
 
