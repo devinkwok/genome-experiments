@@ -5,6 +5,7 @@ import time
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
 
@@ -154,30 +155,36 @@ def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, ch
     metrics = evaluate_model(model, valid_loader, device, disable_eval)
     if not writer is None:
         for key, value in metrics.items():
-            writer.add_scalar(key, value, global_step=model.total_batches, walltime=elapsed_time, include_gradients=False)
+            writer.add_scalar(key, value, global_step=model.total_batches, walltime=elapsed_time)
         if snapshot_model_state:
-            log_model_state(model, writer, model.total_batches, elapsed_time)
+            log_model_state(model, writer, model.total_batches, elapsed_time, include_gradients=False)
     yield model, epochs, len(train_loader), metrics
 
 
-def log_model_state(model, writer, batch, elapsed_time, include_gradients=True):
-    for key, value in model.state_dict().items():
-        value = value.cpu().detach()
-        writer.add_histogram('hist_' + key, value.flatten(), global_step=batch, walltime=elapsed_time)
-        if len(value.shape) == 0:  # if 0D, output as scalar
-            writer.add_scalar(key, value.item(), global_step=batch, walltime=elapsed_time)
-        else:
-            if len(value.shape) == 1:  # if 1D, width = in_dimension, height = 1
-                writer.add_image(key, torch.unsqueeze(value, dim=0),
-                            global_step=batch, walltime=elapsed_time, dataformats='HW')
-            if include_gradients:
-                pass #TODO
-            elif len(value.shape) == 2:  # if 2D, width = in_dimension, height = out_channels
-                writer.add_image(key, value.permute(1, 0),
-                            global_step=batch, walltime=elapsed_time, dataformats='HW')
-            elif len(value.shape) == 3:  # if 3D, width = in_dimension, height = in_channels, grid = out_channels
-                writer.add_image(key, make_grid(torch.unsqueeze(value, dim=3).permute(2, 3, 0, 1), pad_value=2),
-                            global_step=batch, walltime=elapsed_time, dataformats='CHW')
+def log_model_state(model, writer, batch, elapsed_time, include_gradients=True, scale_factor=20):
+    for key, value in model.named_parameters():
+        tensor_shape = value.shape
+        if len(tensor_shape) == 0:  # if 0D, output 1x1 image
+            new_shape = (1, 1, 1, 1)
+        elif len(tensor_shape) == 1:  # if 1D, width = in_dimension, height = 1
+            new_shape = (1, 1, 1, tensor_shape[0])
+        elif len(tensor_shape) == 2:  # if 2D, width = in_dimension, height = out_channels
+            new_shape = (1, 1, tensor_shape[0], tensor_shape[1])
+        elif len(tensor_shape) == 3:  # if 3D, width = in_dimension, height = in_channels, grid = out_channels
+            new_shape = (tensor_shape[0], 1, tensor_shape[1], tensor_shape[2])
+        
+        img = value.cpu().detach().reshape(new_shape)
+        writer.add_histogram('hist_' + key, img.flatten(), global_step=batch, walltime=elapsed_time)
+
+        if include_gradients:
+            grad = value.grad.cpu().detach().reshape(new_shape)
+            writer.add_histogram('grad_' + key, grad.flatten(), global_step=batch, walltime=elapsed_time)
+            pos_grad = F.relu(grad)
+            neg_grad = F.relu(-1 * grad)
+            img = torch.cat((img + pos_grad * scale_factor, img, img + neg_grad * scale_factor), dim=1)
+
+        img = make_grid(img, pad_value=2)
+        writer.add_image(key, img, global_step=batch, walltime=elapsed_time, dataformats='CHW')
 
 
 def run(update_config):
