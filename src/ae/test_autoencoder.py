@@ -9,6 +9,7 @@ import torch
 import numpy as np
 import numpy.testing as npt
 
+from train import load_data
 from autoencoder import *
 from datasets import SequenceDataset
 

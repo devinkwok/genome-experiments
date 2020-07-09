@@ -3,7 +3,7 @@ import timeit
 
 import torch
 
-import autoencoder as ae
+import train
 
 
 # this is needed if model changes architecture
@@ -20,7 +20,7 @@ def rename_state_dict(hparams, old_to_new_keys_dict):
 def experiment(hparams, key, values, n_runs=1):
     for value in values:
         hparams[key] = value
-        run_fn = lambda: ae.run(hparams)
+        run_fn = lambda: train.run(hparams)
         runtime = timeit.timeit(run_fn, number=n_runs)
         print('Runtime: ', runtime)
 
@@ -43,7 +43,7 @@ def test_logged_models(logfile, test_data):
             elif line.startswith('Saving model to '):
                 filename = line[len('Saving model to '):]
                 config['load_prev_model_state'] = filename
-                ae.run(config)
+                train.run(config)
             line = file.readline().rstrip()
 
 
