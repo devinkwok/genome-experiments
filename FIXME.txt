@@ -61,3 +61,5 @@ HPC
 - order matters for input, target in BCELoss, note that the order is (input, target) where the formula is (target * log(input) + (1-target) * log(1-input))
 - download p13 build for GRCh38 data
 - there is information leakage with current SequenceDataset since train/test sequences can overlap
+
+- need to actually track the total trained batch number

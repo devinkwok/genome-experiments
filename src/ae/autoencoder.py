@@ -74,7 +74,8 @@ class Autoencoder(nn.Module):
         self.latent_noise_std = latent_noise_std
         self.loss_fn = loss_fn
 
-        self.total_epochs = 0  # tracks number of epochs this model has been trained
+        # self.total_epochs = 0  # tracks number of epochs this model has been trained
+        self.register_buffer('_total_batches', torch.tensor([[0]], dtype=torch.long))
 
         self.encode_layers = nn.ModuleDict()
         self.encode_layers['input_dropout'] = SeqDropout(input_dropout_freq)
@@ -85,6 +86,16 @@ class Autoencoder(nn.Module):
         self.decode_layers['latent_noise'] = GaussianNoise(self.latent_noise_std)
         self.decode_layers['conv0'] = nn.ConvTranspose1d(latent_len, N_BASE, kernel_len)
         self.decode_layers['softmax'] = nn.Softmax(dim=1)
+
+
+    @property
+    def total_batches(self):
+        return self._total_batches.item()
+
+
+    @total_batches.setter
+    def total_batches(self, value):
+        self._total_batches[0] = value
 
 
     def encode(self, x, override_convert_to_onehot=False):

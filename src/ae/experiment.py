@@ -39,7 +39,7 @@ def test_logged_models(logfile, test_data):
                 config['split_prop'] = 1.0
                 config['save_model'] = False
                 config['learn_rate'] = 0.0
-                config['checkpoint_interval'] = 2
+                config['checkpoint_interval'] = 1
             elif line.startswith('Saving model to '):
                 filename = line[len('Saving model to '):]
                 config['load_prev_model_state'] = filename
@@ -62,7 +62,7 @@ def exp1_window_size():
         'latent_noise_std': 0.0,
     }
     # one latent var isn't enough, >= 2 bits should capture all 4 bp
-    experiment(hparams, 'latent_len', [1, 2, 4])
+    experiment(hparams, 'latent_len', [2, 1, 4])
 
     # similar experiment on window size 3, >= 2 * 3 bits should capture all variation
     hparams['kernel_len'] = 3
@@ -206,8 +206,9 @@ def exp8_multilayer_rerun():
         'latent_len': 200,
         'seq_len': 64,
         'seq_per_batch': 200,
-        'input_path': "data/ref_genome/chr22.fa",
-        # 'load_prev_model_state': "outputs/src/ae/autoencoder/aem0chr22_excerpt_4mMultilayer3x30d0.05n0.3l0.0_20at2.0.pth",
+        # 'input_path': "data/ref_genome/chr22.fa",
+        'input_path': "data/ref_genome/chr22_excerpt_800k.fa",
+        'load_prev_model_state': 'outputs/src/ae/experiment/from_gtx960/2020-07-08_05-02-24_aemdchr22Multilayer9x200d0.03n0.2l0.0_2at0.01_1-191883.pth',
         'split_prop': 0.05,
         'epochs': 20,
         'learn_rate': 0.1,
@@ -221,7 +222,7 @@ def exp8_multilayer_rerun():
         'neighbour_loss_prop': 0.0,
         'hidden_dropout_freq': 0.05,
         'n_dataloader_workers': 4,
-        'checkpoint_interval': 1000000,
+        'checkpoint_interval': 1000,
     }
     experiment(hparams, 'learn_rate', [0.1, 0.01, 0.001])
 
@@ -243,8 +244,7 @@ def exp9_latentlinear():
         'save_model': True,
         'disable_eval': False,
         'neighbour_loss_prop': 0.0,
-        # 'load_prev_model_state': 'outputs/src/ae/experiment/aem0hchr22Multilayer9x200d0.03n0.2l0.0_3at1.0_0-79999.pth',
-        'load_prev_model_state': 'outputs/src/ae/experiment/aem0hchr22Multilayer9x200d0.03n0.2l0.0_4at0.01_1-153990.pth',
+        'load_prev_model_state': 'outputs/src/ae/experiment/aem0hchr22Multilayer9x200d0.03n0.2l0.0_3at1.0_0-79999.pth',
         'hidden_len': 24,
         'pool_size': 4,
         'n_conv_and_pool': 2,
@@ -517,6 +517,7 @@ if __name__ == '__main__':
     # exp12_TEST_get_label()
 
     # exp13_test_flags()
-    exp14_multilayer_depth()
+    # exp14_multilayer_depth()
 
-    # test_logged_models('outputs/src/ae/logs/exp_2020-07-05-23-11-40.log', 'data/ref_genome/chr22_excerpt_800k.fa')
+    test_logged_models('outputs/src/ae/logs/exp_test.log', 'data/ref_genome/chr22_excerpt_800k.fa')
+    test_logged_models('outputs/src/ae/logs/exp_test.log', 'data/ref_genome/test.fasta')

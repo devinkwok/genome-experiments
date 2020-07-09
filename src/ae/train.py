@@ -1,9 +1,12 @@
 import sys
 sys.path.append('./src/')
 import argparse
+import time
 
 import numpy as np
 import torch
+from torch.utils.tensorboard import SummaryWriter
+from torchvision.utils import make_grid
 
 from autoencoder import *
 from seq_util.io import output_path
@@ -38,6 +41,8 @@ __CONFIG_DEFAULT = {
     'n_dataloader_workers': 2,
     'checkpoint_interval': 1000,
     'output_len': 919,  # for supervised model
+    'log_path': 'logs',
+    'snapshot_model_state': True,
 }
 
 
@@ -45,7 +50,7 @@ def load_data(model, dataset, split_prop, n_dataloader_workers):
     print("Split training and validation sets...")
     split_size = int(split_prop * len(dataset))
     if split_size == len(dataset):
-        split_size = len(dataset) - 1
+        split_size = len(dataset) - model.seq_per_batch
     train_data, valid_data = torch.utils.data.random_split(dataset, [len(dataset) - split_size, split_size])
     print("Create data loaders...")
     train_loader = torch.utils.data.DataLoader(train_data,
@@ -95,7 +100,7 @@ def evaluate_model(model, valid_loader, device, disable_eval):
 # disable_eval is a quick hack to turn evaluation code off and on, this is useful for testing
 # model effectiveness while dropout and noise are included
 def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, checkpoint_interval,
-            use_cuda=False):
+            writer=None, use_cuda=False, snapshot_model_state=True):
     # target CPU or GPU
     if use_cuda and torch.cuda.is_available():
         device = torch.device('cuda')
@@ -106,9 +111,8 @@ def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, ch
     print(device)
 
     model.to(device)
-    n_batches = 0
+    start_time = time.time()
     for i in range(epochs):
-        model.total_epochs += 1
         loss_sum = 0
         for sample in train_loader:
             model.train()
@@ -122,22 +126,58 @@ def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, ch
                 del sample
                 loss = model.loss(x)
             loss_sum += loss.item()
-            n_batches += 1
+            model.total_batches += 1
             loss.backward()
             optimizer.step()
-            optimizer.zero_grad()
+            if not writer is None:
+                writer.add_scalar('loss', loss, model.total_batches)
             del x, loss, labels
 
-            if n_batches % checkpoint_interval == 0:
-                avg_loss = loss_sum / checkpoint_interval
-                loss_sum = 0
+            if model.total_batches % checkpoint_interval == 0:
                 metrics = evaluate_model(model, valid_loader, device, disable_eval)
-                print("epoch {}, batch {}, avg loss {}, metrics {}".format(
-                        i, n_batches, avg_loss, metrics))
-                yield model, i, n_batches, metrics
+                metrics['avg_loss'] = loss_sum / checkpoint_interval
+                elapsed_time = time.time() - start_time
+                metrics['elapsed_time_sec'] = elapsed_time
+
+                print("epoch {}, batch {}, {}".format(i, model.total_batches, metrics))
+
+                if not writer is None:
+                    for key, value in metrics.items():
+                        writer.add_scalar(key, value, global_step=model.total_batches, walltime=elapsed_time)
+                    if snapshot_model_state:
+                        log_model_state(model, writer, model.total_batches, elapsed_time, include_gradients=True)
+                yield model, i, model.total_batches, metrics
+                loss_sum = 0
+
+            optimizer.zero_grad()
 
     metrics = evaluate_model(model, valid_loader, device, disable_eval)
+    if not writer is None:
+        for key, value in metrics.items():
+            writer.add_scalar(key, value, global_step=model.total_batches, walltime=elapsed_time, include_gradients=False)
+        if snapshot_model_state:
+            log_model_state(model, writer, model.total_batches, elapsed_time)
     yield model, epochs, len(train_loader), metrics
+
+
+def log_model_state(model, writer, batch, elapsed_time, include_gradients=True):
+    for key, value in model.state_dict().items():
+        value = value.cpu().detach()
+        writer.add_histogram('hist_' + key, value.flatten(), global_step=batch, walltime=elapsed_time)
+        if len(value.shape) == 0:  # if 0D, output as scalar
+            writer.add_scalar(key, value.item(), global_step=batch, walltime=elapsed_time)
+        else:
+            if len(value.shape) == 1:  # if 1D, width = in_dimension, height = 1
+                writer.add_image(key, torch.unsqueeze(value, dim=0),
+                            global_step=batch, walltime=elapsed_time, dataformats='HW')
+            if include_gradients:
+                pass #TODO
+            elif len(value.shape) == 2:  # if 2D, width = in_dimension, height = out_channels
+                writer.add_image(key, value.permute(1, 0),
+                            global_step=batch, walltime=elapsed_time, dataformats='HW')
+            elif len(value.shape) == 3:  # if 3D, width = in_dimension, height = in_channels, grid = out_channels
+                writer.add_image(key, make_grid(torch.unsqueeze(value, dim=3).permute(2, 3, 0, 1), pad_value=2),
+                            global_step=batch, walltime=elapsed_time, dataformats='CHW')
 
 
 def run(update_config):
@@ -145,6 +185,9 @@ def run(update_config):
     config.update(update_config)
     print("Config values:")
     print(config)
+    
+    sub_dir = time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())
+    writer = SummaryWriter(output_path(config['log_path'], directory=sub_dir))
 
     if config['fixed_random_seed']:
         torch.manual_seed(0)
@@ -167,7 +210,10 @@ def run(update_config):
 
     if not (config['load_prev_model_state'] is None):
         print("Loading model...")
-        model.load_state_dict(torch.load(config['load_prev_model_state'], map_location=torch.device('cpu')))
+        state_dict = torch.load(config['load_prev_model_state'], map_location=torch.device('cpu'))
+        if not '_total_batches' in state_dict:
+            state_dict['_total_batches'] = torch.tensor([[0]], dtype=torch.long)
+        model.load_state_dict(state_dict)
     if config['model'] == 'LatentLinearRegression':
         encoder = model
         model = LatentLinearRegression(config['kernel_len'], config['latent_len'], config['seq_len'],
@@ -183,15 +229,16 @@ def run(update_config):
     print("Training for {} epochs".format(config['epochs']))
 
     checkpoints = train(model, train_loader, valid_loader, optimizer, config['epochs'],
-            config['disable_eval'], config['checkpoint_interval'], use_cuda=config['use_cuda_if_available'])
+            config['disable_eval'], config['checkpoint_interval'], writer,
+            use_cuda=config['use_cuda_if_available'], snapshot_model_state=config['snapshot_model_state'])
     for model, i, j, metrics in checkpoints:
         print("Model evaluation at epoch {}, batch {}, metrics {}".format(i, j, metrics))
         if config['save_model']:
             model_str = "{}{}x{}d{}n{}l{}_{}at{}_{}-{}".format(config['model'],
                     model.kernel_len, model.latent_len, model.input_dropout_freq,
                     model.latent_noise_std, config['neighbour_loss_prop'],
-                    model.total_epochs + config['epochs'], config['learn_rate'], i, j)
-            out_file = output_path(config['name'], config['input_path'], model_str + '.pth')
+                    model.total_batches + config['epochs'], config['learn_rate'], i, j)
+            out_file = output_path(config['name'], config['input_path'], model_str + '.pth', directory=sub_dir)
             print("Saving model to {}".format(out_file))
             torch.save(model.state_dict(), out_file)
 

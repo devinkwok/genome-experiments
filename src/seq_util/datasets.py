@@ -106,14 +106,14 @@ def bioseq_to_tensor(bioseq):
 
 
 def seq_from_tensor(tensor):
-    return Seq(''.join([INDEX_TO_BASE[i] for i in tensor.detach().numpy()]))
+    return Seq(''.join([INDEX_TO_BASE[i] for i in tensor.cpu().detach().numpy()]))
 
 
 def print_target_vs_reconstruction(target, reconstruction, n_columns=89, print_as_numbers=False):
     print(' ', seq_from_tensor(target[:n_columns - 2]))
-    probabilities = reconstruction.detach().numpy().T
+    probabilities = reconstruction.cpu().detach().numpy().T
     print('  ', end='')
-    differences = target.detach().numpy() - np.argmax(probabilities, axis=0)
+    differences = target.cpu().detach().numpy() - np.argmax(probabilities, axis=0)
     for diff in differences[:n_columns - 2]:
         if diff == 0:
             print('-', end='')

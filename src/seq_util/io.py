@@ -1,19 +1,29 @@
-from time import gmtime, strftime
 import inspect
 import os.path
 from pathlib import Path
 
-
-def output_path(prefix, input_file, suffix):
+# if suffix is None, return a directory
+# if input_file is None, only name using prefix/suffix
+# if directory is not None, append to end of path but before filename
+def output_path(prefix, input_file=None, suffix=None, directory=None):
     # use filename of calling function to specify output directory
     caller = inspect.stack()[-1][1]
     out_path = os.path.join('outputs',
                 os.path.split(caller)[0],
                 path_to_filename(caller))
-    # make sure directory exists
+    if not directory is None:
+        out_path = os.path.join(out_path, directory)
+    if input_file is None:
+        name = prefix
+    else:
+        name = prefix + path_to_filename(input_file)
+    if suffix is None:  # assume this is directory
+        out_path = os.path.join(out_path, name)
+        # make sure directory exists
     Path(out_path).mkdir(parents=True, exist_ok=True)
-    filename = strftime("%Y-%m-%d_%H-%M-%S_", gmtime()) + prefix + path_to_filename(input_file) + suffix
-    return os.path.join(out_path, filename)
+    if not suffix is None:  # assume this is file
+        out_path = os.path.join(out_path, name + suffix)
+    return out_path
 
 
 def path_to_filename(path):

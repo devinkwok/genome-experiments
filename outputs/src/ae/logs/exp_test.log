@@ -1,0 +1,52 @@
+Config values:
+{'name': 'aemd', 'model': 'Multilayer', 'kernel_len': 9, 'latent_len': 200, 'seq_len': 64, 'seq_per_batch': 200, 'input_path': 'data/ref_genome/chr22.fa', 'split_prop': 0.02, 'epochs': 1, 'learn_rate': 0.01, 'input_dropout_freq': 0.03, 'latent_noise_std': 0.2, 'save_model': True, 'disable_eval': False, 'neighbour_loss_prop': 0.0, 'load_prev_model_state': None, 'hidden_len': 24, 'pool_size': 2, 'n_conv_and_pool': 1, 'n_conv_before_pool': 2, 'n_linear': 2, 'use_cuda_if_available': True, 'hidden_dropout_freq': 0.05, 'fixed_random_seed': True, 'n_dataloader_workers': 4, 'checkpoint_interval': 10000, 'output_len': 919, 'TEST_use_old_dataset': False, 'TEST_get_as_onehot': False, 'TEST_get_label': False}
+reading sequence from file...
+NEW 39159719 1 64 39159782 39159719
+Model specification:
+MultilayerEncoder(
+  (loss_fn): NeighbourDistanceLoss(
+    (bce_loss): BCELoss()
+    (mse_loss): MSELoss()
+  )
+  (encode_layers): ModuleDict(
+    (input_dropout): SeqDropout(
+      (dropout): Dropout2d(p=0.03, inplace=False)
+    )
+    (conv00): Conv1d(4, 24, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu00): ReLU()
+    (conv01): Conv1d(24, 24, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu01): ReLU()
+    (pool0): MaxPool1d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (norm0): BatchNorm1d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (dropout0): Dropout(p=0.05, inplace=False)
+    (view): View()
+    (linear0): Linear(in_features=768, out_features=200, bias=True)
+    (reluL1): ReLU()
+    (normL1): BatchNorm1d(200, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (linear1): Linear(in_features=200, out_features=200, bias=True)
+  )
+  (decode_layers): ModuleDict(
+    (latent_noise): GaussianNoise()
+    (linear1): Linear(in_features=200, out_features=200, bias=True)
+    (reluL1): ReLU()
+    (normL1): BatchNorm1d(200, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (linear0): Linear(in_features=200, out_features=768, bias=True)
+    (view): View()
+    (relu00): ReLU()
+    (norm0): BatchNorm1d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (pool0): Upsample(scale_factor=2.0, mode=linear)
+    (conv01): ConvTranspose1d(24, 24, kernel_size=(9,), stride=(1,), padding=(4,))
+    (relu01): ReLU()
+    (conv00): ConvTranspose1d(24, 4, kernel_size=(9,), stride=(1,), padding=(4,))
+    (softmax): Softmax(dim=1)
+  )
+)
+Loading data...
+Split training and validation sets...
+Create data loaders...
+Training for 1 epochs
+Using device:
+cuda
+Model evaluation at epoch 0, batch 190000, metrics {'correct': 49445717, 'n_samples': 50124416, 'accuracy': 0.9864597125680228}
+Saving model to outputs/src/ae/experiment/2020-07-08_05-01-32_aemdchr22Multilayer9x200d0.03n0.2l0.0_2at0.01_0-190000.pth
+Runtime:  3445.952836160999
