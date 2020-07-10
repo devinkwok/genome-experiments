@@ -7,7 +7,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
-from torchvision.utils import make_grid
+# from torchvision.utils import make_grid
 
 from ae.autoencoder import *
 from seq_util.io import output_path
@@ -169,8 +169,8 @@ def log_model_state(model, writer, batch, elapsed_time, include_gradients=True, 
             neg_grad = F.relu(-1 * grad)
             img = torch.cat((img + pos_grad * scale_factor, img, img + neg_grad * scale_factor), dim=1)
 
-        img = make_grid(img, pad_value=2)
-        writer.add_image(key, img, global_step=batch, walltime=elapsed_time, dataformats='CHW')
+        # img = make_grid(img, pad_value=2)
+        writer.add_images(key, img, global_step=batch, walltime=elapsed_time, dataformats='CHW')
 
 
 def load_model(config):
