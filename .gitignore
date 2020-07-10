@@ -2,8 +2,9 @@
 **/__pycache__/**
 outputs/**/*.pickle
 outputs/**/*.pth
+outputs/**/events.out.tfevents.*
+outputs/src/selene/training_outputs/**
 data/**
 ref/**
 env/**
 .data/**
-outputs/**/events.out.tfevents.*

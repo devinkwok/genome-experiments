@@ -9,7 +9,7 @@ import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
 
-from autoencoder import *
+from ae.autoencoder import *
 from seq_util.io import output_path
 from seq_util.datasets import SequenceDataset
 
