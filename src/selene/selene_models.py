@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 
 from ae.autoencoder import ReverseComplementConv1d, Autoencoder
-from ae.train import load_model
+from ae.load import load_model
 
 
 class DeeperDeepSEA(nn.Module):
