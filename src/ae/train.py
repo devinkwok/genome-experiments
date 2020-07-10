@@ -47,20 +47,6 @@ __CONFIG_DEFAULT = {
 }
 
 
-def load_data(model, dataset, split_prop, n_dataloader_workers):
-    print("Split training and validation sets...")
-    split_size = int(split_prop * len(dataset))
-    if split_size == len(dataset):
-        split_size = len(dataset) - model.seq_per_batch
-    train_data, valid_data = torch.utils.data.random_split(dataset, [len(dataset) - split_size, split_size])
-    print("Create data loaders...")
-    train_loader = torch.utils.data.DataLoader(train_data,
-            batch_size=model.seq_per_batch, shuffle=True, num_workers=n_dataloader_workers)
-    valid_loader = torch.utils.data.DataLoader(valid_data,
-            batch_size=model.seq_per_batch*2, shuffle=False, num_workers=n_dataloader_workers)
-    return train_loader, valid_loader
-
-
 def evaluate_model(model, valid_loader, device, disable_eval):
     if not disable_eval:
         model.eval()
@@ -187,9 +173,58 @@ def log_model_state(model, writer, batch, elapsed_time, include_gradients=True, 
         writer.add_image(key, img, global_step=batch, walltime=elapsed_time, dataformats='CHW')
 
 
-def run(update_config):
-    config = dict(__CONFIG_DEFAULT)
-    config.update(update_config)
+def load_model(config):
+    loss_fn = NeighbourDistanceLoss(config['neighbour_loss_prop'])
+
+    if config['model'] == 'Multilayer' or config['model'] == 'LatentLinearRegression':
+        model = MultilayerEncoder(config['kernel_len'], config['latent_len'], config['seq_len'],
+                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn,
+                config['hidden_len'], config['pool_size'], config['n_conv_and_pool'],
+                config['n_conv_before_pool'], config['n_linear'], config['hidden_dropout_freq'])
+    else:
+        model = Autoencoder(config['kernel_len'], config['latent_len'], config['seq_len'],
+                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn)
+
+    if not (config['load_prev_model_state'] is None):
+        state_dict = torch.load(config['load_prev_model_state'], map_location=torch.device('cpu'))
+        if not '_total_batches' in state_dict:
+            state_dict['_total_batches'] = torch.tensor([[0]], dtype=torch.long)
+        model.load_state_dict(state_dict)
+
+    if config['model'] == 'LatentLinearRegression':
+        encoder = model
+        model = LatentLinearRegression(config['kernel_len'], config['latent_len'], config['seq_len'],
+                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn,
+                encoder, config['output_len'])
+
+    return model
+
+
+def load_dataset(config):
+    if config['model'] == 'Autoencoder':
+        dataset = SequenceDataset(config['input_path'], seq_len=config['seq_len'], overlap=(config['kernel_len'] - 1))
+    elif config['model'] == 'LatentLinearRegression':
+        dataset = LabelledSequence(config['input_path'], config['seq_len'])
+    else:
+        dataset = SequenceDataset(config['input_path'], config['seq_len'])
+    return dataset
+
+
+def get_dataloaders(config):
+    dataset = load_dataset(config)
+    split_size = int(config['split_prop'] * len(dataset))
+    if split_size == len(dataset):
+        split_size = len(dataset) - config['seq_per_batch']
+    train_data, valid_data = torch.utils.data.random_split(dataset, [len(dataset) - split_size, split_size])
+    train_loader = torch.utils.data.DataLoader(train_data,
+            batch_size=config['seq_per_batch'], shuffle=True, num_workers=config['n_dataloader_workers'])
+    valid_loader = torch.utils.data.DataLoader(valid_data,
+            batch_size=config['seq_per_batch']*2, shuffle=False, num_workers=config['n_dataloader_workers'])
+    return train_loader, valid_loader
+
+
+def run(config):
+    config = update_config(config)
     print("Config values:")
     print(config)
     
@@ -201,43 +236,20 @@ def run(update_config):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-    loss_fn = NeighbourDistanceLoss(config['neighbour_loss_prop'])
 
-    if config['model'] == 'Multilayer' or config['model'] == 'LatentLinearRegression':
-        model = MultilayerEncoder(config['kernel_len'], config['latent_len'], config['seq_len'],
-                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn,
-                config['hidden_len'], config['pool_size'], config['n_conv_and_pool'],
-                config['n_conv_before_pool'], config['n_linear'], config['hidden_dropout_freq'])
-        if config['model'] == 'Multilayer':
-            dataset = SequenceDataset(config['input_path'], model.seq_len)
-    else:
-        model = Autoencoder(config['kernel_len'], config['latent_len'], config['seq_len'],
-                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn)
-        dataset = SequenceDataset(config['input_path'], seq_len=model.seq_len, overlap=(model.kernel_len - 1))
-
-    if not (config['load_prev_model_state'] is None):
-        print("Loading model...")
-        state_dict = torch.load(config['load_prev_model_state'], map_location=torch.device('cpu'))
-        if not '_total_batches' in state_dict:
-            state_dict['_total_batches'] = torch.tensor([[0]], dtype=torch.long)
-        model.load_state_dict(state_dict)
-    if config['model'] == 'LatentLinearRegression':
-        encoder = model
-        model = LatentLinearRegression(config['kernel_len'], config['latent_len'], config['seq_len'],
-                config['seq_per_batch'], config['input_dropout_freq'], config['latent_noise_std'], loss_fn,
-                encoder, config['output_len'])
-        dataset = LabelledSequence(config['input_path'], config['seq_len'])
-    print("Model specification:")
+    print("Loading model...")
+    model = load_model(config)
     print(model)
-    print("Loading data...")
-    train_loader, valid_loader = load_data(model, dataset, 
-            config['split_prop'], config['n_dataloader_workers'])
-    optimizer = torch.optim.SGD(model.parameters(), lr=config['learn_rate'])
-    print("Training for {} epochs".format(config['epochs']))
 
+    print("Loading data...")
+    train_loader, valid_loader = get_dataloaders(config)
+    optimizer = torch.optim.SGD(model.parameters(), lr=config['learn_rate'])
+
+    print("Training for {} epochs".format(config['epochs']))
     checkpoints = train(model, train_loader, valid_loader, optimizer, config['epochs'],
             config['disable_eval'], config['checkpoint_interval'], writer,
             use_cuda=config['use_cuda_if_available'], snapshot_model_state=config['snapshot_model_state'])
+
     for model, i, j, metrics in checkpoints:
         print("Model evaluation at epoch {}, batch {}, metrics {}".format(i, j, metrics))
         if config['save_model']:
@@ -250,6 +262,12 @@ def run(update_config):
             torch.save(model.state_dict(), out_file)
 
     return model, train_loader, valid_loader, optimizer, loss_fn
+
+
+def update_config(config):
+    defaults = dict(__CONFIG_DEFAULT)
+    defaults.update(config)
+    return defaults
 
 
 if __name__ == '__main__':

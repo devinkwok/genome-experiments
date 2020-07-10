@@ -29,7 +29,6 @@ N_BASE = 4
 class SequenceDataset(torch.utils.data.Dataset):
 
     def __init__(self, fasta_filename, seq_len, stride=1, overlap=None):
-        print("reading sequence from file...")
         bioseq = SeqIO.read(fasta_filename, "fasta")
         self.seq = bioseq.seq.ungap('N').ungap('n')
         self.augment_state = 0

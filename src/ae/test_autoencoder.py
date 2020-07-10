@@ -6,10 +6,11 @@ import math
 import unittest
 
 import torch
+import torch.nn as nn
 import numpy as np
 import numpy.testing as npt
 
-from train import load_data
+from train import update_config, load_model, get_dataloaders
 from autoencoder import *
 from datasets import SequenceDataset
 
@@ -17,25 +18,26 @@ class Test_Autoencoder(unittest.TestCase):
 
 
     def setUp(self):
-        self.kernel_len = 5
-        self.latent_len = 2
-        self.seq_len = 20
-        self.seq_per_batch = 7
-        self.input_dropout_freq = 0.0
-        self.latent_noise_std = 0.0
-        self.loss_fn = NeighbourDistanceLoss(0.0)
-        self.autoencoders = [
-            Autoencoder(self.kernel_len, self.latent_len, self.seq_len, self.seq_per_batch,
-                self.input_dropout_freq, self.latent_noise_std, self.loss_fn),
-            MultilayerEncoder(self.kernel_len, self.latent_len, self.seq_len, self.seq_per_batch,
-                    self.input_dropout_freq, self.latent_noise_std, self.loss_fn,
-                    hidden_len=10, pool_size=2, n_conv_and_pool=2, n_conv_before_pool=2,
-                    n_linear=2, hidden_dropout_freq=0.0),
-        ]
-        self.filename = "data/ref_genome/test.fasta"
-        self.dataset = SequenceDataset(self.filename, seq_len=self.seq_len)
-        self.train_loader, self.valid_loader = load_data(
-                    self.autoencoders[0], self.dataset, split_prop=0.2, n_dataloader_workers=2)
+        config = {
+            'model': 'Multilayer',
+            'kernel_len': 5,
+            'latent_len': 2,
+            'seq_len': 20,
+            'seq_per_batch': 7,
+            'input_path': "data/ref_genome/test.fasta",
+            'hidden_len': 10,
+            'pool_size': 2,
+            'n_conv_and_pool': 2,
+            'n_conv_before_pool': 2,
+            'n_linear': 2,
+            'hidden_dropout_freq': 0.0,
+        }
+        self.config = update_config(config)
+        self.autoencoders = []
+        self.autoencoders.append(load_model(self.config))
+        self.config['model'] = 'Autoencoder'
+        self.autoencoders.append(load_model(self.config))
+        self.train_loader, self.valid_loader = get_dataloaders(self.config)
         self.shape = (5, 4, 3)
         self.ones = torch.ones(*self.shape)
         self.zeros = torch.zeros(*self.shape)
@@ -43,10 +45,10 @@ class Test_Autoencoder(unittest.TestCase):
 
     def test_load_data(self):
         for x in self.train_loader:
-            self.assertEqual(x.shape, (self.seq_per_batch, self.seq_len))
+            self.assertEqual(x.shape, (self.config['seq_per_batch'], self.config['seq_len']))
             break  # only test the first batch
         for x in self.valid_loader:
-            self.assertEqual(x.shape, (self.seq_per_batch * 2, self.seq_len))
+            self.assertEqual(x.shape, (self.config['seq_per_batch'] * 2, self.config['seq_len']))
             break  # only test the first batch
 
 
@@ -57,7 +59,7 @@ class Test_Autoencoder(unittest.TestCase):
                 latent_shape = (model.seq_per_batch, model.latent_len, model.seq_len - (model.kernel_len - 1))
                 #TODO need Multilayer encoder to be fully convolutional during training
                 # self.assertEqual(latent.shape, latent_shape)
-                self.assertEqual(reconstructed.shape, (x.shape[0], N_BASE, x.shape[1]))
+                self.assertEqual(reconstructed.shape, (x.shape[0], 4, x.shape[1]))
                 break  # only test the first batch
 
 
@@ -85,6 +87,19 @@ class Test_Autoencoder(unittest.TestCase):
                 metrics = model.evaluate(x, true_x)
                 self.assertEqual(metrics['correct'], x.nelement() - 1)
 
+                break  # only test the first batch
+
+
+    def test_decapitate(self):
+        for model in self.autoencoders:
+            keep_n_layers = 1
+            model.decapitate(keep_n_layers=keep_n_layers)
+            self.assertEqual(len(model.encode_layers), keep_n_layers)
+            self.assertEqual(len(model.decode_layers), 0)
+            for x in self.train_loader:
+                y = model.encode(x)
+                z = model.decode(x)
+                npt.assert_array_equal(x, z)
                 break  # only test the first batch
 
 
@@ -135,6 +150,29 @@ class Test_Autoencoder(unittest.TestCase):
 
         y = torch.arange(self.ones.nelement()).reshape(self.shape).float()
         self.assertEqual(nd_loss(x, z, y).item(), 1.0)
+
+
+    def test_ReverseComplementConv1d(self):
+        with torch.no_grad():
+            in_channels, out_channels, kernel_len = 4, 2, 6
+            x = torch.randn(12, 4, 20)
+            conv = ReverseComplementConv1d(in_channels, out_channels, kernel_len, complement=False, reverse=False)
+            self.assertEqual(conv(x).shape, nn.Conv1d(in_channels, out_channels, kernel_len)(x).shape)
+            npt.assert_array_equal(conv(x), conv.conv(x))
+
+            def test_reverse(x, conv):
+                y = conv(x + torch.flip(x, [2]))
+                npt.assert_array_equal(y, torch.flip(y, [2]))
+            test_reverse(x, ReverseComplementConv1d(in_channels, out_channels, kernel_len, complement=False, reverse=True))
+
+            def test_complement(x, conv):
+                x_complement = torch.flip(x, [1])
+                npt.assert_array_equal(conv(x), conv(x_complement))
+            test_complement(x, ReverseComplementConv1d(in_channels, out_channels, kernel_len, complement=True, reverse=False))
+
+            conv = ReverseComplementConv1d(in_channels, out_channels, kernel_len, complement=True, reverse=True)
+            test_reverse(x, conv)
+            test_complement(x, conv)
 
 
 if __name__ == '__main__':

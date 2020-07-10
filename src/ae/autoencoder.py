@@ -61,6 +61,33 @@ class NeighbourDistanceLoss(nn.Module):
         return self.bce_loss(z, x)
 
 
+class ReverseComplementConv1d(nn.Module):
+
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0,
+                dilation=1, groups=1, bias=True, padding_mode='zeros', complement=False, reverse=True):
+        super().__init__()
+        self.conv = nn.Conv1d(in_channels, out_channels, kernel_size,
+                    stride, padding, dilation, groups, bias, padding_mode)
+        self.complement = complement
+        self.reverse = reverse
+
+
+    def forward(self, x):
+        if not self.complement and not self.reverse:
+            return self.conv(x)
+        y = []
+        y.append(self.conv(x))
+        if self.complement:
+            x_complement = torch.flip(x, [1])
+            y.append(self.conv(x_complement))
+        if self.reverse:  # undo reverse along sequence so positions stay the same
+            y.append(torch.flip(self.conv(torch.flip(x, [2])), [2]))
+        if self.complement and self.reverse:
+            y.append(torch.flip(self.conv(torch.flip(x_complement, [2])), [2]))
+        y_out, _ = torch.max(torch.stack(y, dim=0), dim=0)
+        return y_out
+
+
 class Autoencoder(nn.Module):
 
 
@@ -86,6 +113,17 @@ class Autoencoder(nn.Module):
         self.decode_layers['latent_noise'] = GaussianNoise(self.latent_noise_std)
         self.decode_layers['conv0'] = nn.ConvTranspose1d(latent_len, N_BASE, kernel_len)
         self.decode_layers['softmax'] = nn.Softmax(dim=1)
+
+
+    # trims extra layers from the encoder portion, for transfer learning
+    def decapitate(self, keep_n_layers=1, remove_n_layers=None):
+        if remove_n_layers is None:
+            remove_layers = list(self.encode_layers.keys())[keep_n_layers:]
+        else:
+            remove_layers = list(self.encode_layers.keys())[(-1 * remove_n_layers):]
+        for key in remove_layers:
+            _ = self.encode_layers.pop(key)
+        self.decode_layers.clear()
 
 
     @property
