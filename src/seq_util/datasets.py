@@ -130,3 +130,19 @@ def print_target_vs_reconstruction(target, reconstruction, n_columns=89, print_a
                 print(' ', end='')
         print('')
 
+
+class LabelledSequence(torch.utils.data.Dataset):
+
+    def __init__(self, filename, input_seq_len):
+        data = torch.load(filename)
+        self.labels = torch.tensor(data['labels'][:, (891, 914)])
+        self.one_hot = torch.tensor(data['x'][:, :, 500-int(input_seq_len/2):500+int(input_seq_len/2)])
+
+
+    def __len__(self):
+        return len(self.labels)
+
+
+    def __getitem__(self, index):
+        return self.one_hot[index], self.labels[index]
+

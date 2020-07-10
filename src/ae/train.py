@@ -11,7 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from ae.autoencoder import *
 from seq_util.io import output_path
-from seq_util.datasets import SequenceDataset
+from seq_util.datasets import SequenceDataset, LabelledSequence
 
 
 __CONFIG_DEFAULT = {
