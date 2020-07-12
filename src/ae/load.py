@@ -1,3 +1,4 @@
+import torch
 
 from ae.autoencoder import NeighbourDistanceLoss, Autoencoder, MultilayerEncoder, LatentLinearRegression
 
