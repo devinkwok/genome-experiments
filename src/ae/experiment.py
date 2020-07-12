@@ -503,6 +503,36 @@ def exp14_multilayer_depth():
     experiment(hparams, 'n_conv_and_pool', [1, 2, 3])
 
 
+def exp15_exploding_grad():
+    hparams = {
+        'model': 'Multilayer',
+        'name': "aem0h",
+        'kernel_len': 9,
+        'latent_len': 200,
+        'seq_len': 64,
+        'seq_per_batch': 200,
+        # 'input_path': "data/ref_genome/chr22.fa",
+        'input_path': "data/ref_genome/chr22_excerpt_800k.fa",
+        'load_prev_model_state': 'outputs/src/ae/experiment/aemdchr22Multilayer9x200d0.03n0.2l0.0_300002at0.1_1-300000.pth',
+        'split_prop': 0.05,
+        'epochs': 20,
+        'learn_rate': 0.1,
+        'input_dropout_freq': 0.03,
+        'latent_noise_std': 0.2,
+        'hidden_len': 24,
+        'pool_size': 2,
+        'n_conv_and_pool': 1,
+        'n_conv_before_pool': 2,
+        'n_linear': 2,
+        'neighbour_loss_prop': 0.0,
+        'hidden_dropout_freq': 0.05,
+        'n_dataloader_workers': 4,
+        'checkpoint_interval': 100,
+    }
+
+    experiment(hparams, 'learn_rate', [100., 10., 1.,])
+
+
 if __name__ == '__main__':
     # exp1_window_size()
     # exp2_input_drop()
@@ -520,6 +550,7 @@ if __name__ == '__main__':
 
     # exp13_test_flags()
     exp14_multilayer_depth()
+    exp15_exploding_grad()
 
     # test_logged_models('outputs/src/ae/logs/exp_test.log', 'data/ref_genome/chr22_excerpt_800k.fa')
     # test_logged_models('outputs/src/ae/logs/exp_test.log', 'data/ref_genome/test.fasta')

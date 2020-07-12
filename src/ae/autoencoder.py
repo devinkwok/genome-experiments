@@ -84,7 +84,8 @@ class ReverseComplementConv1d(nn.Module):
             y.append(torch.flip(self.conv(torch.flip(x, [2])), [2]))
         if self.complement and self.reverse:
             y.append(torch.flip(self.conv(torch.flip(x_complement, [2])), [2]))
-        y_out, _ = torch.max(torch.stack(y, dim=0), dim=0)
+        y_out, index = torch.max(torch.stack(y, dim=0), dim=0)
+        del index  # don't need this
         return y_out
 
 
