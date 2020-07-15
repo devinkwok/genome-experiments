@@ -8,6 +8,7 @@ model: {
 
     class_args: {
         sequence_length: 1000,
+        channel_size_factor: 1,
         # sequence_length: 400,
         n_targets: 1,
 
@@ -114,13 +115,13 @@ sampler: !obj:selene_sdk.samplers.IntervalsSampler {
     save_datasets: [validate, test]
 }
 train_model: !obj:selene_sdk.TrainModel {
-    batch_size: 48,
+    batch_size: 12,
     max_steps: 50,  # update this value for longer training
     report_stats_every_n_steps: 5,
     n_validation_samples: 3200,
     n_test_samples: 12000,
     cpu_n_threads: 16,
-    use_cuda: True,  # TODO: update this if CUDA is not on your machine
+    use_cuda: False,  # TODO: update this if CUDA is not on your machine
     data_parallel: False
 }
 # train_model: !obj:selene_sdk.TrainModel {

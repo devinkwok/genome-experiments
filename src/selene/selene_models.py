@@ -2,6 +2,7 @@
 Code for DeepSEA models and Selene framework from 
 https://github.com/FunctionLab/selene/tree/master/tutorials
 """
+from collections import OrderedDict
 
 import numpy as np
 import torch
@@ -33,56 +34,56 @@ class DeeperDeepSEA(nn.Module):
 
     """
 
-    def __init__(self, sequence_length, n_targets):
+    def __init__(self, sequence_length, n_targets, channel_sizes=[20, 30, 60], channel_size_factor=16):
         super(DeeperDeepSEA, self).__init__()
         self.conv_kernel_size = 9
         self.pool_kernel_size = 4
+        self.sequence_length = sequence_length
+        self.n_targets = n_targets
+        self.n_units = len(channel_sizes)
 
-        self.conv_net = nn.Sequential(
-            nn.Conv1d(4, 320, kernel_size=self.conv_kernel_size),
-            nn.ReLU(inplace=True),
-            nn.Conv1d(320, 320, kernel_size=self.conv_kernel_size),
-            nn.ReLU(inplace=True),
-            nn.MaxPool1d(
-                kernel_size=self.pool_kernel_size, stride=self.pool_kernel_size),
-            nn.BatchNorm1d(320),
+        self.channel_sizes = [x * channel_size_factor for x in channel_sizes]
+        self.channel_sizes.insert(0, 4)  # first dimension is 4
 
-            nn.Conv1d(320, 480, kernel_size=self.conv_kernel_size),
-            nn.ReLU(inplace=True),
-            nn.Conv1d(480, 480, kernel_size=self.conv_kernel_size),
-            nn.ReLU(inplace=True),
-            nn.MaxPool1d(
-                kernel_size=self.pool_kernel_size, stride=self.pool_kernel_size),
-            nn.BatchNorm1d(480),
-            nn.Dropout(p=0.2),
+        self.conv_net = self._create_conv_net(self.channel_sizes)
+        self.conv_output_channels = self.channel_sizes[-1]
+        self.classifier = self._create_classifier()
 
-            nn.Conv1d(480, 960, kernel_size=self.conv_kernel_size),
-            nn.ReLU(inplace=True),
-            nn.Conv1d(960, 960, kernel_size=self.conv_kernel_size),
-            nn.ReLU(inplace=True),
-            nn.BatchNorm1d(960),
-            nn.Dropout(p=0.2))
+    def _create_conv_net(self, channel_sizes):
+        conv_net_dict = OrderedDict()
+        for i in range(self.n_units):
+            conv_net_dict['convA' + str(i)] = nn.Conv1d(channel_sizes[i], channel_sizes[i + 1], kernel_size=self.conv_kernel_size)
+            conv_net_dict['reluA' + str(i)] = nn.ReLU(inplace=True)
+            conv_net_dict['convB' + str(i)] = nn.Conv1d(channel_sizes[i + 1], channel_sizes[i + 1], kernel_size=self.conv_kernel_size)
+            conv_net_dict['reluB' + str(i)] = nn.ReLU(inplace=True)
+            conv_net_dict['maxpool' + str(i)] = nn.MaxPool1d(kernel_size=self.pool_kernel_size, stride=self.pool_kernel_size)
+            conv_net_dict['batchnorm' + str(i)] = nn.BatchNorm1d(channel_sizes[i + 1])
+            if i >= 1:
+                conv_net_dict['dropout' + str(i)] = nn.Dropout(p=0.2)
+        return nn.Sequential(conv_net_dict)
 
+
+    def _create_classifier(self):
         reduce_by = 2 * (self.conv_kernel_size - 1)
-        self._n_channels = int(
-            np.floor(
-                (np.floor(
-                    (sequence_length - reduce_by) / float(self.pool_kernel_size))
-                 - reduce_by) / float(self.pool_kernel_size))
-            - reduce_by)
-        self.classifier = nn.Sequential(
-            nn.Linear(960 * self._n_channels, n_targets),
+        hidden_length = self.sequence_length
+        for i in range(self.n_units):
+            hidden_length = np.floor((hidden_length - reduce_by) / float(self.pool_kernel_size))
+        self._n_channels = int(hidden_length)
+        classifier = nn.Sequential(
+            nn.Linear(self.conv_output_channels * self._n_channels, self.n_targets),
             nn.ReLU(inplace=True),
-            nn.BatchNorm1d(n_targets),
-            nn.Linear(n_targets, n_targets),
+            nn.BatchNorm1d(self.n_targets),
+            nn.Linear(self.n_targets, self.n_targets),
             nn.Sigmoid())
+        return classifier
+
 
     def forward(self, x):
         """
         Forward propagation of a batch.
         """
         out = self.conv_net(x)
-        reshape_out = out.view(out.size(0), 960 * self._n_channels)
+        reshape_out = out.view(out.size(0), self.conv_output_channels * self._n_channels)
         predict = self.classifier(reshape_out)
         return predict
 
