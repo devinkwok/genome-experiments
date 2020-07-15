@@ -63,30 +63,52 @@ class NeighbourDistanceLoss(nn.Module):
 
 class ReverseComplementConv1d(nn.Module):
 
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0,
-                dilation=1, groups=1, bias=True, padding_mode='zeros', complement=False, reverse=True):
+    def __init__(self, in_channels, normal_out, complement_out, reverse_out, reverse_complement_out,
+                kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True):
         super().__init__()
-        self.conv = nn.Conv1d(in_channels, out_channels, kernel_size,
-                    stride, padding, dilation, groups, bias, padding_mode)
-        self.complement = complement
-        self.reverse = reverse
+        
+        self.convs = nn.ModuleDict()
+        if normal_out > 0:
+            self.convs['normal'] = nn.Conv1d(in_channels, normal_out,
+                                kernel_size, stride, padding, dilation, groups, bias)
+        if complement_out > 0:
+            self.convs['complement'] = nn.Conv1d(in_channels, complement_out,
+                                kernel_size, stride, padding, dilation, groups, bias)
+        if reverse_out > 0:
+            self.convs['reverse'] = nn.Conv1d(in_channels, reverse_out,
+                                kernel_size, stride, padding, dilation, groups, bias)
+        if reverse_complement_out > 0:
+            self.convs['reverse_complement'] = nn.Conv1d(in_channels, reverse_complement_out,
+                                kernel_size, stride, padding, dilation, groups, bias)
 
 
     def forward(self, x):
-        if not self.complement and not self.reverse:
-            return self.conv(x)
+        y_out = []
+        if 'normal' in self.convs:
+            y_out.append(self.apply_filter(x, self.convs['normal'], False, False))
+        if 'complement' in self.convs:
+            y_out.append(self.apply_filter(x, self.convs['complement'], True, False))
+        if 'reverse' in self.convs:
+            y_out.append(self.apply_filter(x, self.convs['reverse'], False, True))
+        if 'reverse_complement' in self.convs:
+            y_out.append(self.apply_filter(x, self.convs['reverse_complement'], True, True))
+        return torch.cat(y_out, dim=1)  # concatenate along channel dimension
+
+
+    def apply_filter(self, x, conv_filter, do_complement, do_reverse):
         y = []
-        y.append(self.conv(x))
-        if self.complement:
+        y.append(conv_filter(x))
+        if do_complement:
             x_complement = torch.flip(x, [1])
-            y.append(self.conv(x_complement))
-        if self.reverse:  # undo reverse along sequence so positions stay the same
-            y.append(torch.flip(self.conv(torch.flip(x, [2])), [2]))
-        if self.complement and self.reverse:
-            y.append(torch.flip(self.conv(torch.flip(x_complement, [2])), [2]))
+            y.append(conv_filter(x_complement))
+        if do_reverse:  # undo reverse along sequence so positions stay the same
+            y.append(torch.flip(conv_filter(torch.flip(x, [2])), [2]))
+        if do_complement and do_reverse:
+            y.append(torch.flip(conv_filter(torch.flip(x_complement, [2])), [2]))
         y_out, index = torch.max(torch.stack(y, dim=0), dim=0)
         del index  # don't need this
         return y_out
+
 
 
 class Autoencoder(nn.Module):

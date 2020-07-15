@@ -2,64 +2,64 @@
 ops: [train, evaluate]
 model: {
     path: ./src/selene/selene_models.py,
-    class: DeeperDeepSEA,
-    # class: ReverseComplementDeepSEA,
+    # class: DeeperDeepSEA,
+    class: ReverseComplementDeepSEA,
     # class: CopyKernelDeepSEA,
 
     class_args: {
         sequence_length: 1000,
-        channel_size_factor: 4,
+        channel_size_factor: 2,
         # sequence_length: 400,
         n_targets: 1,
 
         # reverse_complement_prop: [
-        #     [1.0, 0.0, 0.0],
+        #     [0.5, 0.0, 0.0],
         #     [0.0, 0.0, 0.0],
         #     [0.0, 0.0, 0.0],
         #     [0.0, 0.0, 0.0],
         #     [0.0, 0.0, 0.0],
         # ],
         # reverse_complement_prop: [
-        #     [0.0, 1.0, 0.0],
+        #     [0.0, 0.5, 0.0],
         #     [0.0, 0.0, 0.0],
         #     [0.0, 0.0, 0.0],
         #     [0.0, 0.0, 0.0],
         #     [0.0, 0.0, 0.0],
         # ],
         # reverse_complement_prop: [
-        #     [0.0, 0.0, 1.0],
+        #     [0.0, 0.0, 0.5],
         #     [0.0, 0.0, 0.0],
         #     [0.0, 0.0, 0.0],
         #     [0.0, 0.0, 0.0],
         #     [0.0, 0.0, 0.0],
         # ],
         # reverse_complement_prop: [
-        #     [0.0, 0.0, 1.0],
-        #     [1.0, 0.0, 0.0],
+        #     [0.0, 0.0, 0.5],
+        #     [0.5, 0.0, 0.0],
         #     [0.0, 0.0, 0.0],
         #     [0.0, 0.0, 0.0],
         #     [0.0, 0.0, 0.0],
         # ],
+        reverse_complement_prop: [
+            [0.0, 0.0, 0.5],
+            [0.5, 0.0, 0.0],
+            [0.5, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
+        ],
         # reverse_complement_prop: [
-        #     [0.0, 0.0, 1.0],
-        #     [1.0, 0.0, 0.0],
-        #     [1.0, 0.0, 0.0],
-        #     [0.0, 0.0, 0.0],
+        #     [0.0, 0.0, 0.5],
+        #     [0.5, 0.0, 0.0],
+        #     [0.5, 0.0, 0.0],
+        #     [0.5, 0.0, 0.0],
         #     [0.0, 0.0, 0.0],
         # ],
         # reverse_complement_prop: [
-        #     [0.0, 0.0, 1.0],
-        #     [1.0, 0.0, 0.0],
-        #     [1.0, 0.0, 0.0],
-        #     [1.0, 0.0, 0.0],
-        #     [0.0, 0.0, 0.0],
-        # ],
-        # reverse_complement_prop: [
-        #     [0.0, 0.0, 1.0],
-        #     [1.0, 0.0, 0.0],
-        #     [1.0, 0.0, 0.0],
-        #     [1.0, 0.0, 0.0],
-        #     [1.0, 0.0, 0.0],
+        #     [0.0, 0.0, 0.5],
+        #     [0.5, 0.0, 0.0],
+        #     [0.5, 0.0, 0.0],
+        #     [0.5, 0.0, 0.0],
+        #     [0.5, 0.0, 0.0],
         # ],
 
         # encode_model_config: {
@@ -82,9 +82,13 @@ model: {
         # },
 
         # keep_n_layers: 3,
+        # n_encoded_channels: , #TODO
         # keep_n_layers: 7,
+        # n_encoded_channels: , #TODO
         # keep_n_layers: 9,
+        # n_encoded_channels: , #TODO
         # keep_n_layers: 13,
+        # n_encoded_channels: , #TODO
     },
     non_strand_specific: mean
 }

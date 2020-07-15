@@ -155,25 +155,29 @@ class Test_Autoencoder(unittest.TestCase):
     def test_ReverseComplementConv1d(self):
         with torch.no_grad():
             in_channels, out_channels, kernel_len = 4, 2, 6
-            x = torch.randn(12, 4, 20)
-            conv = ReverseComplementConv1d(in_channels, out_channels, kernel_len, complement=False, reverse=False)
+            x = torch.randn(12, in_channels, 20)
+            conv = ReverseComplementConv1d(in_channels, out_channels, 0, 0, 0, kernel_len)
             self.assertEqual(conv(x).shape, nn.Conv1d(in_channels, out_channels, kernel_len)(x).shape)
-            npt.assert_array_equal(conv(x), conv.conv(x))
-
-            def test_reverse(x, conv):
-                y = conv(x + torch.flip(x, [2]))
-                npt.assert_array_equal(y, torch.flip(y, [2]))
-            test_reverse(x, ReverseComplementConv1d(in_channels, out_channels, kernel_len, complement=False, reverse=True))
+            npt.assert_array_equal(conv(x), conv.convs['normal'](x))
 
             def test_complement(x, conv):
                 x_complement = torch.flip(x, [1])
                 npt.assert_array_equal(conv(x), conv(x_complement))
-            test_complement(x, ReverseComplementConv1d(in_channels, out_channels, kernel_len, complement=True, reverse=False))
+            test_complement(x, ReverseComplementConv1d(in_channels, 0, out_channels, 0, 0, kernel_len))
 
-            conv = ReverseComplementConv1d(in_channels, out_channels, kernel_len, complement=True, reverse=True)
+            def test_reverse(x, conv):
+                y = conv(x + torch.flip(x, [2]))
+                npt.assert_array_equal(y, torch.flip(y, [2]))
+            test_reverse(x, ReverseComplementConv1d(in_channels, 0, 0, out_channels, 0, kernel_len))
+
+            conv = ReverseComplementConv1d(in_channels, 0, 0, 0, out_channels, kernel_len)
             test_reverse(x, conv)
             test_complement(x, conv)
 
+            conv = ReverseComplementConv1d(in_channels, out_channels, out_channels, out_channels, out_channels, kernel_len)
+            target_shape = list(conv.convs['normal'](x).shape)
+            target_shape[1] = target_shape[1] * 4
+            self.assertEqual(list(conv(x).shape), target_shape)
 
 if __name__ == '__main__':
     unittest.main()
