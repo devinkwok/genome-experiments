@@ -34,7 +34,7 @@ class DeeperDeepSEA(nn.Module):
 
     """
 
-    def __init__(self, sequence_length, n_targets, channel_sizes=[20, 30, 60], channel_size_factor=16):
+    def __init__(self, sequence_length, n_targets, channel_sizes=[2, 3, 6], channel_size_factor=160):
         super(DeeperDeepSEA, self).__init__()
         self.conv_kernel_size = 9
         self.pool_kernel_size = 4
@@ -90,39 +90,26 @@ class DeeperDeepSEA(nn.Module):
 
 class ReverseComplementDeepSEA(DeeperDeepSEA):
 
-    def __init__(self, sequence_length, n_targets, reverse_complement_flags):
-        super(ReverseComplementDeepSEA, self).__init__(sequence_length, n_targets)
+    def __init__(self, sequence_length, n_targets, reverse_complement_flags, channel_sizes=[2, 3, 6], channel_size_factor=160):
+        self.reverse_complement_flags = reverse_complement_flags
+        super(ReverseComplementDeepSEA, self).__init__(sequence_length, n_targets, channel_sizes=channel_sizes, channel_size_factor=channel_size_factor)
 
-        self.conv_net = nn.Sequential(
-            ReverseComplementConv1d(4, 320, kernel_size=self.conv_kernel_size,
-                    reverse=reverse_complement_flags[0][0], complement=reverse_complement_flags[0][1]),
-            nn.ReLU(inplace=True),
-            ReverseComplementConv1d(320, 320, kernel_size=self.conv_kernel_size,
-                    reverse=reverse_complement_flags[1][0], complement=reverse_complement_flags[1][1]),
-            nn.ReLU(inplace=True),
-            nn.MaxPool1d(
-                kernel_size=self.pool_kernel_size, stride=self.pool_kernel_size),
-            nn.BatchNorm1d(320),
 
-            ReverseComplementConv1d(320, 480, kernel_size=self.conv_kernel_size,
-                    reverse=reverse_complement_flags[2][0], complement=reverse_complement_flags[2][1]),
-            nn.ReLU(inplace=True),
-            ReverseComplementConv1d(480, 480, kernel_size=self.conv_kernel_size,
-                    reverse=reverse_complement_flags[3][0], complement=reverse_complement_flags[3][1]),
-            nn.ReLU(inplace=True),
-            nn.MaxPool1d(
-                kernel_size=self.pool_kernel_size, stride=self.pool_kernel_size),
-            nn.BatchNorm1d(480),
-            nn.Dropout(p=0.2),
+    def _create_conv_net(self, channel_sizes):
+        conv_net_dict = OrderedDict()
+        for i in range(self.n_units):
+            conv_net_dict['convA' + str(i)] = ReverseComplementConv1d(channel_sizes[i], channel_sizes[i + 1], kernel_size=self.conv_kernel_size,
+                    reverse=self.reverse_complement_flags[i*2][0], complement=self.reverse_complement_flags[i*2][1])
+            conv_net_dict['reluA' + str(i)] = nn.ReLU(inplace=True)
+            conv_net_dict['convB' + str(i)] = ReverseComplementConv1d(channel_sizes[i + 1], channel_sizes[i + 1], kernel_size=self.conv_kernel_size,
+                    reverse=self.reverse_complement_flags[i*2 + 1][0], complement=self.reverse_complement_flags[i*2 + 1][1])
+            conv_net_dict['reluB' + str(i)] = nn.ReLU(inplace=True)
+            conv_net_dict['maxpool' + str(i)] = nn.MaxPool1d(kernel_size=self.pool_kernel_size, stride=self.pool_kernel_size)
+            conv_net_dict['batchnorm' + str(i)] = nn.BatchNorm1d(channel_sizes[i + 1])
+            if i >= 1:
+                conv_net_dict['dropout' + str(i)] = nn.Dropout(p=0.2)
+        return nn.Sequential(conv_net_dict)
 
-            ReverseComplementConv1d(480, 960, kernel_size=self.conv_kernel_size,
-                    reverse=reverse_complement_flags[4][0], complement=reverse_complement_flags[4][1]),
-            nn.ReLU(inplace=True),
-            ReverseComplementConv1d(960, 960, kernel_size=self.conv_kernel_size,
-                    reverse=reverse_complement_flags[5][0], complement=reverse_complement_flags[5][1]),
-            nn.ReLU(inplace=True),
-            nn.BatchNorm1d(960),
-            nn.Dropout(p=0.2))
 
 # TODO need to correctly specify encoded channels and linear channels
 # need to test imports load

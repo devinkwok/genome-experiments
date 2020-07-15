@@ -116,10 +116,10 @@ sampler: !obj:selene_sdk.samplers.IntervalsSampler {
 }
 train_model: !obj:selene_sdk.TrainModel {
     batch_size: 12,
-    max_steps: 50,  # update this value for longer training
-    report_stats_every_n_steps: 5,
-    n_validation_samples: 3200,
-    n_test_samples: 12000,
+    max_steps: 20000,  # update this value for longer training
+    report_stats_every_n_steps: 1000,
+    n_validation_samples: 12000,
+    n_test_samples: 480000,
     cpu_n_threads: 16,
     use_cuda: True,  # TODO: update this if CUDA is not on your machine
     data_parallel: False
@@ -128,8 +128,8 @@ train_model: !obj:selene_sdk.TrainModel {
 #     batch_size: 64,
 #     max_steps: 8000,  # update this value for longer training
 #     report_stats_every_n_steps: 1000,
-#     n_validation_samples: 32000,
-#     n_test_samples: 120000,
+#     n_validation_samples: 120000,
+#     n_test_samples: 4800000,
 #     cpu_n_threads: 32,
 #     use_cuda: True,  # TODO: update this if CUDA is not on your machine
 #     data_parallel: False
