@@ -2,30 +2,12 @@
 ops: [train, evaluate]
 model: {
     path: ./src/selene/selene_models.py,
-    # class: DeeperDeepSEA,
-    class: ReverseComplementDeepSEA,
-    # class: CopyKernelDeepSEA,
-
+        class: ReverseComplementDeepSEA,
+    
     class_args: {
         sequence_length: 1000,
         channel_size_factor: 4,
-        # sequence_length: 400,
         n_targets: 1,
-
-        # reverse_complement_prop: [
-        #     [1.0, 0.0, 0.0],
-        #     [0.0, 0.0, 0.0],
-        #     [0.0, 0.0, 0.0],
-        #     [0.0, 0.0, 0.0],
-        #     [0.0, 0.0, 0.0],
-        # ],
-        # reverse_complement_prop: [
-        #     [0.0, 1.0, 0.0],
-        #     [0.0, 0.0, 0.0],
-        #     [0.0, 0.0, 0.0],
-        #     [0.0, 0.0, 0.0],
-        #     [0.0, 0.0, 0.0],
-        # ],
         reverse_complement_prop: [
             [0.0, 0.0, 1.0],
             [0.0, 0.0, 0.0],
@@ -33,70 +15,12 @@ model: {
             [0.0, 0.0, 0.0],
             [0.0, 0.0, 0.0],
         ],
-        # reverse_complement_prop: [
-        #     [0.0, 0.0, 1.0],
-        #     [1.0, 0.0, 0.0],
-        #     [0.0, 0.0, 0.0],
-        #     [0.0, 0.0, 0.0],
-        #     [0.0, 0.0, 0.0],
-        # ],
-        # reverse_complement_prop: [
-        #     [0.0, 0.0, 1.0],
-        #     [1.0, 0.0, 0.0],
-        #     [1.0, 0.0, 0.0],
-        #     [0.0, 0.0, 0.0],
-        #     [0.0, 0.0, 0.0],
-        # ],
-        # reverse_complement_prop: [
-        #     [0.0, 0.0, 1.0],
-        #     [1.0, 0.0, 0.0],
-        #     [1.0, 0.0, 0.0],
-        #     [1.0, 0.0, 0.0],
-        #     [0.0, 0.0, 0.0],
-        # ],
-        # reverse_complement_prop: [
-        #     [0.0, 0.0, 1.0],
-        #     [1.0, 0.0, 0.0],
-        #     [1.0, 0.0, 0.0],
-        #     [1.0, 0.0, 0.0],
-        #     [1.0, 0.0, 0.0],
-        # ],
-
-        # encode_model_config: {
-        #     'model': 'Multilayer',
-        #     'kernel_len': 9,
-        #     'latent_len': 200,
-        #     'seq_len': 64,
-        #     'seq_per_batch': 200,
-        #     'input_dropout_freq': 0.0,
-        #     'latent_noise_std': 0.0,
-        #     'neighbour_loss_prop': 0.0,
-        #     'load_prev_model_state': './outputs/src/ae/experiment/*', #TODO
-        #     'hidden_len': 24,
-        #     'pool_size': 2,
-        #     'n_conv_and_pool': 1,
-        #     'n_conv_before_pool': 2,
-        #     'n_linear': 2,
-        #     'use_cuda_if_available': True,
-        #     'hidden_dropout_freq': 0.05,
-        # },
-
-        # keep_n_layers: 3,
-        # n_encoded_channels: , #TODO
-        # keep_n_layers: 7,
-        # n_encoded_channels: , #TODO
-        # keep_n_layers: 9,
-        # n_encoded_channels: , #TODO
-        # keep_n_layers: 13,
-        # n_encoded_channels: , #TODO
     },
     non_strand_specific: mean
 }
 sampler: !obj:selene_sdk.samplers.IntervalsSampler {
     reference_sequence: !obj:selene_sdk.sequences.Genome {
-        # we include relative paths here, but we recommend using absolute
-        # paths for future configuration files
-        input_path: ./data/selene/male.hg19.fasta
+                        input_path: ./data/selene/male.hg19.fasta
     },
     features: !obj:selene_sdk.utils.load_features_list {
         input_path: ./data/selene/distinct_features.txt
@@ -104,40 +28,24 @@ sampler: !obj:selene_sdk.samplers.IntervalsSampler {
     target_path: ./data/selene/sorted_GM12878_CTCF.bed.gz,
     intervals_path: ./data/selene/deepsea_TF_intervals.txt,
     seed: 127,
-    # A positive example is an 1000bp sequence with at least 1 class/feature annotated to it.
-    # A negative sample has no classes/features annotated to the sequence.
-    sample_negative: True,
+            sample_negative: True,
     sequence_length: 1000,
-    # sequence_length: 400,
-    center_bin_to_predict: 200,
+        center_bin_to_predict: 200,
     test_holdout: [chr8, chr9],
     validation_holdout: [chr6, chr7],
-    # The feature must take up 50% of the bin (200bp) for it to be considered
-    # a feature annotated to that sequence.
-    feature_thresholds: 0.5,
+            feature_thresholds: 0.5,
     mode: train,
     save_datasets: [validate, test]
 }
 train_model: !obj:selene_sdk.TrainModel {
     batch_size: 12,
-    max_steps: 20000,  # update this value for longer training
+    max_steps: 20000,
     report_stats_every_n_steps: 1000,
     n_validation_samples: 12000,
     n_test_samples: 480000,
     cpu_n_threads: 16,
-    use_cuda: True,  # TODO: update this if CUDA is not on your machine
-    data_parallel: False
+    use_cuda: True,      data_parallel: False
 }
-# train_model: !obj:selene_sdk.TrainModel {
-#     batch_size: 64,
-#     max_steps: 8000,  # update this value for longer training
-#     report_stats_every_n_steps: 1000,
-#     n_validation_samples: 120000,
-#     n_test_samples: 4800000,
-#     cpu_n_threads: 32,
-#     use_cuda: True,  # TODO: update this if CUDA is not on your machine
-#     data_parallel: False
-# }
 random_seed: 1447
 output_dir: ./outputs/src/selene/training_outputs
 create_subdirectory: False

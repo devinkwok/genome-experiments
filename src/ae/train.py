@@ -170,8 +170,8 @@ def log_model_state(model, writer, batch, elapsed_time, include_gradients=True, 
             neg_grad = F.relu(-1 * grad)
             img = torch.cat((img + pos_grad * scale_factor, img, img + neg_grad * scale_factor), dim=1)
 
-        img = make_grid(img, pad_value=2)
-        writer.add_images(key, img, global_step=batch, walltime=elapsed_time, dataformats='NCHW')
+        # img = make_grid(img, pad_value=2)
+        # writer.add_images(key, img, global_step=batch, walltime=elapsed_time, dataformats='NCHW')
 
 
 def load_dataset(config):
