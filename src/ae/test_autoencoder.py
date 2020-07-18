@@ -178,11 +178,13 @@ class Test_Autoencoder(unittest.TestCase):
             target_shape = list(conv.convs['normal'](x).shape)
             target_shape[1] = target_shape[1] * 4
             self.assertEqual(list(conv(x).shape), target_shape)
+            self.assertEqual(conv.out_channels, target_shape[1])
 
             conv = ReverseComplementConv1d(in_channels, 0, 0, 0, out_channels, kernel_len, max_pool=False)
             target_shape = list(conv.convs['reverse_complement'](x).shape)
             target_shape[1] = target_shape[1] * 4
             self.assertEqual(list(conv(x).shape), target_shape)
+            self.assertEqual(conv.out_channels, target_shape[1])
 
 
 if __name__ == '__main__':

@@ -22,6 +22,16 @@ def get_conv_width(input_length, kernel_size, n_pools, pool_size, n_convs_per_po
     return int(hidden_length)
 
 
+def get_conv_channels_and_pool(module_dict):
+    encoder_n_pool, encoder_channels = 0, 0
+    for name, layer in module_dict.items():
+        if 'pool' in name:
+            encoder_n_pool += 1
+        if 'conv' in name:
+            encoder_channels = layer.out_channels
+    return encoder_channels, encoder_n_pool
+
+
 class DeeperDeepSEA(nn.Module):
     """
     A deeper DeepSEA model architecture.
@@ -55,13 +65,11 @@ class DeeperDeepSEA(nn.Module):
 
         self.channel_sizes = [x * channel_size_factor for x in channel_sizes]
         self.input_channels = input_channels  # first dimension is 4
-
-        self.conv_output_channels = self.channel_sizes[-1]
-        
+        conv_modules = self._create_conv_net(self.channel_sizes, self.input_channels)
+        self.conv_net = nn.Sequential(conv_modules)
+        self.conv_output_channels, n_pools = get_conv_channels_and_pool(conv_modules)
         self._n_channels = get_conv_width(self.sequence_length, self.conv_kernel_size,
-                                        self.n_units, self.pool_kernel_size, no_padding=True)
-
-        self.conv_net = self._create_conv_net(self.channel_sizes, self.input_channels)
+                                        n_pools, self.pool_kernel_size, no_padding=True)
         self.classifier = self._create_classifier()
 
 
@@ -77,7 +85,7 @@ class DeeperDeepSEA(nn.Module):
             conv_net_dict['batchnorm' + str(i)] = nn.BatchNorm1d(channel_sizes[i + 1])
             if i >= 1:
                 conv_net_dict['dropout' + str(i)] = nn.Dropout(p=0.2)
-        return nn.Sequential(conv_net_dict)
+        return conv_net_dict
 
 
     def _create_classifier(self):
@@ -137,7 +145,7 @@ class ReverseComplementDeepSEA(DeeperDeepSEA):
             if i >= 1:
                 conv_net_dict['dropout' + str(i)] = nn.Dropout(p=0.2)
 
-        return nn.Sequential(conv_net_dict)
+        return conv_net_dict
 
 
 class CopyKernelDeepSEA(DeeperDeepSEA):
@@ -148,12 +156,7 @@ class CopyKernelDeepSEA(DeeperDeepSEA):
                 encoder_n_layers, deepsea_n_layers, channel_size_factor=160, retrain_encoder=False):
         encoder_model = load_model(encoder_model_config)
         encoder_model.decapitate(keep_n_layers=encoder_n_layers)
-        encoder_n_pool, encoder_channels = 0, 0
-        for name, layer in encoder_model.encode_layers.items():
-            if 'pool' in name:
-                encoder_n_pool += 1
-            if 'conv' in name:
-                encoder_channels = layer.out_channels
+        encoder_channels, encoder_n_pool = get_conv_channels_and_pool(encoder_model.encode_layers)
 
         encoder_length = get_conv_width(sequence_length, encoder_model_config['kernel_len'],
                 encoder_n_pool, encoder_model_config['pool_size'], no_padding=False)
