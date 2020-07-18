@@ -214,11 +214,11 @@ class MultilayerEncoder(Autoencoder):
         encode_layers['input_dropout'] = SeqDropout(input_dropout_freq)
         for i, (n_in, n_out) in enumerate(zip(in_size, out_size)):
             encode_layers['conv{}0'.format(i)] = nn.Conv1d(
-                    n_in, n_out, kernel_len, 1, pad, padding_mode='zeros')
+                    n_in, n_out, kernel_len, 1, pad)
             encode_layers['relu{}0'.format(i)] = nn.ReLU()
             for j in range(1, n_conv_before_pool):
                 encode_layers['conv{}{}'.format(i, j)] = nn.Conv1d(
-                        n_out, n_out, kernel_len, 1, pad, padding_mode='zeros')
+                        n_out, n_out, kernel_len, 1, pad)
                 encode_layers['relu{}{}'.format(i, j)] = nn.ReLU()
             encode_layers['pool{}'.format(i)] = nn.MaxPool1d(pool_size)
             encode_layers['norm{}'.format(i)] = nn.BatchNorm1d(n_out)
