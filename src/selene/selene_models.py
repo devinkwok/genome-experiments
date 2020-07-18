@@ -132,32 +132,36 @@ class ReverseComplementDeepSEA(DeeperDeepSEA):
 class CopyKernelDeepSEA(DeeperDeepSEA):
 
 
-    # go from 0 up to encode_n_layers in the encoder, then from deepsea_n_units to max in deepsea
-    def __init__(self, sequence_length, n_targets, encode_model_config,
-                encode_n_layers, deepsea_n_layers, channel_size_factor=160):
-        encode_model = load_model(encode_model_config)
-        encode_model.decapitate(keep_n_layers=encode_n_layers)
+    # go from 0 up to encoder_n_layers in the encoder, then from deepsea_n_units to max in deepsea
+    def __init__(self, sequence_length, n_targets, encoder_model_config,
+                encoder_n_layers, deepsea_n_layers, channel_size_factor=160, retrain_encoder=False):
+        encoder_model = load_model(encoder_model_config)
+        encoder_model.decapitate(keep_n_layers=encoder_n_layers)
         encoder_n_pool, encoder_channels = 0, 0
-        for name, layer in encode_model.encode_layers.items():
+        for name, layer in encoder_model.encode_layers.items():
             if 'pool' in name:
                 encoder_n_pool += 1
             if 'conv' in name:
                 encoder_channels = layer.out_channels
 
-        encoder_length = get_conv_width(sequence_length, encode_model_config['kernel_len'],
-                encoder_n_pool, encode_model_config['pool_size'], no_padding=False)
+        encoder_length = get_conv_width(sequence_length, encoder_model_config['kernel_len'],
+                encoder_n_pool, encoder_model_config['pool_size'], no_padding=False)
         deepsea_channels = [x * channel_size_factor for x in [2, 3, 6]]
         deepsea_channels = deepsea_channels[deepsea_n_layers:]
 
 
         super(CopyKernelDeepSEA, self).__init__(encoder_length, n_targets,
                 channel_sizes=deepsea_channels, channel_size_factor=1, input_channels=encoder_channels)
-        self.encode_model = encode_model
+        self.encoder_model = encoder_model
+        self.retrain_encoder = retrain_encoder
 
 
     def forward(self, x):
-        with torch.no_grad():
-            out = self.encode_model.encode(x, override_convert_to_onehot=True)
+        if self.retrain_encoder:
+            out = self.encoder_model.encode(x, override_convert_to_onehot=True)
+        else:
+            with torch.no_grad():
+                out = self.encoder_model.encode(x, override_convert_to_onehot=True)
         return super(CopyKernelDeepSEA, self).forward(out)
 
 

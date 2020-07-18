@@ -7,7 +7,7 @@ model: {
     class_args: {
         sequence_length: 1000,
         n_targets: 1,
-        encode_model_config: {
+        encoder_model_config: {
             'model': 'Multilayer',
             'kernel_len': 9,
             'latent_len': 200,
@@ -25,7 +25,7 @@ model: {
             'use_cuda_if_available': True,
             'hidden_dropout_freq': 0.05,
         },
-        encode_n_layers: 14,
+        encoder_n_layers: 14,
         deepsea_n_layers: 2,
         channel_size_factor: 10,
     },

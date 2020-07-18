@@ -28,6 +28,7 @@ model: {
         encoder_n_layers: 14,
         deepsea_n_layers: 3,
         channel_size_factor: 10,
+        retrain_encoder: True,
     },
     non_strand_specific: mean
 }

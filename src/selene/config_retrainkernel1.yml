@@ -25,9 +25,10 @@ model: {
             'use_cuda_if_available': True,
             'hidden_dropout_freq': 0.05,
         },
-        encoder_n_layers: 14,
-        deepsea_n_layers: 3,
+        encoder_n_layers: 7,
+        deepsea_n_layers: 1,
         channel_size_factor: 10,
+        retrain_encoder: True,
     },
     non_strand_specific: mean
 }
