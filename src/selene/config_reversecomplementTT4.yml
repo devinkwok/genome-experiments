@@ -6,7 +6,7 @@ model: {
     
     class_args: {
         sequence_length: 1000,
-        channel_size_factor: 1,
+        channel_size_factor: 4,
         n_targets: 1,
         reverse_complement_prop: [
             [0.0, 0.0, 1.0],

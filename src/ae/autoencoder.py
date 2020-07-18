@@ -64,9 +64,10 @@ class NeighbourDistanceLoss(nn.Module):
 class ReverseComplementConv1d(nn.Module):
 
     def __init__(self, in_channels, normal_out, complement_out, reverse_out, reverse_complement_out,
-                kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True):
+                kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True, max_pool=True):
         super().__init__()
         
+        self.max_pool = max_pool
         self.convs = nn.ModuleDict()
         if normal_out > 0:
             self.convs['normal'] = nn.Conv1d(in_channels, normal_out,
@@ -99,16 +100,35 @@ class ReverseComplementConv1d(nn.Module):
         y = []
         y.append(conv_filter(x))
         if do_complement:
-            x_complement = torch.flip(x, [1])
-            y.append(conv_filter(x_complement))
+            y.append(conv_filter(torch.flip(x, [1])))
         if do_reverse:  # undo reverse along sequence so positions stay the same
             y.append(torch.flip(conv_filter(torch.flip(x, [2])), [2]))
         if do_complement and do_reverse:
-            y.append(torch.flip(conv_filter(torch.flip(x_complement, [2])), [2]))
-        y_out, index = torch.max(torch.stack(y, dim=0), dim=0)
-        del index  # don't need this
+            y.append(torch.flip(conv_filter(torch.flip(torch.flip(x, [1]), [2])), [2]))
+        if self.max_pool:
+            y_out, index = torch.max(torch.stack(y, dim=0), dim=0)
+            del index  # don't need index
+        else:
+            y_out = torch.cat(y, dim=1)
         return y_out
 
+
+    @property
+    def out_channels(self):
+        if self.max_pool:
+            channels = [layer.out_channels for _, layer in self.convs.items()]
+            return sum(channels)
+        else:
+            channels = 0
+            if 'normal' in self.convs:
+                channels += self.convs['normal'].out_channels
+            if 'complement' in self.convs:
+                channels += self.convs['complement'].out_channels * 2
+            if 'reverse' in self.convs:
+                channels += self.convs['reverse'].out_channels * 2
+            if 'reverse_complement' in self.convs:
+                channels += self.convs['reverse_complement'].out_channels * 4
+            return channels
 
 
 class Autoencoder(nn.Module):
