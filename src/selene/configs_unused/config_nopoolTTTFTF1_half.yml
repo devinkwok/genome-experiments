@@ -6,15 +6,16 @@ model: {
     
     class_args: {
         sequence_length: 1000,
-        channel_size_factor: 16,
+        channel_size_factor: 1,
         n_targets: 1,
         reverse_complement_prop: [
             [0.0, 0.0, 0.5],
-            [0.5, 0.0, 0.0],
-            [0.5, 0.0, 0.0],
+            [0.0, 0.5, 0.0],
+            [0.0, 0.5, 0.0],
             [0.0, 0.0, 0.0],
             [0.0, 0.0, 0.0],
         ],
+        max_pool: False,
     },
     non_strand_specific: mean
 }

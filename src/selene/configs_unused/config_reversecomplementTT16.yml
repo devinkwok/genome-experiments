@@ -9,9 +9,9 @@ model: {
         channel_size_factor: 16,
         n_targets: 1,
         reverse_complement_prop: [
-            [0.0, 0.0, 0.5],
-            [0.5, 0.0, 0.0],
-            [0.5, 0.0, 0.0],
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
             [0.0, 0.0, 0.0],
             [0.0, 0.0, 0.0],
         ],
@@ -42,7 +42,7 @@ train_model: !obj:selene_sdk.TrainModel {
     max_steps: 20000,
     report_stats_every_n_steps: 1000,
     n_validation_samples: 12000,
-    n_test_samples: 480000,
+    n_test_samples: 48000,
     cpu_n_threads: 16,
     use_cuda: False,
     data_parallel: False

@@ -2,19 +2,11 @@
 ops: [train, evaluate]
 model: {
     path: ./src/selene/selene_models.py,
-        class: ReverseComplementDeepSEA,
-    
+    class: DeeperDeepSEA,
     class_args: {
         sequence_length: 1000,
-        channel_size_factor: 16,
+        channel_size_factor: 4,
         n_targets: 1,
-        reverse_complement_prop: [
-            [0.0, 0.0, 0.5],
-            [0.5, 0.0, 0.0],
-            [0.5, 0.0, 0.0],
-            [0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0],
-        ],
     },
     non_strand_specific: mean
 }

@@ -2,19 +2,32 @@
 ops: [train, evaluate]
 model: {
     path: ./src/selene/selene_models.py,
-        class: ReverseComplementDeepSEA,
+        class: CopyKernelDeepSEA,
     
     class_args: {
         sequence_length: 1000,
-        channel_size_factor: 16,
         n_targets: 1,
-        reverse_complement_prop: [
-            [0.0, 0.0, 0.5],
-            [0.5, 0.0, 0.0],
-            [0.5, 0.0, 0.0],
-            [0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0],
-        ],
+        encoder_model_config: {
+            'model': 'Multilayer',
+            'kernel_len': 9,
+            'latent_len': 200,
+            'seq_len': 64,
+            'seq_per_batch': 200,
+            'input_dropout_freq': 0.0,
+            'latent_noise_std': 0.0,
+            'neighbour_loss_prop': 0.0,
+            'load_prev_model_state': 'outputs/src/ae/experiment/aemdchr22Multilayer9x200d0.03n0.2l0.0_30001at1.0_0-30000.pth',
+            'hidden_len': 24,
+            'pool_size': 4,
+            'n_conv_and_pool': 1,
+            'n_conv_before_pool': 2,
+            'n_linear': 2,
+            'use_cuda_if_available': True,
+            'hidden_dropout_freq': 0.05,
+        },
+        encoder_n_layers: 14,
+        deepsea_n_layers: 2,
+        channel_size_factor: 10,
     },
     non_strand_specific: mean
 }
@@ -29,8 +42,8 @@ sampler: !obj:selene_sdk.samplers.IntervalsSampler {
     intervals_path: ./data/selene/deepsea_TF_intervals.txt,
     seed: 127,
             sample_negative: True,
-    sequence_length: 1000,
-        center_bin_to_predict: 200,
+        sequence_length: 1000,
+    center_bin_to_predict: 200,
     test_holdout: [chr8, chr9],
     validation_holdout: [chr6, chr7],
             feature_thresholds: 0.5,
