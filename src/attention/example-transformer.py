@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 class TransformerModel(nn.Module):
 
-    def __init__(self, ntoken, ninp, nhead, nhid, nlayers, dropout=0.5):
+    def __init__(self, ntoken, ninp, nhead, nhid, nlayers, dropout=0.2, kernel_size=1):
         super(TransformerModel, self).__init__()
         from torch.nn import TransformerEncoder, TransformerEncoderLayer
         self.model_type = 'Transformer'
@@ -15,7 +15,14 @@ class TransformerModel(nn.Module):
         self.pos_encoder = PositionalEncoding(ninp, dropout)
         encoder_layers = TransformerEncoderLayer(ninp, nhead, nhid, dropout)
         self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers)
-        self.encoder = nn.Embedding(ntoken, ninp)
+        # add option for convolution head
+        self.kernel_size = kernel_size
+        if self.kernel_size <= 1:
+            self.encoder = nn.Embedding(ntoken, ninp)
+        else:
+            self.encoder = nn.Sequential(
+                nn.Conv1d(ntoken, ninp, self.kernel_size),
+            )
         self.ninp = ninp
         self.decoder = nn.Linear(ninp, ntoken)
 
@@ -28,17 +35,24 @@ class TransformerModel(nn.Module):
 
     def init_weights(self):
         initrange = 0.1
-        self.encoder.weight.data.uniform_(-initrange, initrange)
+        if self.kernel_size <= 1:
+            self.encoder.weight.data.uniform_(-initrange, initrange)
         self.decoder.bias.data.zero_()
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
     def forward(self, src):
+        if self.kernel_size <= 1:
+            src = self.encoder(src) * math.sqrt(self.ninp)
+        else:
+            # convolution needs (batch size, channels, sequence length)
+            src = F.one_hot(src, num_classes=4).permute(1, 2, 0).float()
+            # but transformer needs (sequence length, batch size, channels)
+            src = self.encoder(src).permute(2, 0, 1)
         if self.src_mask is None or self.src_mask.size(0) != len(src):
             device = src.device
             mask = self._generate_square_subsequent_mask(len(src)).to(device)
             self.src_mask = mask
 
-        src = self.encoder(src) * math.sqrt(self.ninp)
         src = self.pos_encoder(src)
         output = self.transformer_encoder(src, self.src_mask)
         output = self.decoder(output)
@@ -73,8 +87,9 @@ batch_size = 10
 eval_batch_size = 10
 valid_split = 0.02
 test_split = 0.01
-dataset = SequenceDataset('data/ref_genome/test.fasta', seq_len=bptt + 1, stride=bptt)
-dataset = RandomRepeatSequence(bptt + 1, 30000, 3, repeat_len=4)
+dataset = SequenceDataset('data/ref_genome/test.fasta', seq_len=bptt, stride=bptt)
+dataset = RandomRepeatSequence(bptt, 30000, 3, repeat_len=4)
+
 valid_size = int(len(dataset) * valid_split)
 test_size = int(len(dataset) * test_split)
 train_data, valid_data = torch.utils.data.random_split(dataset, [len(dataset) - valid_size, valid_size])
@@ -84,17 +99,19 @@ valid_loader = torch.utils.data.DataLoader(valid_data, batch_size=eval_batch_siz
 test_loader = torch.utils.data.DataLoader(test_data, batch_size=eval_batch_size, shuffle=False, num_workers=2)
 
 
-def get_batch(sequence, device):
-    sequence = sequence.permute(1, 0) # reorder to (sequence, batch) dimensions
-    size = sequence.shape[1]
+def get_batch(sequence, device, kernel_size=1):
+    sequence = sequence.permute(1, 0)  # reorder to (sequence, batch) dimensions
+    size = sequence.shape[1]  # batches
     data = sequence[0:-1]  # trim off the last element as target
-    target = sequence[1:].reshape(bptt * size)  # have to reshape due to reordering
+    # first target is past the first conv kernel position
+    target = sequence[kernel_size:].reshape((bptt - kernel_size) * size)  # have to reshape due to reordering
     return data.to(device), target.to(device)
 
 
-def print_test_example(data, target, output):
-    size = data.shape[1]
-    print_target_vs_reconstruction(target.reshape((bptt, size))[::, 0].cpu(), F.softmax(output[::, 0], dim=1).cpu())
+def print_test_example(data, target, output, kernel_size=1):
+    size = data.shape[1]  # batches
+    print_target_vs_reconstruction(
+        target.reshape((bptt - kernel_size, size))[::, 0].cpu(), F.softmax(output[::, 0], dim=1).cpu())
 
 
 ntokens = 4 # the size of vocabulary
@@ -103,10 +120,12 @@ nhid = 100 # the dimension of the feedforward network model in nn.TransformerEnc
 nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
 nhead = 2 # the number of heads in the multiheadattention models
 dropout = 0.2 # the dropout value
-model = TransformerModel(ntokens, emsize, nhead, nhid, nlayers, dropout).to(device)
+lr = 0.1  # learning rate
+kernel_size = 1  # convolution layer as input to attention mechanism
+
+model = TransformerModel(ntokens, emsize, nhead, nhid, nlayers, dropout, kernel_size).to(device)
 
 criterion = nn.CrossEntropyLoss()
-lr = 0.1 # learning rate
 optimizer = torch.optim.SGD(model.parameters(), lr=lr)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.7)
 
@@ -116,7 +135,7 @@ def train():
     total_loss = 0.
     start_time = time.time()
     for batch, sequence in enumerate(train_loader):
-        data, targets = get_batch(sequence, device)
+        data, targets = get_batch(sequence, device, kernel_size=kernel_size)
         optimizer.zero_grad()
         output = model(data)
         loss = criterion(output.view(-1, ntokens), targets)
@@ -146,7 +165,7 @@ def evaluate(eval_model, data_loader):
     with torch.no_grad():
         do_print = True
         for sequence in data_loader:
-            data, targets = get_batch(sequence, device)
+            data, targets = get_batch(sequence, device, kernel_size=kernel_size)
             output = eval_model(data)
             output_flat = output.view(-1, ntokens)
             total_loss += criterion(output_flat, targets).item()
@@ -156,7 +175,7 @@ def evaluate(eval_model, data_loader):
             n_total += len(output_flat)
             if do_print:
                 do_print = False
-                print_test_example(data, targets, output)
+                print_test_example(data, targets, output, kernel_size=kernel_size)
     return total_loss / len(data_loader), n_correct, n_total
 
 best_val_loss = float("inf")
