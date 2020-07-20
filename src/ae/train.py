@@ -45,6 +45,7 @@ __CONFIG_DEFAULT = {
     'output_len': 919,  # for supervised model
     'log_path': 'logs',
     'snapshot_model_state': True,
+    'loss_fn': 'cross_entropy_loss',
 }
 
 
@@ -235,7 +236,7 @@ def run(config):
             print("Saving model to {}".format(out_file))
             torch.save(model.state_dict(), out_file)
 
-    return model, train_loader, valid_loader, optimizer, loss_fn
+    return model, train_loader, valid_loader, optimizer
 
 
 def update_config(config):

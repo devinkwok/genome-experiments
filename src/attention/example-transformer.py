@@ -120,12 +120,15 @@ nhid = 100 # the dimension of the feedforward network model in nn.TransformerEnc
 nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
 nhead = 2 # the number of heads in the multiheadattention models
 dropout = 0.2 # the dropout value
-lr = 0.1  # learning rate
 kernel_size = 1  # convolution layer as input to attention mechanism
+epochs = 10 # The number of epochs
+lr = 0.1  # learning rate
+log_interval = 1000  # how often to log results
 
 model = TransformerModel(ntokens, emsize, nhead, nhid, nlayers, dropout, kernel_size).to(device)
 
-criterion = nn.CrossEntropyLoss()
+# weight for AGCT frequencies
+criterion = nn.CrossEntropyLoss(weight=torch.tensor([0.35, 0.19, 0.18, 0.28]))
 optimizer = torch.optim.SGD(model.parameters(), lr=lr)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.7)
 
@@ -144,7 +147,6 @@ def train():
         optimizer.step()
 
         total_loss += loss.item()
-        log_interval = 100
         if batch % log_interval == 0 and batch > 0:
             cur_loss = total_loss / log_interval
             elapsed = time.time() - start_time
@@ -179,7 +181,6 @@ def evaluate(eval_model, data_loader):
     return total_loss / len(data_loader), n_correct, n_total
 
 best_val_loss = float("inf")
-epochs = 10 # The number of epochs
 best_model = None
 
 for epoch in range(1, epochs + 1):

@@ -531,6 +531,39 @@ def exp15_exploding_grad():
 
     experiment(hparams, 'learn_rate', [100., 10., 1.,])
 
+def exp16_cross_entropy_loss():
+    hparams = {
+        'name': 'aemd',
+        'model': 'Multilayer',
+        'kernel_len': 9,
+        'latent_len': 200,
+        'seq_len': 64,
+        'seq_per_batch': 200,
+        'input_path': 'data/ref_genome/chr22.fa',
+        'split_prop': 0.05,
+        'epochs': 1,
+        'learn_rate': 0.1,
+        'input_dropout_freq': 0.03,
+        'latent_noise_std': 0.2,
+        'save_model': True,
+        'disable_eval': False,
+        'neighbour_loss_prop': 0.0,
+        'load_prev_model_state': None,
+        'hidden_len': 24,
+        'pool_size': 4,
+        'n_conv_and_pool': 1,
+        'n_conv_before_pool': 2,
+        'n_linear': 2,
+        'use_cuda_if_available': True,
+        'hidden_dropout_freq': 0.05,
+        'fixed_random_seed': True,
+        'n_dataloader_workers': 6,
+        'checkpoint_interval': 10000,
+        'log_path': 'logs',
+        'snapshot_model_state': True,
+        'loss_fn': 'cross_entropy_loss',
+    }
+    experiment(hparams, 'loss_fn', ['cross_entropy_loss', 'nd_loss'])
 
 if __name__ == '__main__':
     # exp1_window_size()
@@ -548,8 +581,9 @@ if __name__ == '__main__':
     # exp12_TEST_get_label()
 
     # exp13_test_flags()
-    exp14_multilayer_depth()
-    exp15_exploding_grad()
+    # exp14_multilayer_depth()
+    # exp15_exploding_grad()
+    exp16_cross_entropy_loss()
 
     # test_logged_models('outputs/src/ae/logs/exp_test.log', 'data/ref_genome/chr22_excerpt_800k.fa')
     # test_logged_models('outputs/src/ae/logs/exp_test.log', 'data/ref_genome/test.fasta')

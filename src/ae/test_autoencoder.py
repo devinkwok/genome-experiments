@@ -98,8 +98,8 @@ class Test_Autoencoder(unittest.TestCase):
             self.assertEqual(len(model.decode_layers), 0)
             for x in self.train_loader:
                 y = model.encode(x)
-                z = model.decode(x)
-                npt.assert_array_equal(x, z)
+                z = model.decode(y, softmax=False)
+                npt.assert_array_equal(y, z)
                 break  # only test the first batch
 
 

@@ -3,7 +3,10 @@ import torch
 from ae.autoencoder import NeighbourDistanceLoss, Autoencoder, MultilayerEncoder, LatentLinearRegression
 
 def load_model(config):
-    loss_fn = NeighbourDistanceLoss(config['neighbour_loss_prop'])
+    if config['loss_fn'] == 'cross_entropy_loss':
+        loss_fn = torch.nn.CrossEntropyLoss()
+    else:
+        loss_fn = NeighbourDistanceLoss(config['neighbour_loss_prop'])
 
     if config['model'] == 'Multilayer' or config['model'] == 'LatentLinearRegression':
         model = MultilayerEncoder(config['kernel_len'], config['latent_len'], config['seq_len'],

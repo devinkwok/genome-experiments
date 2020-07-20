@@ -155,7 +155,6 @@ class Autoencoder(nn.Module):
         self.decode_layers = nn.ModuleDict()
         self.decode_layers['latent_noise'] = GaussianNoise(self.latent_noise_std)
         self.decode_layers['conv0'] = nn.ConvTranspose1d(latent_len, N_BASE, kernel_len)
-        self.decode_layers['softmax'] = nn.Softmax(dim=1)
 
 
     # trims extra layers from the encoder portion, for transfer learning
@@ -179,39 +178,41 @@ class Autoencoder(nn.Module):
         self._total_batches[0] = value
 
 
-    def encode(self, x, override_convert_to_onehot=False):
-        if not override_convert_to_onehot:
-            x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+    def encode(self, x):
+        x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
         for layer in self.encode_layers.values():
             x = layer(x)
         return x
 
 
-    def decode(self, y):
+    def decode(self, y, softmax=True):
         for layer in self.decode_layers.values():
             y = layer(y)
+        if softmax:
+            y = F.softmax(y, dim=1)
         return y
 
 
-    def forward(self, x, override_convert_to_onehot=False):
-        latent = self.encode(x, override_convert_to_onehot)
-        reconstructed = self.decode(latent)
+    def forward(self, x, softmax=True):
+        latent = self.encode(x)
+        reconstructed = self.decode(latent, softmax=softmax)
         return reconstructed, latent
 
 
     def loss(self, x, y=None):
-        x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
-        reconstructed, latent = self.forward(x, override_convert_to_onehot=True)
         if y is None:
-            return self.loss_fn(x, reconstructed, latent)
-        else:
-            y = F.one_hot(y, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
-            return self.loss_fn(y, reconstructed, latent)
+            y = x
+        if type(self.loss_fn) is nn.CrossEntropyLoss:
+            reconstructed, _ = self.forward(x, softmax=False)
+            return self.loss_fn(reconstructed, y)
+
+        reconstructed, latent = self.forward(x)
+        y = F.one_hot(y, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+        return self.loss_fn(y, reconstructed, latent)
 
 
     def evaluate(self, x, true_x):
-        x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
-        z, _ = self.forward(x, override_convert_to_onehot=True)
+        z, _ = self.forward(x)
         predictions = torch.argmax(z, 1, keepdim=False)
         correct = (true_x == predictions)
         return {'correct': torch.sum(correct).item(), 'n_samples': correct.nelement()}
@@ -272,7 +273,6 @@ class MultilayerEncoder(Autoencoder):
                 decode_layers['relu{}{}'.format(i, j)] = nn.ReLU()
             decode_layers['conv{}0'.format(i)] = nn.ConvTranspose1d(
                     n_out, n_in, kernel_len, 1, pad)
-        decode_layers['softmax'] = nn.Softmax(dim=1)
 
         self.encode_layers = encode_layers
         self.decode_layers = decode_layers
