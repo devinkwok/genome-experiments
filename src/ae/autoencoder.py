@@ -199,16 +199,19 @@ class Autoencoder(nn.Module):
         return reconstructed, latent
 
 
-    def loss(self, x, y=None):
-        if y is None:
-            y = x
-        if type(self.loss_fn) is nn.CrossEntropyLoss:
-            reconstructed, _ = self.forward(x, softmax=False)
-            return self.loss_fn(reconstructed, y)
+    def loss(self, x, target=None, do_print=False):
+        if target is None:
+            target = x
 
-        reconstructed, latent = self.forward(x)
-        y = F.one_hot(y, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
-        return self.loss_fn(y, reconstructed, latent)
+        if type(self.loss_fn) is nn.CrossEntropyLoss:
+            reconstructed, latent = self.forward(x, softmax=False)
+            loss = self.loss_fn(reconstructed, target)
+        else:
+            reconstructed, latent = self.forward(x)
+            target = F.one_hot(target, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+            loss = self.loss_fn(target, reconstructed, latent)
+
+        return loss, target, reconstructed, latent
 
 
     def evaluate(self, x, true_x):

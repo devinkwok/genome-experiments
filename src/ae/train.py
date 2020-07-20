@@ -12,7 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 from ae.autoencoder import *
 from ae.load import load_model
 from seq_util.io import output_path
-from seq_util.datasets import SequenceDataset, LabelledSequence
+from seq_util.datasets import SequenceDataset, LabelledSequence, print_target_vs_reconstruction
 
 
 __CONFIG_DEFAULT = {
@@ -107,20 +107,17 @@ def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, ch
             model.train()
             if len(sample) == 2:
                 x, labels = sample[0].to(device), sample[1].to(device)
-                del sample
-                loss = model.loss(x, labels)
+                loss, target, reconstructed, latent = model.loss(x, labels)
             else:
                 labels = None
                 x = sample.to(device)
-                del sample
-                loss = model.loss(x)
+                loss, target, reconstructed, latent = model.loss(x)
             loss_sum += loss.item()
             model.total_batches += 1
             loss.backward()
             optimizer.step()
             if not writer is None:
                 writer.add_scalar('loss', loss, model.total_batches)
-            del x, loss, labels
 
             if model.total_batches % checkpoint_interval == 0:
                 metrics = evaluate_model(model, valid_loader, device, disable_eval)
@@ -129,6 +126,7 @@ def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, ch
                 metrics['elapsed_time_sec'] = elapsed_time
 
                 print("epoch {}, batch {}, {}".format(i, model.total_batches, metrics))
+                print_target_vs_reconstruction(target[0], F.softmax(reconstructed[0].T, dim=1))
 
                 if not writer is None:
                     for key, value in metrics.items():
@@ -138,6 +136,7 @@ def train(model, train_loader, valid_loader, optimizer, epochs, disable_eval, ch
                 yield model, i, model.total_batches, metrics
                 loss_sum = 0
 
+            del x, sample, loss, labels, latent, target, reconstructed
             optimizer.zero_grad()
 
     metrics = evaluate_model(model, valid_loader, device, disable_eval)
