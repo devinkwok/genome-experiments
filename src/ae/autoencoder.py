@@ -208,8 +208,8 @@ class Autoencoder(nn.Module):
             loss = self.loss_fn(reconstructed, target)
         else:
             reconstructed, latent = self.forward(x)
-            target = F.one_hot(target, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
-            loss = self.loss_fn(target, reconstructed, latent)
+            loss = self.loss_fn(F.one_hot(target, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+                        , reconstructed, latent)
 
         return loss, target, reconstructed, latent
 

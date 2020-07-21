@@ -19,9 +19,7 @@ BASE_TO_INDEX = {
     'T': 3, 't': 3,
     }
 INDEX_TO_BASE = ['A', 'G', 'C', 'T']
-MAGNITUDE = {
-    0: ' ', 1: '.', 2: '-', 3: '~', 4: '=', 5: '<', 6: '*', 7: '^', 8: '#', 9: '@',
-}
+MAGNITUDE = {-1: 'X', 0: ' ', 1: '.', 2: '-', 3: '~', 4: ':', 5: '<', 6: '*', 7: '^', 8: '#', 9: '@', 10: '@',}
 N_BASE = 4
 
 # map style dataset holding entire sequence in memory
@@ -122,10 +120,16 @@ def print_target_vs_reconstruction(target, reconstruction, n_columns=89, print_a
     for base, row in zip(INDEX_TO_BASE, probabilities):
         print(base, end=' ')
         for j in row[:n_columns - 2]:
+            if math.isfinite(j):
+                value = int(j * 10)
+            else:
+                value = -1
             if not print_as_numbers:
-                print(MAGNITUDE[int(j * 10)], end='')
+                print(MAGNITUDE[value], end='')
             elif j > 0.1:
-                print(int(j * 10), end='')
+                if value >= 10:
+                    value = 0
+                print(value, end='')
             else:
                 print(' ', end='')
         print('')

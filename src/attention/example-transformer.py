@@ -1,9 +1,33 @@
 # from https://pytorch.org/tutorials/beginner/transformer_tutorial.html
+import sys
+sys.path.append('src/seq_util/')
 
 import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+from datasets import SequenceDataset, RandomRepeatSequence, print_target_vs_reconstruction
+
+bptt = 200
+batch_size = 5
+accumulation_interval = 10  # how many batches to combine into one gradient update
+eval_batch_size = 5
+valid_split = 0.02
+test_split = 0.01
+dataset = SequenceDataset('data/ref_genome/chr22.fa', seq_len=bptt, stride=bptt)
+# dataset = RandomRepeatSequence(bptt, 30000, 3, repeat_len=4)
+
+ntokens = 4 # the size of vocabulary
+emsize = 1024 # embedding dimension
+nhid = 1024 # the dimension of the feedforward network model in nn.TransformerEncoder
+nlayers = 24 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
+nhead = 16 # the number of heads in the multiheadattention models
+dropout = 0.1 # the dropout value
+kernel_size = 9  # convolution layer as input to attention mechanism
+epochs = 1 # The number of epochs
+lr = 0.1  # learning rate
+log_interval = 100  # how often to log results
 
 class TransformerModel(nn.Module):
 
@@ -76,19 +100,8 @@ class PositionalEncoding(nn.Module):
         x = x + self.pe[:x.size(0), :]
         return self.dropout(x)
 
-import sys
-sys.path.append('src/seq_util/')
-from datasets import SequenceDataset, RandomRepeatSequence, print_target_vs_reconstruction
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-bptt = 200
-batch_size = 10
-eval_batch_size = 10
-valid_split = 0.02
-test_split = 0.01
-dataset = SequenceDataset('data/ref_genome/test.fasta', seq_len=bptt, stride=bptt)
-dataset = RandomRepeatSequence(bptt, 30000, 3, repeat_len=4)
 
 valid_size = int(len(dataset) * valid_split)
 test_size = int(len(dataset) * test_split)
@@ -113,22 +126,10 @@ def print_test_example(data, target, output, kernel_size=1):
     print_target_vs_reconstruction(
         target.reshape((bptt - kernel_size, size))[::, 0].cpu(), F.softmax(output[::, 0], dim=1).cpu())
 
-
-ntokens = 4 # the size of vocabulary
-emsize = 50 # embedding dimension
-nhid = 100 # the dimension of the feedforward network model in nn.TransformerEncoder
-nlayers = 2 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
-nhead = 2 # the number of heads in the multiheadattention models
-dropout = 0.2 # the dropout value
-kernel_size = 1  # convolution layer as input to attention mechanism
-epochs = 10 # The number of epochs
-lr = 0.1  # learning rate
-log_interval = 1000  # how often to log results
-
 model = TransformerModel(ntokens, emsize, nhead, nhid, nlayers, dropout, kernel_size).to(device)
 
 # weight for AGCT frequencies
-criterion = nn.CrossEntropyLoss(weight=torch.tensor([0.35, 0.19, 0.18, 0.28]))
+criterion = nn.CrossEntropyLoss(weight=torch.tensor([0.35, 0.19, 0.18, 0.28]).to(device))
 optimizer = torch.optim.SGD(model.parameters(), lr=lr)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=0.7)
 
@@ -139,12 +140,14 @@ def train():
     start_time = time.time()
     for batch, sequence in enumerate(train_loader):
         data, targets = get_batch(sequence, device, kernel_size=kernel_size)
-        optimizer.zero_grad()
         output = model(data)
-        loss = criterion(output.view(-1, ntokens), targets)
+        loss = criterion(output.view(-1, ntokens), targets) / accumulation_interval
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
-        optimizer.step()
+
+        if batch % accumulation_interval == 0:
+            optimizer.step()
+            optimizer.zero_grad()
 
         total_loss += loss.item()
         if batch % log_interval == 0 and batch > 0:
@@ -196,6 +199,7 @@ for epoch in range(1, epochs + 1):
     if val_loss < best_val_loss:
         best_val_loss = val_loss
         best_model = model
+        torch.save(model.state_dict(), "./transformer" + str(epoch)+ ".pth")
 
     scheduler.step()
 
