@@ -17,6 +17,7 @@ BASE_TO_INDEX = {
     'G': 1, 'g': 1,
     'C': 2, 'c': 2,
     'T': 3, 't': 3,
+    'N': 4, 'n': 4,
     }
 INDEX_TO_BASE = ['A', 'G', 'C', 'T']
 MAGNITUDE = {-1: 'X', 0: ' ', 1: '.', 2: '-', 3: '~', 4: ':', 5: '<', 6: '*', 7: '^', 8: '#', 9: '@', 10: '@',}
@@ -26,15 +27,18 @@ N_BASE = 4
 # 
 class SequenceDataset(torch.utils.data.Dataset):
 
-    def __init__(self, fasta_filename, seq_len, stride=1, overlap=None):
+    def __init__(self, fasta_filename, seq_len, stride=1, overlap=None, augment=True, no_gaps=True):
         bioseq = SeqIO.read(fasta_filename, "fasta")
-        self.seq = bioseq.seq.ungap('N').ungap('n')
+        self.seq = bioseq.seq
+        if no_gaps:
+            self.seq = self.seq.ungap('N').ungap('n')
         self.augment_state = 0
         if overlap is None:
             self.stride = stride
         else:
             self.stride = seq_len - overlap
         self.seq_len = seq_len
+        self.augment = augment
 
 
     @property
@@ -55,15 +59,16 @@ class SequenceDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         subseq = self.seq[index * self.stride : index * self.stride + self.seq_len]
         # randomly assign reverse, complement, or reverse complement
-        self.augment_state += 1
-        if self.augment_state == 1:
-            subseq = subseq[::-1]
-        elif self.augment_state == 2:
-            subseq = subseq.complement()
-        elif self.augment_state == 3:
-            subseq = subseq.reverse_complement()
-        else:
-            self.augment_state = 0
+        if self.augment:
+            self.augment_state += 1
+            if self.augment_state == 1:
+                subseq = subseq[::-1]
+            elif self.augment_state == 2:
+                subseq = subseq.complement()
+            elif self.augment_state == 3:
+                subseq = subseq.reverse_complement()
+            else:
+                self.augment_state = 0
         return bioseq_to_tensor(subseq)
 
 
@@ -149,4 +154,3 @@ class LabelledSequence(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         return self.one_hot[index], self.labels[index]
-

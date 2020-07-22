@@ -10,24 +10,36 @@ import torch.nn.functional as F
 from datasets import SequenceDataset, RandomRepeatSequence, print_target_vs_reconstruction
 
 bptt = 200
-batch_size = 5
+batch_size = 1
 accumulation_interval = 10  # how many batches to combine into one gradient update
-eval_batch_size = 5
-valid_split = 0.02
-test_split = 0.01
-dataset = SequenceDataset('data/ref_genome/chr22.fa', seq_len=bptt, stride=bptt)
+eval_batch_size = 1
+valid_split = 0.01
+test_split = 0.02
+# dataset = SequenceDataset('data/ref_genome/chr22.fa', seq_len=bptt, stride=bptt)
 # dataset = RandomRepeatSequence(bptt, 30000, 3, repeat_len=4)
+dataset = SequenceDataset('data/ref_genome/test.fasta', seq_len=bptt, stride=bptt)
 
-ntokens = 4 # the size of vocabulary
+ntokens = 4  # the size of vocabulary
+
 emsize = 1024 # embedding dimension
 nhid = 1024 # the dimension of the feedforward network model in nn.TransformerEncoder
-nlayers = 24 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
+nlayers = 20 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
 nhead = 16 # the number of heads in the multiheadattention models
 dropout = 0.1 # the dropout value
 kernel_size = 9  # convolution layer as input to attention mechanism
 epochs = 1 # The number of epochs
 lr = 0.1  # learning rate
-log_interval = 100  # how often to log results
+log_interval = 1000  # how often to log results
+
+emsize = 120 # embedding dimension
+nhid = 120 # the dimension of the feedforward network model in nn.TransformerEncoder
+nlayers = 6 # the number of nn.TransformerEncoderLayer in nn.TransformerEncoder
+nhead = 6 # the number of heads in the multiheadattention models
+dropout = 0.1 # the dropout value
+kernel_size = 9  # convolution layer as input to attention mechanism
+epochs = 1 # The number of epochs
+lr = 0.1  # learning rate
+log_interval = 1  # how often to log results
 
 class TransformerModel(nn.Module):
 
@@ -75,6 +87,7 @@ class TransformerModel(nn.Module):
         if self.src_mask is None or self.src_mask.size(0) != len(src):
             device = src.device
             mask = self._generate_square_subsequent_mask(len(src)).to(device)
+            print(mask)
             self.src_mask = mask
 
         src = self.pos_encoder(src)
@@ -109,6 +122,7 @@ train_data, valid_data = torch.utils.data.random_split(dataset, [len(dataset) - 
 valid_data, test_data = torch.utils.data.random_split(valid_data, [valid_size - test_size, test_size])
 train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=2)
 valid_loader = torch.utils.data.DataLoader(valid_data, batch_size=eval_batch_size, shuffle=False, num_workers=2)
+print(len(valid_loader))
 test_loader = torch.utils.data.DataLoader(test_data, batch_size=eval_batch_size, shuffle=False, num_workers=2)
 
 
@@ -150,7 +164,7 @@ def train():
             optimizer.zero_grad()
 
         total_loss += loss.item()
-        if batch % log_interval == 0 and batch > 0:
+        if batch % (log_interval * accumulation_interval) == 0 and batch > 0:
             cur_loss = total_loss / log_interval
             elapsed = time.time() - start_time
             val_loss, n_correct, n_total = evaluate(model, valid_loader)

@@ -178,8 +178,19 @@ class Autoencoder(nn.Module):
         self._total_batches[0] = value
 
 
-    def encode(self, x):
-        x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
+    def one_hot(self, index_sequence):
+        with torch.no_grad():
+            output = torch.zeros(index_sequence.size(0), N_BASE, index_sequence.size(1))
+            for i in range(N_BASE):
+                output[:, i,:] = output[:, i,:].masked_fill(index_sequence == i, float(1.0))
+        return output
+
+
+    def encode(self, x, TEST_new_onehot=False):
+        if TEST_new_onehot:
+            x = self.one_hot(x)
+        else:
+            x = F.one_hot(x, num_classes=N_BASE).permute(0, 2, 1).type(torch.float32)
         for layer in self.encode_layers.values():
             x = layer(x)
         return x
