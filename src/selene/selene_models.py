@@ -1,3 +1,5 @@
+import sys
+sys.path.append('./src/')
 """
 Code for DeepSEA models and Selene framework from 
 https://github.com/FunctionLab/selene/tree/master/tutorials

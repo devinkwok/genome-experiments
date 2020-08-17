@@ -1,0 +1,32 @@
+---
+ops: [evaluate]
+model: {
+    path: models/deepsea_arch.py,
+    class: DeepSEA,
+    class_args: {
+        weights_filename: models/deepsea_variant_effects.pth,
+        save_update_to_file: models/deepsea_variant_effects_updated_weights.pth,
+    },
+    non_strand_specific: mean
+}
+sampler: !obj:selene_sdk.samplers.file_samplers.MatFileSampler {
+    filepath: data/test.mat,
+    sequence_key: testxdata,
+    targets_key: testdata,
+    sequence_batch_axis: 0,
+    sequence_alphabet_axis: 1,
+    targets_batch_axis: 0,
+    shuffle: False
+}
+evaluate_model: !obj:selene_sdk.EvaluateModel {
+    batch_size: 64,
+    features:  !obj:selene_sdk.utils.load_features_list {
+        input_path: data/distinct_features.txt
+    },
+    use_cuda: True, 
+    report_gt_feature_n_positives: 50,
+    trained_model_path: models/deepsea_variant_effects_updated_weights.pth,
+    output_dir: evaluation_outputs
+}
+random_seed: 123
+...
